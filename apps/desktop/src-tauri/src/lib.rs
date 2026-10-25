@@ -18,10 +18,14 @@ pub fn run() {
             panic!("Cannot start Workbench: {}", e);
         }
     };
+    let pty_manager = commands::PtyManager::new();
+    let network_tracker = commands::NetworkTracker::new();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(workspace_manager)
+        .manage(pty_manager)
+        .manage(network_tracker)
         .invoke_handler(tauri::generate_handler![
             commands::workspace_create,
             commands::workspace_list,
@@ -30,6 +34,9 @@ pub fn run() {
             commands::vm_start,
             commands::vm_stop,
             commands::vm_status,
+            commands::vm_rotate,
+            commands::drag_window,
+            commands::toggle_maximize_window,
             commands::terminal_execute,
             commands::agent_get_version,
             commands::agent_start_task,
@@ -37,7 +44,29 @@ pub fn run() {
             commands::agent_list_sessions,
             commands::provider_list,
             commands::provider_save,
-            commands::provider_delete
+            commands::provider_delete,
+            commands::fs_read_dir,
+            commands::fs_read_file,
+            commands::fs_write_file,
+            commands::fs_create_file,
+            commands::fs_create_dir,
+            commands::fs_delete,
+            commands::fs_rename,
+            commands::fs_search,
+            commands::git_status,
+            commands::git_commit,
+            commands::git_init,
+            commands::opencode_clear_sessions,
+            commands::opencode_clear_global_history,
+            commands::opencode_clear_cache,
+            commands::dialog_open_folder,
+            commands::pty_spawn,
+            commands::pty_write,
+            commands::pty_resize,
+            commands::pty_kill,
+            commands::network_get_stats,
+            commands::network_retry_connection,
+            commands::network_run_speed_test
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

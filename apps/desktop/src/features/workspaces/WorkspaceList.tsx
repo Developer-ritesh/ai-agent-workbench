@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Play,
   Square,
@@ -8,6 +8,8 @@ import {
   HardDrive,
   Network,
   ShieldCheck,
+  Search,
+  Plus,
 } from 'lucide-react';
 import { Workspace } from '../../types';
 import { StatusBadge } from '../../components/StatusBadge';
@@ -31,60 +33,108 @@ export const WorkspaceList: React.FC<WorkspaceListProps> = ({
   onDeleteWorkspace,
   onOpenCreateModal,
 }) => {
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'running' | 'stopped'>('all');
+
   const runningCount = workspaces.filter((w) => w.status === 'running').length;
   const totalCpus = workspaces.reduce((acc, w) => acc + (w.status === 'running' ? w.config.cpuCount : 0), 0);
   const totalMem = workspaces.reduce((acc, w) => acc + (w.status === 'running' ? w.config.memoryMb : 0), 0);
 
+  const filtered = workspaces.filter((w) => {
+    const matchesSearch =
+      w.name.toLowerCase().includes(search.toLowerCase()) ||
+      w.hostProjectPath.toLowerCase().includes(search.toLowerCase());
+    if (filter === 'running') return matchesSearch && w.status === 'running';
+    if (filter === 'stopped') return matchesSearch && w.status !== 'running';
+    return matchesSearch;
+  });
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Overview Stat Cards */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '24px 32px', overflowY: 'auto' }}>
+      {/* Top Banner Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-        <div className="glass-card">
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Configured Workspaces</div>
-          <div style={{ fontSize: 26, fontWeight: 700, marginTop: 6, color: '#fff' }}>{workspaces.length}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+        <div className="card">
+          <div style={{ fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>
+            Workspaces
+          </div>
+          <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4, color: 'var(--text-primary)' }}>
+            {workspaces.length}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
             {runningCount} active Linux VM{runningCount === 1 ? '' : 's'}
           </div>
         </div>
 
-        <div className="glass-card">
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Active VM Resources</div>
-          <div style={{ fontSize: 26, fontWeight: 700, marginTop: 6, color: 'var(--accent-cyan)' }}>
+        <div className="card">
+          <div style={{ fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>
+            Allocated Resources
+          </div>
+          <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4, color: 'var(--accent-cyan)' }}>
             {totalCpus} vCPUs <span style={{ fontSize: 16, fontWeight: 400, color: 'var(--text-muted)' }}>/</span> {totalMem / 1024} GB
           </div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
             Apple Virtualization Framework
           </div>
         </div>
 
-        <div className="glass-card">
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>Security Perimeter</div>
-          <div style={{ fontSize: 26, fontWeight: 700, marginTop: 6, color: '#34d399', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <ShieldCheck size={24} />
-            <span>Isolated</span>
+        <div className="card">
+          <div style={{ fontSize: 11.5, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>
+            Isolation Perimeter
           </div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+          <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4, color: '#10b981', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <ShieldCheck size={22} />
+            <span>Enforced</span>
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
             Host shell & Keychain blocked from guest
           </div>
         </div>
       </div>
 
-      {/* Header and Grid */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h2 style={{ fontSize: 20, fontWeight: 600 }}>Virtual Machine Workspaces</h2>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>
-            Dedicated Linux execution environments running OpenCode coding agents
-          </p>
+      {/* Search & Filters Row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, maxWidth: 460 }}>
+          <div className="form-group" style={{ flex: 1, position: 'relative' }}>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Search workspaces by name or path..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ paddingLeft: 30 }}
+            />
+            <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: 10, top: 10 }} />
+          </div>
+
+          <div style={{ display: 'flex', background: 'var(--bg-surface)', padding: 3, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-panel)' }}>
+            {(['all', 'running', 'stopped'] as const).map((tab) => (
+              <button
+                key={tab}
+                className={`btn btn-sm ${filter === tab ? 'btn-primary' : ''}`}
+                style={{
+                  background: filter === tab ? undefined : 'transparent',
+                  color: filter === tab ? undefined : 'var(--text-secondary)',
+                  border: 'none',
+                  textTransform: 'capitalize',
+                }}
+                onClick={() => setFilter(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
         </div>
+
         <button className="btn btn-primary" onClick={onOpenCreateModal}>
-          + New Workspace
+          <Plus size={14} />
+          <span>New Workspace</span>
         </button>
       </div>
 
-      {workspaces.length === 0 ? (
+      {/* Workspaces Grid */}
+      {filtered.length === 0 ? (
         <div
-          className="glass-card"
+          className="card"
           style={{
             padding: 48,
             textAlign: 'center',
@@ -94,37 +144,39 @@ export const WorkspaceList: React.FC<WorkspaceListProps> = ({
             gap: 12,
           }}
         >
-          <Cpu size={40} color="var(--text-muted)" />
-          <h3 style={{ fontSize: 16, fontWeight: 600 }}>No Workspaces Configured Yet</h3>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 420 }}>
-            Create an isolated workspace to mount your local project directory into a secure Linux VM and run OpenCode agents safely.
+          <Cpu size={36} color="var(--text-muted)" />
+          <h3 style={{ fontSize: 16, fontWeight: 600 }}>No Workspaces Found</h3>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 400 }}>
+            {search ? `No workspaces matching "${search}".` : 'Create your first isolated workspace to run OpenCode coding agents inside a dedicated Linux VM.'}
           </p>
           <button className="btn btn-primary" style={{ marginTop: 8 }} onClick={onOpenCreateModal}>
-            Create First Workspace
+            Create Workspace
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 18 }}>
-          {workspaces.map((ws) => {
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 16 }}>
+          {filtered.map((ws) => {
             const isRunning = ws.status === 'running';
             const isSelected = ws.id === activeWorkspaceId;
 
             return (
               <div
                 key={ws.id}
-                className="glass-card"
+                className="card"
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 16,
-                  borderColor: isSelected ? 'rgba(56, 189, 248, 0.4)' : undefined,
-                  boxShadow: isSelected ? '0 0 20px rgba(56, 189, 248, 0.15)' : undefined,
+                  gap: 14,
+                  borderColor: isSelected ? 'var(--accent-primary)' : undefined,
+                  boxShadow: isSelected ? '0 0 16px var(--accent-glow)' : undefined,
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <h3 style={{ fontSize: 16, fontWeight: 600, color: '#fff' }}>{ws.name}</h3>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {ws.name}
+                    </h3>
+                    <div style={{ fontSize: 11.5, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>
                       {ws.vmId} • {ws.imageId}
                     </div>
                   </div>
@@ -133,10 +185,10 @@ export const WorkspaceList: React.FC<WorkspaceListProps> = ({
 
                 <div
                   style={{
-                    background: 'rgba(0, 0, 0, 0.25)',
-                    padding: '8px 12px',
-                    borderRadius: 'var(--radius-sm)',
-                    fontSize: 12,
+                    background: 'var(--bg-app)',
+                    padding: '6px 10px',
+                    borderRadius: 'var(--radius-xs)',
+                    fontSize: 11.5,
                     fontFamily: 'var(--font-mono)',
                     color: 'var(--text-secondary)',
                     overflow: 'hidden',
@@ -150,17 +202,17 @@ export const WorkspaceList: React.FC<WorkspaceListProps> = ({
                 </div>
 
                 {/* Specs row */}
-                <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-secondary)' }}>
+                <div style={{ display: 'flex', gap: 14, fontSize: 12, color: 'var(--text-secondary)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Cpu size={14} color="var(--accent-cyan)" />
+                    <Cpu size={13} color="var(--accent-cyan)" />
                     <span>{ws.config.cpuCount} vCPUs</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <HardDrive size={14} color="var(--accent-purple)" />
+                    <HardDrive size={13} color="var(--accent-purple)" />
                     <span>{ws.config.memoryMb / 1024} GB RAM</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Network size={14} color="var(--accent-amber)" />
+                    <Network size={13} color="var(--status-amber)" />
                     <span style={{ textTransform: 'capitalize' }}>{ws.config.networkMode}</span>
                   </div>
                 </div>
@@ -173,7 +225,7 @@ export const WorkspaceList: React.FC<WorkspaceListProps> = ({
                       style={{ flex: 1 }}
                       onClick={() => onStopVm(ws.id)}
                     >
-                      <Square size={13} />
+                      <Square size={12} />
                       <span>Stop VM</span>
                     </button>
                   ) : (
@@ -182,31 +234,31 @@ export const WorkspaceList: React.FC<WorkspaceListProps> = ({
                       style={{ flex: 1 }}
                       onClick={() => onStartVm(ws.id)}
                     >
-                      <Play size={13} />
+                      <Play size={12} />
                       <span>Start VM</span>
                     </button>
                   )}
 
                   <button
-                    className="btn btn-secondary btn-sm"
-                    style={{ flex: 1 }}
+                    className="btn btn-primary btn-sm"
+                    style={{ flex: 1.2 }}
                     onClick={() => onSelectWorkspace(ws)}
                   >
-                    <FolderOpen size={13} />
-                    <span>Workbench</span>
+                    <FolderOpen size={12} />
+                    <span>Open in IDE</span>
                   </button>
 
                   <button
                     className="btn btn-secondary btn-sm"
-                    style={{ color: '#fb7185' }}
+                    style={{ color: 'var(--status-rose)' }}
                     onClick={() => {
-                      if (confirm(`Are you sure you want to delete workspace "${ws.name}"?`)) {
+                      if (confirm(`Delete workspace "${ws.name}"?`)) {
                         onDeleteWorkspace(ws.id);
                       }
                     }}
-                    title="Delete workspace metadata"
+                    title="Delete workspace"
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={12} />
                   </button>
                 </div>
               </div>

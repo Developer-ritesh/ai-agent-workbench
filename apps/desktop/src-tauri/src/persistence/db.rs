@@ -83,6 +83,35 @@ impl DatabaseManager {
             );
             ",
         )?;
+
+        // Seed default workspace if not present
+        let default_host_path = dirs::home_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join(".ai-agent-workbench")
+            .join("workspaces")
+            .join("masticall-in");
+        let _ = fs::create_dir_all(&default_host_path);
+        let path_str = default_host_path.to_string_lossy().to_string();
+
+        let default_cfg = serde_json::to_string(&VmConfig::default()).unwrap_or_default();
+        let now = Utc::now().to_rfc3339();
+
+        let _ = conn.execute(
+            "INSERT OR IGNORE INTO workspaces (id, name, host_project_path, vm_id, image_id, config_json, status, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            params![
+                "ws-masticall-in",
+                "masticall-in",
+                path_str,
+                "vm-masticall-in",
+                "Ubuntu 24.04",
+                default_cfg,
+                "stopped",
+                now,
+                now
+            ],
+        );
+
         Ok(())
     }
 
@@ -142,7 +171,49 @@ impl DatabaseManager {
         })?;
 
         if let Some(record) = rows.next() {
-            Ok(record?)
+            let rec = record?;
+            let _ = fs::create_dir_all(&rec.host_project_path);
+            Ok(rec)
+        } else if id == "ws-masticall-in" {
+            drop(rows);
+            drop(stmt);
+            let default_host_path = dirs::home_dir()
+                .unwrap_or_else(|| PathBuf::from("."))
+                .join(".ai-agent-workbench")
+                .join("workspaces")
+                .join("masticall-in");
+            let _ = fs::create_dir_all(&default_host_path);
+            let path_str = default_host_path.to_string_lossy().to_string();
+            let default_cfg = serde_json::to_string(&VmConfig::default()).unwrap_or_default();
+            let now = Utc::now().to_rfc3339();
+
+            let _ = conn.execute(
+                "INSERT OR REPLACE INTO workspaces (id, name, host_project_path, vm_id, image_id, config_json, status, created_at, updated_at)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                params![
+                    "ws-masticall-in",
+                    "masticall-in",
+                    path_str,
+                    "vm-masticall-in",
+                    "Ubuntu 24.04",
+                    default_cfg,
+                    "stopped",
+                    now,
+                    now
+                ],
+            );
+
+            Ok(WorkspaceRecord {
+                id: "ws-masticall-in".to_string(),
+                name: "masticall-in".to_string(),
+                host_project_path: path_str,
+                vm_id: "vm-masticall-in".to_string(),
+                image_id: "Ubuntu 24.04".to_string(),
+                config: VmConfig::default(),
+                status: "stopped".to_string(),
+                created_at: now.clone(),
+                updated_at: now,
+            })
         } else {
             Err(WorkbenchError::NotFound(format!("Workspace {} not found", id)))
         }
@@ -347,17 +418,21 @@ mod tests {
             updated_at: "2026-10-24T18:00:00Z".to_string(),
         };
 
+        // Initial schema contains 1 default seeded workspace (ws-masticall-in)
+        let initial_list = manager.list_workspaces().unwrap();
+        assert_eq!(initial_list.len(), 1);
+
         manager.create_workspace(&ws).unwrap();
         let list = manager.list_workspaces().unwrap();
-        assert_eq!(list.len(), 1);
-        assert_eq!(list[0].name, "Test Project");
+        assert_eq!(list.len(), 2);
+        assert!(list.iter().any(|w| w.name == "Test Project"));
 
         manager.update_workspace_status("ws-123", "running").unwrap();
         let fetched = manager.get_workspace("ws-123").unwrap();
         assert_eq!(fetched.status, "running");
 
         manager.delete_workspace("ws-123").unwrap();
-        let empty_list = manager.list_workspaces().unwrap();
-        assert_eq!(empty_list.len(), 0);
+        let remaining_list = manager.list_workspaces().unwrap();
+        assert_eq!(remaining_list.len(), 1);
     }
 }

@@ -28,6 +28,30 @@ pub fn vm_status(
 }
 
 #[tauri::command]
+pub fn vm_rotate(
+    manager: State<'_, WorkspaceManager>,
+    workspace_id: String,
+) -> Result<VmStatusResponse, String> {
+    manager.rotate_vm(&workspace_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn drag_window(window: tauri::Window) -> Result<(), String> {
+    window.start_dragging().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn toggle_maximize_window(window: tauri::Window) -> Result<(), String> {
+    let is_maximized = window.is_maximized().map_err(|e| e.to_string())?;
+    if is_maximized {
+        window.unmaximize().map_err(|e| e.to_string())?;
+    } else {
+        window.maximize().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub fn terminal_execute(
     manager: State<'_, WorkspaceManager>,
     workspace_id: String,

@@ -44,8 +44,8 @@ fn test_end_to_end_workbench_slice() {
 
     db.create_workspace(&ws).expect("Failed to create workspace record");
     let list = db.list_workspaces().expect("Failed to list workspaces");
-    assert_eq!(list.len(), 1);
-    assert_eq!(list[0].id, ws_id);
+    assert_eq!(list.len(), 2);
+    assert!(list.iter().any(|w| w.id == ws_id));
 
     // 4. Test Keychain Provider Storage
     let cred_ref = format!("test-cred-{}", &ws_id);
