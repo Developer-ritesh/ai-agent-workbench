@@ -21,6 +21,7 @@ pub fn run() {
     let pty_manager = commands::PtyManager::new();
     let network_tracker = commands::NetworkTracker::new();
     let port_manager = commands::PortManager::new();
+    let browser_manager = commands::BrowserEngineManager::new();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
@@ -28,6 +29,7 @@ pub fn run() {
         .manage(pty_manager)
         .manage(network_tracker)
         .manage(port_manager)
+        .manage(browser_manager)
         .invoke_handler(tauri::generate_handler![
             commands::workspace_create,
             commands::workspace_list,
@@ -73,7 +75,15 @@ pub fn run() {
             commands::ports_forward_create,
             commands::ports_forward_remove,
             commands::ports_check_availability,
-            commands::api_execute_request
+            commands::api_execute_request,
+            commands::api_parse_curl,
+            commands::browser_engine_status,
+            commands::browser_engine_launch,
+            commands::browser_engine_terminate,
+            commands::browser_cdp_list_tabs,
+            commands::browser_cdp_new_tab,
+            commands::browser_cdp_close_tab,
+            commands::browser_cdp_eval
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

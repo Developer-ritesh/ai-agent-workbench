@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "npm --prefix apps/desktop run tauri dev",
     "build": "npm --prefix apps/desktop run tauri build",
-    "test": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml"
+    "test": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml && npx -y tsx --test apps/desktop/src/features/api/__tests__/api_studio.test.ts",
+    "test:rust": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml",
+    "test:frontend": "npx -y tsx --test apps/desktop/src/features/api/__tests__/api_studio.test.ts"
   }
 }

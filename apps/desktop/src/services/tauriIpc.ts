@@ -13,6 +13,9 @@ import {
   PortForwardMapping,
   ApiRequestConfig,
   ApiResponseData,
+  BrowserEngineStatus,
+  CdpTabTarget,
+  CdpEvalResult,
 } from '../types';
 
 let isTauriEnv = false;
@@ -452,6 +455,28 @@ function mockCall<T>(cmd: string, args: Record<string, unknown>): Promise<T> {
             } as unknown as T);
             break;
           }
+          case 'api_parse_curl': {
+            resolve({
+              method: 'GET',
+              url: 'http://127.0.0.1:3000/api/v1/health',
+              params: [],
+              headers: [],
+              bodyType: 'none',
+            } as unknown as T);
+            break;
+          }
+          case 'api_execute_request': {
+            resolve({
+              status: 200,
+              statusText: 'OK',
+              timeMs: 42,
+              sizeBytes: 154,
+              headers: { 'Content-Type': 'application/json' },
+              cookies: [],
+              data: '{\n  "status": "healthy",\n  "timestamp": "' + new Date().toISOString() + '"\n}',
+            } as unknown as T);
+            break;
+          }
           default:
             reject(new Error(`Unknown mock command: ${cmd}`));
         }
@@ -666,6 +691,54 @@ export const TauriApi = {
         headers: {},
         data: '',
         error: String(err?.message || err || 'Network or execution failure'),
+      };
+    }
+  },
+  apiParseCurl: async (curlCmd: string): Promise<ApiRequestConfig> => {
+    return callTauri<ApiRequestConfig>('api_parse_curl', { curlCmd });
+  },
+
+  // Browser Engine & CDP Protocol Controller
+  browserEngineStatus: async (): Promise<BrowserEngineStatus> => {
+    try {
+      return await callTauri<BrowserEngineStatus>('browser_engine_status');
+    } catch {
+      return {
+        isRunning: false,
+        cdpPort: 9222,
+        cdpUrl: 'http://127.0.0.1:9222/json',
+        version: 'Chromium/155.0 (CDP 1.3)',
+        profileDir: '~/.ai-agent-workbench/browser-profile',
+      };
+    }
+  },
+  browserEngineLaunch: async (headless?: boolean, initialUrl?: string): Promise<BrowserEngineStatus> => {
+    return callTauri<BrowserEngineStatus>('browser_engine_launch', { headless, initialUrl });
+  },
+  browserEngineTerminate: async (): Promise<void> => {
+    return callTauri<void>('browser_engine_terminate');
+  },
+  browserCdpListTabs: async (): Promise<CdpTabTarget[]> => {
+    try {
+      return await callTauri<CdpTabTarget[]>('browser_cdp_list_tabs');
+    } catch {
+      return [];
+    }
+  },
+  browserCdpNewTab: async (url: string): Promise<CdpTabTarget> => {
+    return callTauri<CdpTabTarget>('browser_cdp_new_tab', { url });
+  },
+  browserCdpCloseTab: async (targetId: string): Promise<void> => {
+    return callTauri<void>('browser_cdp_close_tab', { targetId });
+  },
+  browserCdpEval: async (targetId: string, expression: string): Promise<CdpEvalResult> => {
+    try {
+      return await callTauri<CdpEvalResult>('browser_cdp_eval', { targetId, expression });
+    } catch (e: any) {
+      return {
+        success: false,
+        value: '',
+        error: String(e?.message || e || 'CDP evaluation error'),
       };
     }
   },

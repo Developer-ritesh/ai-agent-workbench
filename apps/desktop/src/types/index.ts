@@ -160,7 +160,7 @@ export interface NetworkStats {
 }
 
 // -------------------------------------------------------------
-// Integrated Browser
+// System Browser & Developer Tools (CDP & DevTools Architecture)
 // -------------------------------------------------------------
 export type BrowserViewportPreset = 'desktop' | 'laptop' | 'tablet' | 'mobile';
 
@@ -168,11 +168,62 @@ export interface BrowserTab {
   id: string;
   url: string;
   title: string;
+  favicon?: string;
   loading?: boolean;
   isLoading?: boolean;
   canGoBack?: boolean;
   canGoForward?: boolean;
   viewport?: BrowserViewportPreset;
+  cdpTargetId?: string;
+  zoomLevel?: number;
+}
+
+export interface BrowserBookmark {
+  id: string;
+  title: string;
+  url: string;
+  favicon?: string;
+  createdAt: string;
+}
+
+export interface BrowserHistoryEntry {
+  id: string;
+  title: string;
+  url: string;
+  timestamp: string;
+}
+
+export interface BrowserDownloadItem {
+  id: string;
+  filename: string;
+  url: string;
+  sizeBytes: number;
+  transferredBytes: number;
+  status: 'progress' | 'completed' | 'cancelled' | 'failed';
+  timestamp: string;
+}
+
+export interface BrowserEngineStatus {
+  isRunning: boolean;
+  pid?: number;
+  cdpPort: number;
+  cdpUrl: string;
+  version: string;
+  profileDir: string;
+}
+
+export interface CdpTabTarget {
+  id: string;
+  title: string;
+  url: string;
+  type: string;
+  webSocketDebuggerUrl?: string;
+}
+
+export interface CdpEvalResult {
+  success: boolean;
+  value: string;
+  error?: string;
 }
 
 export interface BrowserConsoleMessage {
@@ -182,6 +233,8 @@ export interface BrowserConsoleMessage {
   message: string;
   timestamp: string;
   source?: string;
+  stackTrace?: string;
+  count?: number;
 }
 
 export interface BrowserNetworkRequest {
@@ -189,11 +242,85 @@ export interface BrowserNetworkRequest {
   url: string;
   method: string;
   status: number;
+  statusText?: string;
   durationMs?: number;
   timingMs?: number;
   sizeBytes?: number;
+  resourceType?: 'document' | 'stylesheet' | 'script' | 'image' | 'font' | 'xhr' | 'fetch' | 'other';
+  requestHeaders?: Record<string, string>;
+  responseHeaders?: Record<string, string>;
+  requestBody?: string;
+  responseBody?: string;
   timestamp: string;
   failed?: boolean;
+  blockedReason?: string;
+}
+
+export interface DOMNodeInfo {
+  nodeId: number;
+  nodeName: string;
+  localName: string;
+  attributes: Record<string, string>;
+  children?: DOMNodeInfo[];
+  childNodeCount?: number;
+}
+
+export interface CSSRuleProperty {
+  name: string;
+  value: string;
+  enabled: boolean;
+}
+
+export interface CSSRuleInfo {
+  selector: string;
+  properties: CSSRuleProperty[];
+}
+
+export interface BoxModelMetrics {
+  width: number;
+  height: number;
+  margin: { top: number; right: number; bottom: number; left: number };
+  border: { top: number; right: number; bottom: number; left: number };
+  padding: { top: number; right: number; bottom: number; left: number };
+}
+
+export interface StorageEntry {
+  key: string;
+  value: string;
+  size?: number;
+}
+
+export interface CookieEntry {
+  name: string;
+  value: string;
+  domain: string;
+  path: string;
+  expires: string;
+  httpOnly: boolean;
+  secure: boolean;
+}
+
+export interface PerformanceTraceMetric {
+  name: string;
+  value: number;
+  unit: string;
+  status: 'good' | 'needs-improvement' | 'poor';
+}
+
+export interface AutomationStep {
+  id: string;
+  action: 'navigate' | 'click' | 'fill' | 'wait' | 'screenshot';
+  target?: string;
+  value?: string;
+  status?: 'pending' | 'running' | 'passed' | 'failed';
+  durationMs?: number;
+}
+
+export interface AutomationScript {
+  id: string;
+  name: string;
+  description: string;
+  steps: AutomationStep[];
 }
 
 // -------------------------------------------------------------
@@ -214,7 +341,8 @@ export interface PortForwardMapping {
 // -------------------------------------------------------------
 // API Testing Studio
 // -------------------------------------------------------------
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS' | 'CUSTOM';
+export type ApiRequestBodyType = 'none' | 'json' | 'xml' | 'form-data' | 'x-www-form-urlencoded' | 'raw' | 'binary' | 'graphql';
 
 export interface KeyValuePair {
   key: string;
@@ -224,26 +352,75 @@ export interface KeyValuePair {
 }
 
 export interface ApiAuth {
-  type: 'none' | 'bearer' | 'basic' | 'apikey';
+  type: 'none' | 'bearer' | 'basic' | 'apikey' | 'oauth2' | 'inherit';
   bearerToken?: string;
   basicUser?: string;
   basicPass?: string;
   apiKeyName?: string;
   apiKeyValue?: string;
   apiKeyLocation?: 'header' | 'query';
+  oauth2Token?: string;
+  oauth2AuthUrl?: string;
+  oauth2TokenUrl?: string;
+  oauth2ClientId?: string;
+  oauth2ClientSecret?: string;
+  oauth2Scope?: string;
+}
+
+export interface ApiTimingMetrics {
+  dnsLookupMs?: number;
+  dns_lookup_ms?: number;
+  tcpConnectMs?: number;
+  tcp_connect_ms?: number;
+  tlsHandshakeMs?: number;
+  tls_handshake_ms?: number;
+  ttfbMs?: number;
+  ttfb_ms?: number;
+  contentTransferMs?: number;
+  content_transfer_ms?: number;
+  totalMs?: number;
+  total_ms?: number;
+}
+
+export interface ApiCookie {
+  name: string;
+  value: string;
+  domain: string;
+  path: string;
+  expires: string;
+  httpOnly: boolean;
+  secure: boolean;
+}
+
+export interface ApiTestResult {
+  name: string;
+  status: 'passed' | 'failed';
+  error?: string;
 }
 
 export interface ApiRequestConfig {
   id?: string;
   name?: string;
+  description?: string;
   method: HttpMethod;
+  customMethod?: string;
   url: string;
   params?: KeyValuePair[];
   headers?: KeyValuePair[];
   auth?: ApiAuth;
-  bodyType?: 'none' | 'json' | 'form-data' | 'x-www-form-urlencoded' | 'raw';
+  bodyType?: ApiRequestBodyType;
   bodyContent?: string;
+  bodyJson?: string;
+  bodyFormData?: KeyValuePair[];
+  graphqlQuery?: string;
+  graphqlVariables?: string;
+  preRequestScript?: string;
+  testScript?: string;
   timeoutSeconds?: number;
+  followRedirects?: boolean;
+  maxRedirects?: number;
+  verifySsl?: boolean;
+  proxyUrl?: string;
 }
 
 export interface ApiResponseData {
@@ -252,20 +429,69 @@ export interface ApiResponseData {
   timeMs: number;
   sizeBytes: number;
   headers: Record<string, string>;
+  cookies?: ApiCookie[];
+  timing?: ApiTimingMetrics;
+  redirectCount?: number;
+  testResults?: ApiTestResult[];
   data: string;
   error?: string;
+}
+
+export interface ApiFolder {
+  id: string;
+  name: string;
+  requests: ApiRequestConfig[];
 }
 
 export interface ApiCollection {
   id: string;
   name: string;
+  description?: string;
   requests: ApiRequestConfig[];
+  folders?: ApiFolder[];
+  variables?: Record<string, string>;
+  auth?: ApiAuth;
 }
 
 export interface ApiEnvironment {
   id: string;
   name: string;
   variables: Record<string, string>;
+  isSecret?: Record<string, boolean>;
+}
+
+export interface ApiHistoryItem {
+  id: string;
+  timestamp: string;
+  method: HttpMethod;
+  url: string;
+  status: number;
+  timeMs: number;
+  sizeBytes: number;
+  requestConfig: ApiRequestConfig;
+}
+
+export interface ApiRunnerReportResult {
+  requestId: string;
+  name: string;
+  method: string;
+  url: string;
+  status: number;
+  timeMs: number;
+  tests: ApiTestResult[];
+}
+
+export interface ApiRunnerReport {
+  id: string;
+  startTime: string;
+  totalDurationMs: number;
+  totalRequests: number;
+  passedRequests: number;
+  failedRequests: number;
+  totalTests: number;
+  passedTests: number;
+  failedTests: number;
+  results: ApiRunnerReportResult[];
 }
 
 // -------------------------------------------------------------

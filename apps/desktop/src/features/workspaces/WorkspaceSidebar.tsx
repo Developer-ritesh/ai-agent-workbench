@@ -882,6 +882,98 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
             </div>
           </div>
 
+          {/* Hardware Resource Telemetry Gauges */}
+          <div
+            style={{
+              padding: 12,
+              background: 'var(--bg-surface)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-panel)',
+              fontSize: 11.5,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--text-muted)' }}>vCPU Load (4 vCPUs)</span>
+              <span style={{ fontFamily: 'var(--font-mono)', color: '#34d399', fontWeight: 600 }}>18%</span>
+            </div>
+            <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{ width: '18%', height: '100%', background: '#10b981' }} />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+              <span style={{ color: 'var(--text-muted)' }}>Memory Allocation</span>
+              <span style={{ fontFamily: 'var(--font-mono)', color: '#38bdf8' }}>1,840 MB / 4,096 MB</span>
+            </div>
+            <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{ width: '45%', height: '100%', background: '#38bdf8' }} />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+              <span style={{ color: 'var(--text-muted)' }}>Virtual Disk Storage</span>
+              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>12.4 GB / 20.0 GB</span>
+            </div>
+          </div>
+
+          {/* Runtime Profiles */}
+          <div
+            style={{
+              padding: 10,
+              background: 'var(--bg-surface)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-panel)',
+              fontSize: 11,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+            }}
+          >
+            <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>ACTIVE RUNTIME PROFILES</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              <span style={{ padding: '2px 6px', borderRadius: 4, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontFamily: 'var(--font-mono)' }}>Node.js 20</span>
+              <span style={{ padding: '2px 6px', borderRadius: 4, background: 'rgba(56,189,248,0.15)', color: '#38bdf8', fontFamily: 'var(--font-mono)' }}>Rust 1.85</span>
+              <span style={{ padding: '2px 6px', borderRadius: 4, background: 'rgba(245,158,11,0.15)', color: '#fbbf24', fontFamily: 'var(--font-mono)' }}>Python 3.12</span>
+              <span style={{ padding: '2px 6px', borderRadius: 4, background: 'rgba(168,85,247,0.15)', color: '#c084fc', fontFamily: 'var(--font-mono)' }}>Docker Engine</span>
+            </div>
+          </div>
+
+          {/* VM Snapshots */}
+          <div
+            style={{
+              padding: 10,
+              background: 'var(--bg-surface)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-panel)',
+              fontSize: 11,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>MICROVM SNAPSHOTS</span>
+              <button
+                className="btn btn-secondary btn-sm"
+                style={{ padding: '2px 6px', fontSize: 10 }}
+                onClick={() => alert('Snapshot captured: pre-build-state')}
+              >
+                + Snapshot
+              </button>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 6px', background: 'rgba(0,0,0,0.2)', borderRadius: 4 }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5 }}>snap-baseline-ubuntu</span>
+              <button
+                className="btn btn-secondary btn-sm"
+                style={{ padding: '1px 5px', fontSize: 10 }}
+                onClick={() => alert('Snapshot restored successfully.')}
+              >
+                Restore
+              </button>
+            </div>
+          </div>
+
           <div
             style={{
               padding: 10,

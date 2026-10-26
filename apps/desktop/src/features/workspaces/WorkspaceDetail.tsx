@@ -10,6 +10,7 @@ import { ApiStudio } from '../api/ApiStudio';
 import { TestingEngine } from '../testing/TestingEngine';
 import { DiagnosticsPanel } from '../diagnostics/DiagnosticsPanel';
 import { AgentPanel } from '../agents/AgentPanel';
+import { GitDiffViewer } from '../git/GitDiffViewer';
 import { Bot, PanelRightClose, PanelRightOpen } from 'lucide-react';
 
 interface WorkspaceDetailProps {
@@ -262,6 +263,10 @@ export const WorkspaceDetail: React.FC<WorkspaceDetailProps> = ({
         ) : activityTab === 'diagnostics' ? (
           <div className="flex-1 flex min-h-0 overflow-hidden">
             <DiagnosticsPanel onSendToAgent={handleSendToAgent} />
+          </div>
+        ) : activityTab === 'git' ? (
+          <div className="flex-1 flex min-h-0 overflow-hidden bg-zinc-950">
+            <GitDiffViewer workspaceId={workspace.id} />
           </div>
         ) : activityTab === 'agent' ? (
           <div className="flex-1 flex min-h-0 overflow-hidden bg-zinc-950">

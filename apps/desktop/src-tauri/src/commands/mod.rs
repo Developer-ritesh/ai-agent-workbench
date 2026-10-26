@@ -7,6 +7,7 @@ pub mod pty;
 pub mod network;
 pub mod ports;
 pub mod api_client;
+pub mod browser_engine;
 
 pub use workspace::*;
 pub use vm::*;
@@ -17,3 +18,4 @@ pub use pty::*;
 pub use network::*;
 pub use ports::*;
 pub use api_client::*;
+pub use browser_engine::*;
