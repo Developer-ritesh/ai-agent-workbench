@@ -13,7 +13,6 @@ import {
   Upload,
   Download,
   AlertTriangle,
-  Sparkles,
   Search,
   Eye,
   EyeOff,
@@ -40,7 +39,7 @@ interface ApiStudioProps {
   onSendToAgent?: (prompt: string) => void;
 }
 
-export const ApiStudio: React.FC<ApiStudioProps> = ({ onSendToAgent }) => {
+export const ApiStudio: React.FC<ApiStudioProps> = () => {
   // Navigation Tabs in Sidebar: 'collections' | 'history' | 'environments' | 'specs'
   const [sidebarTab, setSidebarTab] = useState<'collections' | 'history' | 'environments' | 'specs'>('collections');
 
@@ -215,9 +214,6 @@ export const ApiStudio: React.FC<ApiStudioProps> = ({ onSendToAgent }) => {
   const [showImportModal, setShowImportModal] = useState<boolean>(false);
   const [importFormat, setImportFormat] = useState<'postman' | 'openapi' | 'curl'>('postman');
   const [importText, setImportText] = useState<string>('');
-
-  const [showAiDebugModal, setShowAiDebugModal] = useState<boolean>(false);
-
   // Persistence (Load & Save)
   useEffect(() => {
     try {
@@ -574,24 +570,11 @@ export const ApiStudio: React.FC<ApiStudioProps> = ({ onSendToAgent }) => {
     URL.revokeObjectURL(u);
   };
 
-  // Contextual AI Debug Trigger
-  const handleConfirmAiDebug = () => {
-    setShowAiDebugModal(false);
-    if (onSendToAgent && response) {
-      const resolvedUrl = substituteEnv(url);
-      const safeHeaders = { ...headers.filter((h) => h.enabled).map((h) => `${h.key}: ${h.value}`) };
-      const safeAuth = authType === 'none' ? 'None' : `${authType.toUpperCase()} (Credentials redacted)`;
-
-      onSendToAgent(
-        `[Contextual API Debugging Request]\nTarget Endpoint: ${method} ${resolvedUrl}\nHTTP Status: ${response.status} ${response.statusText}\nExecution Duration: ${response.timeMs}ms\nAuth: ${safeAuth}\n\nHeaders:\n${JSON.stringify(safeHeaders, null, 2)}\n\nResponse Body:\n\`\`\`json\n${response.data}\n\`\`\`\n\nError Diagnostic:\n${response.error || 'None'}\n\nPlease analyze the API contract and underlying service implementation, identify the defect, and suggest code changes.`
-      );
-    }
-  };
 
   const unresolvedTokens = findUnresolvedTokens(url);
 
   return (
-    <div className="flex h-full w-full bg-zinc-950 text-zinc-100 font-sans select-none overflow-hidden">
+    <div className="api-studio-container flex h-full w-full bg-zinc-950 text-zinc-100 font-sans select-none overflow-hidden">
       {/* 1. Left Sidebar: Collections, History, Environments, OpenAPI Specs */}
       <div className="w-72 bg-zinc-900 border-r border-zinc-800 flex flex-col flex-shrink-0">
         {/* Navigation Tabs in Sidebar */}
@@ -970,15 +953,6 @@ export const ApiStudio: React.FC<ApiStudioProps> = ({ onSendToAgent }) => {
             >
               <Code className="w-3.5 h-3.5 text-blue-400" />
               <span>Code</span>
-            </button>
-
-            <button
-              onClick={() => setShowAiDebugModal(true)}
-              className="flex items-center gap-1 px-3 py-1 bg-purple-900/30 hover:bg-purple-900/50 text-purple-200 border border-purple-700/60 rounded text-xs font-semibold transition"
-              title="Ask AI to Debug API Failures"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Ask AI to Debug</span>
             </button>
           </div>
         </div>
@@ -1697,18 +1671,9 @@ export const ApiStudio: React.FC<ApiStudioProps> = ({ onSendToAgent }) => {
               {response && (
                 <>
                   {response.error && (
-                    <div className="mb-3 p-3 bg-rose-950/40 border border-rose-900/60 rounded-lg flex items-center justify-between font-sans">
-                      <div className="flex items-center gap-2 text-rose-300">
-                        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                        <span>{response.error}</span>
-                      </div>
-                      <button
-                        onClick={() => setShowAiDebugModal(true)}
-                        className="flex items-center gap-1.5 px-3 py-1 bg-rose-900/40 hover:bg-rose-900/60 text-rose-200 border border-rose-700/60 rounded text-xs transition"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                        <span>Fix with AI Agent</span>
-                      </button>
+                    <div className="mb-3 p-3 bg-rose-950/40 border border-rose-900/60 rounded-lg flex items-center gap-2 text-rose-300 font-sans">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      <span>{response.error}</span>
                     </div>
                   )}
 
@@ -2222,51 +2187,6 @@ export const ApiStudio: React.FC<ApiStudioProps> = ({ onSendToAgent }) => {
         </div>
       )}
 
-      {/* 7. ASK AI TO DEBUG MODAL */}
-      {showAiDebugModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg p-5 shadow-2xl space-y-4 font-sans">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-              <span className="font-bold text-zinc-100 text-sm flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-300" />
-                Ask AI to Debug API Failure
-              </span>
-              <button onClick={() => setShowAiDebugModal(false)} className="text-zinc-400 hover:text-zinc-200">
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs text-zinc-300">
-              The workbench will sanitize credentials, tokens, and cookies, then dispatch the active request parameters, error diagnostics, and response body to your AI Agent:
-            </p>
-
-            <div className="bg-zinc-950 border border-zinc-850 rounded-lg p-3 space-y-1.5 font-mono text-[11px] text-zinc-400">
-              <p className="text-emerald-400 font-bold font-sans">Collected Diagnostic Context:</p>
-              <p>• Method: {method}</p>
-              <p>• URL: {substituteEnv(url)}</p>
-              <p>• Status: {response ? `${response.status} ${response.statusText}` : 'Not executed'}</p>
-              <p>• Error: {response?.error || 'N/A'}</p>
-              <p className="text-zinc-500 text-[10px] font-sans">Authorization headers & tokens automatically redacted.</p>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
-              <button
-                onClick={() => setShowAiDebugModal(false)}
-                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-750 text-zinc-300 rounded text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmAiDebug}
-                className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold flex items-center gap-1.5"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span>Send to AI Agent</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

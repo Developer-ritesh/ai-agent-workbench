@@ -562,3 +562,32 @@ export interface McpServerConfig {
   toolsCount: number;
 }
 
+export interface OpencodeMcpServer {
+  id: string;
+  type: 'local' | 'remote';
+  enabled: boolean;
+  command?: string[];
+  url?: string;
+  headers?: Record<string, string>;
+  environment?: Record<string, string>;
+  oauth?: boolean;
+}
+
+export interface OpencodeSkillInfo {
+  name: string;
+  title: string;
+  description: string;
+  path: string;
+  has_skill_md: boolean;
+  file_count: number;
+}
+
+export interface OpencodeSyncResult {
+  success: boolean;
+  skills_count: number;
+  mcps_count: number;
+  message: string;
+  target_path: string;
+}
+
+

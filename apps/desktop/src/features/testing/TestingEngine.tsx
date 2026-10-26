@@ -6,9 +6,8 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Sparkles,
-  Terminal,
   ChevronRight,
+  ChevronDown,
   Layers,
 } from 'lucide-react';
 import { TestCaseResult } from '../../types';
@@ -18,7 +17,7 @@ interface TestingEngineProps {
   workspacePath?: string;
 }
 
-export const TestingEngine: React.FC<TestingEngineProps> = ({ onSendToAgent, workspacePath }) => {
+export const TestingEngine: React.FC<TestingEngineProps> = () => {
   const [activeSuite, setActiveSuite] = useState<'all' | 'unit' | 'integration' | 'e2e' | 'typecheck'>('all');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [selectedTestId, setSelectedTestId] = useState<string | null>('tc-2');
@@ -98,21 +97,6 @@ export const TestingEngine: React.FC<TestingEngineProps> = ({ onSendToAgent, wor
     }, 1800);
   };
 
-  const handleFixWithAgent = (test: TestCaseResult) => {
-    if (onSendToAgent) {
-      onSendToAgent(
-        `[Automated Test Failure Fix Request]\nTest Suite: ${test.suiteName}\nFailed Test: ${test.testName}\nFailure Message:\n${test.errorMessage}\nStack Trace:\n${test.stackTrace || 'N/A'}\nWorkspace: ${workspacePath || 'current project'}\nPlease investigate the root cause, write a patch to satisfy the assertion, and re-run tests.`
-      );
-    }
-  };
-
-  const handleGenerateTests = () => {
-    if (onSendToAgent) {
-      onSendToAgent(
-        `[Test Suite Expansion]\nPlease inspect the workspace project files and generate missing unit and Playwright integration tests covering edge cases and error states.`
-      );
-    }
-  };
 
   const filteredTests = tests.filter((t) => {
     const s = t.suiteName || t.suite || '';
@@ -124,42 +108,70 @@ export const TestingEngine: React.FC<TestingEngineProps> = ({ onSendToAgent, wor
   });
 
   return (
-    <div className="flex flex-col h-full w-full bg-zinc-950 text-zinc-100 font-sans select-none overflow-hidden">
+    <div
+      className="testing-engine-container"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        background: 'var(--bg-app)',
+        color: 'var(--text-primary)',
+        padding: '24px 28px',
+        overflowY: 'auto',
+      }}
+    >
       {/* Top Header */}
-      <div className="p-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
-            <FlaskConical className="w-5 h-5" />
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingBottom: 16,
+          borderBottom: '1px solid var(--border-panel)',
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div
+            style={{
+              padding: 8,
+              background: 'rgba(16, 185, 129, 0.1)',
+              color: '#34d399',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(16, 185, 129, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <FlaskConical size={22} />
           </div>
           <div>
-            <h1 className="text-base font-bold text-zinc-100">Automatic Testing Engine</h1>
-            <p className="text-xs text-zinc-400">
+            <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+              Automatic Testing Engine
+            </h1>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0' }}>
               Unit, Integration, Playwright E2E Browser & TypeCheck runner in isolated VM
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleGenerateTests}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-750 text-zinc-200 rounded-lg text-xs font-medium border border-zinc-700 transition"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Generate Tests</span>
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
             onClick={handleRunTests}
             disabled={isRunning}
-            className="flex items-center gap-2 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-md transition disabled:opacity-50"
+            className="btn btn-primary btn-sm"
+            style={{ background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none' }}
           >
             {isRunning ? (
               <>
-                <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                <RotateCw size={14} className="animate-spin" />
                 <span>Running...</span>
               </>
             ) : (
               <>
-                <Play className="w-3.5 h-3.5" />
+                <Play size={14} />
                 <span>Run Test Suite</span>
               </>
             )}
@@ -167,163 +179,264 @@ export const TestingEngine: React.FC<TestingEngineProps> = ({ onSendToAgent, wor
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-3 p-4 bg-zinc-950 border-b border-zinc-800 text-xs">
-        <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl flex items-center justify-between">
+      {/* KPI Metric Cards */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 14,
+          margin: '18px 0',
+          flexShrink: 0,
+        }}
+      >
+        <div className="card" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p className="text-zinc-500 text-[11px] font-medium">Total Tests</p>
-            <p className="text-lg font-bold text-zinc-200">{tests.length}</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              Total Tests
+            </p>
+            <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: '2px 0 0' }}>
+              {tests.length}
+            </p>
           </div>
-          <Layers className="w-5 h-5 text-zinc-600" />
+          <Layers size={22} color="var(--text-muted)" />
         </div>
 
-        <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl flex items-center justify-between">
+        <div className="card" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p className="text-zinc-500 text-[11px] font-medium">Passed</p>
-            <p className="text-lg font-bold text-emerald-400">{passedCount}</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              Passed
+            </p>
+            <p style={{ fontSize: 22, fontWeight: 700, color: '#34d399', margin: '2px 0 0' }}>
+              {passedCount}
+            </p>
           </div>
-          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+          <CheckCircle2 size={22} color="#10b981" />
         </div>
 
-        <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl flex items-center justify-between">
+        <div className="card" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p className="text-zinc-500 text-[11px] font-medium">Failed</p>
-            <p className="text-lg font-bold text-rose-400">{failedCount}</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              Failed
+            </p>
+            <p style={{ fontSize: 22, fontWeight: 700, color: '#f87171', margin: '2px 0 0' }}>
+              {failedCount}
+            </p>
           </div>
-          <XCircle className="w-5 h-5 text-rose-500" />
+          <XCircle size={22} color="#f43f5e" />
         </div>
 
-        <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl flex items-center justify-between">
+        <div className="card" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p className="text-zinc-500 text-[11px] font-medium">Total Runtime</p>
-            <p className="text-lg font-bold text-zinc-200">3.17s</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              Total Runtime
+            </p>
+            <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: '2px 0 0' }}>
+              3.17s
+            </p>
           </div>
-          <Clock className="w-5 h-5 text-zinc-600" />
+          <Clock size={22} color="var(--text-muted)" />
         </div>
       </div>
 
-      {/* Main Two-Column Layout */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left: Test List & Suite Filter */}
-        <div className="w-1/2 border-r border-zinc-800 flex flex-col bg-zinc-950">
-          {/* Suite Filter Bar */}
-          <div className="p-2 border-b border-zinc-800 flex items-center gap-1.5 overflow-x-auto text-xs bg-zinc-900/40">
-            {(['all', 'unit', 'e2e', 'typecheck'] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => setActiveSuite(s)}
-                className={`px-3 py-1 rounded-md text-[11px] font-medium uppercase transition ${
-                  activeSuite === s
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-850'
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
+      {/* Filter Tabs */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 6,
+          paddingBottom: 14,
+          borderBottom: '1px solid var(--border-panel)',
+          flexShrink: 0,
+        }}
+      >
+        {(['all', 'unit', 'e2e', 'typecheck'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveSuite(tab)}
+            className={`btn btn-sm ${activeSuite === tab ? 'btn-primary' : 'btn-secondary'}`}
+            style={{
+              fontFamily: 'var(--font-mono)',
+              textTransform: 'uppercase',
+              fontSize: 11,
+              padding: '4px 12px',
+              borderRadius: 'var(--radius-full)',
+              background: activeSuite === tab ? 'var(--accent-blue)' : undefined,
+            }}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
-          {/* Test List */}
-          <div className="flex-1 overflow-y-auto divide-y divide-zinc-850">
-            {filteredTests.map((test) => {
-              const isSelected = test.id === selectedTestId;
-              return (
-                <div
-                  key={test.id}
-                  onClick={() => setSelectedTestId(test.id)}
-                  className={`p-3 cursor-pointer transition flex items-start justify-between gap-3 ${
-                    isSelected ? 'bg-zinc-900 border-l-2 border-emerald-400' : 'hover:bg-zinc-900/40'
-                  }`}
-                >
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center gap-2">
-                      {test.status === 'passed' ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                      ) : (
-                        <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                      )}
-                      <span className="text-xs font-semibold text-zinc-200">{test.testName}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[11px] text-zinc-500">
-                      <span>{test.suiteName}</span>
-                      <span>•</span>
-                      <span>{test.durationMs}ms</span>
-                    </div>
+      {/* Main Content: Test List & Execution Details */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '1.2fr 1fr',
+          gap: 18,
+          marginTop: 18,
+          flex: 1,
+          minHeight: 0,
+        }}
+      >
+        {/* Test List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto' }}>
+          {filteredTests.map((t) => {
+            const isSelected = selectedTestId === t.id;
+            return (
+              <div
+                key={t.id}
+                onClick={() => setSelectedTestId(t.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 16px',
+                  background: isSelected ? 'var(--bg-surface-active)' : 'var(--bg-surface)',
+                  border: isSelected ? '1px solid var(--accent-cyan)' : '1px solid var(--border-panel)',
+                  borderRadius: 'var(--radius-md)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {t.status === 'passed' ? (
+                    <CheckCircle2 size={18} color="#34d399" />
+                  ) : (
+                    <XCircle size={18} color="#f87171" />
+                  )}
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)', margin: 0 }}>
+                      {t.testName}
+                    </p>
+                    <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '2px 0 0' }}>
+                      {t.suiteName} • <span style={{ fontFamily: 'var(--font-mono)' }}>{t.durationMs}ms</span>
+                    </p>
                   </div>
-                  <ChevronRight className={`w-4 h-4 ${isSelected ? 'text-emerald-400' : 'text-zinc-600'}`} />
                 </div>
-              );
-            })}
-          </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {isSelected ? <ChevronDown size={16} color="var(--accent-cyan)" /> : <ChevronRight size={16} color="var(--text-muted)" />}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Right: Test Details & Console Streaming */}
-        <div className="w-1/2 flex flex-col bg-zinc-950">
-          {/* Test Detail Pane */}
+        {/* Selected Test Detail & Logs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto' }}>
           {selectedTest && (
-            <div className="p-4 border-b border-zinc-800 bg-zinc-900/30">
-              <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800">
-                <span className="text-xs font-bold text-zinc-200">Test Execution Details</span>
-                {selectedTest.status === 'failed' && (
-                  <button
-                    onClick={() => handleFixWithAgent(selectedTest)}
-                    className="flex items-center gap-1.5 px-3 py-1 bg-rose-900/40 hover:bg-rose-900/60 text-rose-200 border border-rose-700/60 rounded text-xs transition"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                    <span>Fix with AI Agent</span>
-                  </button>
-                )}
+            <div
+              className="card"
+              style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-panel)',
+                borderRadius: 'var(--radius-md)',
+                padding: 16,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingBottom: 10,
+                  borderBottom: '1px solid var(--border-panel)',
+                }}
+              >
+                <h3 style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>Test Execution Details</h3>
               </div>
 
-              <div className="space-y-2 text-xs">
-                <div>
-                  <span className="text-zinc-500">Suite: </span>
-                  <span className="font-semibold text-zinc-300">{selectedTest.suiteName}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500">Test: </span>
-                  <span className="text-zinc-200">{selectedTest.testName}</span>
-                </div>
+              <div style={{ marginTop: 12, fontSize: 12 }}>
+                <p style={{ color: 'var(--text-secondary)' }}>
+                  <strong style={{ color: 'var(--text-primary)' }}>Suite:</strong> {selectedTest.suiteName}
+                </p>
+                <p style={{ color: 'var(--text-secondary)', marginTop: 4 }}>
+                  <strong style={{ color: 'var(--text-primary)' }}>Test:</strong> {selectedTest.testName}
+                </p>
 
                 {selectedTest.errorMessage && (
-                  <div className="p-3 bg-rose-950/30 border border-rose-900/60 rounded-lg text-rose-300 font-mono text-[11px] space-y-2">
-                    <p className="font-bold">{selectedTest.errorMessage}</p>
-                    {selectedTest.stackTrace && (
-                      <pre className="text-zinc-400 whitespace-pre-wrap text-[10px] mt-1">
-                        {selectedTest.stackTrace}
-                      </pre>
-                    )}
+                  <div
+                    style={{
+                      marginTop: 10,
+                      padding: 10,
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.25)',
+                      borderRadius: 6,
+                      color: '#f87171',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 11.5,
+                    }}
+                  >
+                    {selectedTest.errorMessage}
                   </div>
+                )}
+
+                {selectedTest.stackTrace && (
+                  <pre
+                    style={{
+                      marginTop: 8,
+                      padding: 10,
+                      background: '#05070d',
+                      border: '1px solid #1a2234',
+                      borderRadius: 6,
+                      color: '#94a3b8',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 11,
+                      overflowX: 'auto',
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {selectedTest.stackTrace}
+                  </pre>
                 )}
               </div>
             </div>
           )}
 
-          {/* Console Output Stream */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="px-3 py-2 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between text-xs text-zinc-400">
-              <span className="flex items-center gap-1.5 font-medium">
-                <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-                Live Runner Output
-              </span>
-              <span className="text-[11px] text-zinc-500 font-mono">Isolated Linux MicroVM</span>
+          {/* MicroVM Runner Output Console */}
+          <div
+            style={{
+              flex: 1,
+              background: '#05070d',
+              border: '1px solid #1a2234',
+              borderRadius: 'var(--radius-md)',
+              padding: 14,
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11.5,
+              lineHeight: 1.6,
+              color: '#94a3b8',
+              overflowY: 'auto',
+              minHeight: 180,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                paddingBottom: 8,
+                borderBottom: '1px solid #1a2234',
+                marginBottom: 8,
+                color: 'var(--accent-cyan)',
+                fontWeight: 600,
+                fontSize: 11,
+              }}
+            >
+              <span>›_ Live Runner Output (Isolated Linux MicroVM)</span>
             </div>
-            <div className="flex-1 bg-zinc-950 p-3 font-mono text-[11px] text-zinc-300 overflow-y-auto space-y-1">
-              {streamLogs.map((log, idx) => (
-                <div
-                  key={idx}
-                  className={`${
-                    log.includes('✓')
-                      ? 'text-emerald-400'
-                      : log.includes('✗') || log.includes('AssertionError')
-                      ? 'text-rose-400'
-                      : 'text-zinc-400'
-                  }`}
-                >
-                  {log}
-                </div>
-              ))}
-            </div>
+            {streamLogs.map((log, idx) => (
+              <div
+                key={idx}
+                style={{
+                  color: log.includes('✓')
+                    ? '#34d399'
+                    : log.includes('✗') || log.includes('AssertionError')
+                    ? '#f87171'
+                    : undefined,
+                }}
+              >
+                {log}
+              </div>
+            ))}
           </div>
         </div>
       </div>

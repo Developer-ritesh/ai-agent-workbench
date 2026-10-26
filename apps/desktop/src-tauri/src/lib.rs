@@ -83,7 +83,14 @@ pub fn run() {
             commands::browser_cdp_list_tabs,
             commands::browser_cdp_new_tab,
             commands::browser_cdp_close_tab,
-            commands::browser_cdp_eval
+            commands::browser_cdp_eval,
+            commands::opencode_get_mcp_config,
+            commands::opencode_toggle_mcp_server,
+            commands::opencode_save_mcp_server,
+            commands::opencode_delete_mcp_server,
+            commands::opencode_list_skills,
+            commands::opencode_get_skill_content,
+            commands::opencode_sync_from_path
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

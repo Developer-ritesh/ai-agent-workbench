@@ -1,0 +1,154 @@
+{
+  "plugin": [],
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "dart": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "dart",
+        "mcp-server"
+      ]
+    },
+    "heroui": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "npx",
+        "-y",
+        "@heroui/react-mcp@latest"
+      ]
+    },
+    "playwright": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "npx",
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    },
+    "context7": {
+      "type": "remote",
+      "enabled": true,
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "YOUR_CONTEXT7_API_KEY"
+      }
+    },
+    "gh_grep": {
+      "type": "remote",
+      "enabled": true,
+      "url": "https://mcp.grep.app"
+    },
+    "stitch": {
+      "type": "remote",
+      "enabled": true,
+      "oauth": false,
+      "url": "https://stitch.googleapis.com/mcp",
+      "headers": {
+        "X-Goog-Api-Key": "YOUR_GOOGLE_STITCH_API_KEY"
+      }
+    },
+    "thinking": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "filesystem": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/developerritesh/Dev-Action-2026",
+        "/Users/developerritesh/Flutter2025",
+        "/Users/developerritesh/FLutterDev"
+      ]
+    },
+    "google-search": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "npx",
+        "-y",
+        "@mcp-server/google-search-mcp@latest"
+      ]
+    },
+    "memory": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    },
+    "puppeteer": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ]
+    },
+    "supabase": {
+      "type": "remote",
+      "url": "https://mcp.supabase.com/mcp",
+      "enabled": true
+    },
+    "sentry": {
+      "type": "remote",
+      "url": "https://mcp.sentry.dev/mcp",
+      "enabled": true
+    },
+    "fetch": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "uvx",
+        "--with",
+        "mcp<2",
+        "mcp-server-fetch"
+      ]
+    },
+    "florence2": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "uvx",
+        "--from",
+        "git+https://github.com/jkawamoto/mcp-florence2",
+        "mcp-florence2"
+      ]
+    },
+    "rea": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "rea-agents@6.5.0",
+        "mcp"
+      ],
+      "enabled": true,
+      "environment": {
+        "HOPPER_LAUNCHER_PATH": "/Users/developerritesh/Applications/Hopper Disassembler.app/Contents/MacOS/hopper"
+      }
+    }
+  },
+  "chrome-devtools": {
+    "type": "local",
+    "enabled": true,
+    "command": [
+      "npx",
+      "-y",
+      "chrome-devtools-mcp@latest"
+    ]
+  }
+}

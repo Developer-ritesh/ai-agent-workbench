@@ -7,7 +7,6 @@ import {
   Send,
   FlaskConical,
   Network,
-  Bot,
   Activity,
   Cpu,
   Cloud,
@@ -22,7 +21,6 @@ export type ActivityTab =
   | 'api'
   | 'tests'
   | 'ports'
-  | 'agent'
   | 'terminal'
   | 'diagnostics'
   | 'vm'
@@ -161,15 +159,7 @@ export const Navigation: React.FC<NavigationProps> = ({
           )}
         </button>
 
-        {/* 8. AI Agent Control Center */}
-        <button
-          className={`activity-bar-item ${currentTab === 'agent' ? 'active' : ''}`}
-          onClick={() => onSelectTab('agent')}
-          title="AI Agent Control Center (OpenCode)"
-        >
-          <Bot size={18} />
-          <span>Agent</span>
-        </button>
+
 
         {/* 9. Unified Diagnostics & Debugging */}
         <button

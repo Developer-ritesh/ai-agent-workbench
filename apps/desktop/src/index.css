@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
 
 /* ==========================================================================
    macOS AI Agent Workbench — Master IDE Design System
@@ -1955,5 +1956,464 @@ html, body, #root {
 
 .settings-switch-toggle input:checked + .settings-switch-slider:before {
   transform: translateX(16px);
+}
+
+/* ==========================================================================
+   Comprehensive UI Overhaul for Modern Developer Tools:
+   API Studio, Testing Engine, Port Forwarding, Diagnostics, Providers
+   ========================================================================== */
+
+/* Universal Dark Theme Baseline */
+.api-studio-container,
+.testing-engine-container,
+.ports-panel-container,
+.diagnostics-panel-container,
+.provider-settings-container {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.api-studio-container *,
+.testing-engine-container *,
+.ports-panel-container *,
+.diagnostics-panel-container *,
+.provider-settings-container * {
+  box-sizing: border-box;
+}
+
+/* Common Button Styling */
+.api-studio-container button,
+.testing-engine-container button,
+.ports-panel-container button,
+.diagnostics-panel-container button,
+.provider-settings-container button {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border-panel);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  outline: none;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.api-studio-container button:hover,
+.testing-engine-container button:hover,
+.ports-panel-container button:hover,
+.diagnostics-panel-container button:hover,
+.provider-settings-container button:hover {
+  background: var(--bg-surface-hover);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.api-studio-container button:active,
+.testing-engine-container button:active,
+.ports-panel-container button:active,
+.diagnostics-panel-container button:active,
+.provider-settings-container button:active {
+  transform: translateY(1px);
+}
+
+/* Common Form & Input Styling */
+.api-studio-container input,
+.api-studio-container select,
+.api-studio-container textarea,
+.testing-engine-container input,
+.testing-engine-container select,
+.ports-panel-container input,
+.ports-panel-container select,
+.diagnostics-panel-container input,
+.diagnostics-panel-container select,
+.provider-settings-container input,
+.provider-settings-container select {
+  font-family: inherit;
+  font-size: 12px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-panel);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.api-studio-container input:focus,
+.api-studio-container select:focus,
+.api-studio-container textarea:focus,
+.testing-engine-container input:focus,
+.testing-engine-container select:focus,
+.ports-panel-container input:focus,
+.ports-panel-container select:focus,
+.diagnostics-panel-container input:focus,
+.diagnostics-panel-container select:focus,
+.provider-settings-container input:focus,
+.provider-settings-container select:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+/* -------------------------------------------------------------
+   API STUDIO SPECIFIC STYLES
+   ------------------------------------------------------------- */
+.api-sidebar {
+  width: 250px;
+  min-width: 220px;
+  max-width: 320px;
+  height: 100%;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-panel);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.api-sidebar-header {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.api-sidebar-nav {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.api-sidebar-nav-btn {
+  flex: 1;
+  padding: 4px 6px !important;
+  font-size: 11px !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  border-radius: 4px !important;
+}
+
+.api-sidebar-nav-btn.active {
+  background: var(--bg-surface-active) !important;
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.api-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.api-main-pane {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--bg-editor);
+}
+
+.api-omnibox-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-panel);
+  flex-shrink: 0;
+}
+
+.api-method-select {
+  font-weight: 700 !important;
+  width: 95px !important;
+  text-align: center;
+  background: #1e293b !important;
+  color: #38bdf8 !important;
+  border: 1px solid #334155 !important;
+}
+
+.api-method-get { color: #34d399 !important; }
+.api-method-post { color: #38bdf8 !important; }
+.api-method-put { color: #fbbf24 !important; }
+.api-method-patch { color: #a78bfa !important; }
+.api-method-delete { color: #f87171 !important; }
+
+.api-url-omnibox {
+  flex: 1;
+  font-family: var(--font-mono) !important;
+  font-size: 12.5px !important;
+  padding: 7px 12px !important;
+  background: #090d16 !important;
+  border: 1px solid #1e293b !important;
+  color: #f8fafc !important;
+}
+
+.api-send-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border: 1px solid #3b82f6 !important;
+  padding: 7px 18px !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+.api-send-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.5);
+}
+
+.api-request-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 14px;
+  background: var(--bg-topbar);
+  border-bottom: 1px solid var(--border-panel);
+  flex-shrink: 0;
+}
+
+.api-tab-btn {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  color: var(--text-muted) !important;
+  font-size: 12px !important;
+  padding: 8px 12px !important;
+}
+
+.api-tab-btn.active {
+  color: var(--accent-cyan) !important;
+  border-bottom-color: var(--accent-cyan) !important;
+  font-weight: 600;
+}
+
+.api-request-body-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  max-height: 45vh;
+  border-bottom: 1px solid var(--border-panel);
+  padding: 12px 14px;
+}
+
+.api-response-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #080b12;
+  overflow: hidden;
+}
+
+.api-response-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-panel);
+  flex-shrink: 0;
+}
+
+.api-status-pill {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.api-status-2xx {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.api-status-4xx, .api-status-5xx {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.api-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.api-table th {
+  text-align: left;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-panel);
+}
+
+.api-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* -------------------------------------------------------------
+   AUTOMATIC TESTING ENGINE SPECIFIC STYLES
+   ------------------------------------------------------------- */
+.testing-engine-container {
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.testing-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.testing-metric-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-panel);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.testing-metric-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.testing-metric-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.testing-run-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-panel);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  transition: all 0.15s ease;
+}
+
+.testing-run-item:hover {
+  background: var(--bg-surface-hover);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* -------------------------------------------------------------
+   PORT FORWARDING MANAGER SPECIFIC STYLES
+   ------------------------------------------------------------- */
+.ports-panel-container {
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.ports-security-callout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-md);
+  color: #34d399;
+  font-size: 12px;
+  margin: 14px 0 18px;
+}
+
+.ports-table-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-panel);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* -------------------------------------------------------------
+   UNIFIED SYSTEM DIAGNOSTICS SPECIFIC STYLES
+   ------------------------------------------------------------- */
+.diagnostics-panel-container {
+  flex-direction: column;
+  padding: 18px 24px;
+  overflow-y: auto;
+}
+
+.diagnostics-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0;
+  flex-wrap: wrap;
+}
+
+.diagnostics-terminal-stream {
+  background: #05070d;
+  border: 1px solid #1a2234;
+  border-radius: var(--radius-md);
+  padding: 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  min-height: 350px;
+  max-height: 60vh;
+  overflow-y: auto;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* -------------------------------------------------------------
+   PROVIDER PROFILES & KEYCHAIN SPECIFIC STYLES
+   ------------------------------------------------------------- */
+.provider-settings-container {
+  flex-direction: column;
+  padding: 28px;
+  overflow-y: auto;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 

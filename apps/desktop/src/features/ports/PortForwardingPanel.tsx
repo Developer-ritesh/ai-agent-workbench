@@ -101,81 +101,149 @@ export const PortForwardingPanel: React.FC<PortForwardingPanelProps> = ({ onOpen
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-zinc-950 text-zinc-100 p-6 overflow-y-auto">
+    <div
+      className="ports-panel-container"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        background: 'var(--bg-app)',
+        color: 'var(--text-primary)',
+        padding: '24px 28px',
+        overflowY: 'auto',
+      }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between pb-5 border-b border-zinc-800">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
-              <Network className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-zinc-100">Port Forwarding Manager</h1>
-              <p className="text-xs text-zinc-400">
-                Bridge isolated VM services to macOS localhost with automated port discovery
-              </p>
-            </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingBottom: 16,
+          borderBottom: '1px solid var(--border-panel)',
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div
+            style={{
+              padding: 8,
+              background: 'rgba(56, 189, 248, 0.1)',
+              color: 'var(--accent-cyan)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(56, 189, 248, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Network size={22} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+              Port Forwarding Manager
+            </h1>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+              Bridge isolated VM services to macOS localhost with automated port discovery
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button
             onClick={fetchPorts}
             disabled={isRefreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 rounded-lg text-xs font-medium text-zinc-300 transition"
+            className="btn btn-secondary btn-sm"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-emerald-400' : ''}`} />
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
             <span>Rescan</span>
           </button>
           <button
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow-sm transition"
+            className="btn btn-primary btn-sm"
+            style={{ background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none' }}
           >
-            <Plus className="w-4 h-4" />
+            <Plus size={14} />
             <span>Forward Port</span>
           </button>
         </div>
       </div>
 
       {/* Security Status Banner */}
-      <div className="mt-4 p-3 bg-zinc-900/60 border border-zinc-800 rounded-lg flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span className="text-zinc-300">
-            Loopback-Only Binding: All ports are locked to <code className="text-emerald-400 font-mono">127.0.0.1</code>.
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px 16px',
+          background: 'rgba(16, 185, 129, 0.08)',
+          border: '1px solid rgba(16, 185, 129, 0.25)',
+          borderRadius: 'var(--radius-md)',
+          marginTop: 18,
+          fontSize: 12,
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <ShieldCheck size={16} color="#34d399" />
+          <span style={{ color: 'var(--text-primary)' }}>
+            Loopback-Only Binding: All ports are locked to{' '}
+            <code style={{ color: '#34d399', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>127.0.0.1</code>.
           </span>
         </div>
-        <span className="text-[11px] text-zinc-500">Zero WAN Exposure • Automatic Cleanup</span>
+        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Zero WAN Exposure • Automatic Cleanup</span>
       </div>
 
-      {/* Ports Table */}
-      <div className="mt-6 border border-zinc-800 rounded-xl bg-zinc-900/40 overflow-hidden shadow-sm">
-        <table className="w-full text-left border-collapse text-xs">
+      {/* Ports Table Card */}
+      <div
+        style={{
+          marginTop: 20,
+          border: '1px solid var(--border-panel)',
+          borderRadius: 'var(--radius-lg)',
+          background: 'var(--bg-surface)',
+          overflow: 'hidden',
+          boxShadow: 'var(--shadow-md)',
+        }}
+      >
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 12 }}>
           <thead>
-            <tr className="bg-zinc-900 text-zinc-400 border-b border-zinc-800 text-[11px] font-medium">
-              <th className="py-2.5 px-4">Status</th>
-              <th className="py-2.5 px-4">Guest Port</th>
-              <th className="py-2.5 px-4">Local Port</th>
-              <th className="py-2.5 px-4">Protocol</th>
-              <th className="py-2.5 px-4">Process</th>
-              <th className="py-2.5 px-4">Target URL</th>
-              <th className="py-2.5 px-4 text-right">Actions</th>
+            <tr
+              style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                color: 'var(--text-muted)',
+                borderBottom: '1px solid var(--border-panel)',
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+              }}
+            >
+              <th style={{ padding: '10px 16px' }}>Status</th>
+              <th style={{ padding: '10px 16px' }}>Guest Port</th>
+              <th style={{ padding: '10px 16px' }}>Local Port</th>
+              <th style={{ padding: '10px 16px' }}>Protocol</th>
+              <th style={{ padding: '10px 16px' }}>Process</th>
+              <th style={{ padding: '10px 16px' }}>Target URL</th>
+              <th style={{ padding: '10px 16px', textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-850">
+          <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="text-center py-8 text-zinc-500">
+                <td colSpan={7} style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--text-muted)' }}>
                   Scanning active listening ports...
                 </td>
               </tr>
             ) : ports.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-12 text-zinc-500">
-                  <Radio className="w-6 h-6 mx-auto mb-2 opacity-40 text-emerald-500" />
-                  <p>No listening services detected inside the VM.</p>
-                  <p className="text-[11px] text-zinc-600 mt-1">
-                    Start a dev server (e.g. <code>npm run dev</code> or <code>cargo run</code>) to auto-detect.
+                <td colSpan={7} style={{ textAlign: 'center', padding: '48px 16px', color: 'var(--text-muted)' }}>
+                  <Radio size={28} style={{ margin: '0 auto 8px', opacity: 0.5, color: 'var(--accent-cyan)' }} />
+                  <p style={{ fontWeight: 500, fontSize: 13, color: 'var(--text-secondary)' }}>
+                    No listening services detected inside the VM.
+                  </p>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                    Start a dev server (e.g. <code style={{ color: 'var(--accent-cyan)' }}>npm run dev</code> or{' '}
+                    <code style={{ color: 'var(--accent-cyan)' }}>cargo run</code>) to auto-detect.
                   </p>
                 </td>
               </tr>
@@ -183,68 +251,155 @@ export const PortForwardingPanel: React.FC<PortForwardingPanelProps> = ({ onOpen
               ports.map((port) => {
                 const isCopied = copiedId === port.id;
                 return (
-                  <tr key={port.id} className="hover:bg-zinc-850/40 transition">
-                    <td className="py-3 px-4">
+                  <tr
+                    key={port.id}
+                    style={{
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+                      transition: 'background 0.15s ease',
+                    }}
+                  >
+                    <td style={{ padding: '12px 16px' }}>
                       {port.status === 'active' ? (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '3px 8px',
+                            borderRadius: 'var(--radius-full)',
+                            fontSize: 11,
+                            fontWeight: 600,
+                            background: 'rgba(16, 185, 129, 0.15)',
+                            color: '#34d399',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: '50%',
+                              background: '#34d399',
+                            }}
+                          />
                           Active
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-950/60 text-amber-400 border border-amber-800/40">
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '3px 8px',
+                            borderRadius: 'var(--radius-full)',
+                            fontSize: 11,
+                            fontWeight: 600,
+                            background: 'rgba(245, 158, 11, 0.15)',
+                            color: '#fbbf24',
+                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                          }}
+                        >
                           Conflict
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-4 font-mono font-medium text-zinc-200">
+                    <td style={{ padding: '12px 16px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
                       :{port.guestPort}
                     </td>
-                    <td className="py-3 px-4 font-mono font-bold text-emerald-400">
+                    <td
+                      style={{
+                        padding: '12px 16px',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 700,
+                        color: 'var(--accent-cyan)',
+                      }}
+                    >
                       :{port.localPort}
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="uppercase text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono">
+                    <td style={{ padding: '12px 16px' }}>
+                      <span
+                        style={{
+                          textTransform: 'uppercase',
+                          fontSize: 10,
+                          padding: '2px 6px',
+                          borderRadius: 4,
+                          background: 'rgba(255, 255, 255, 0.06)',
+                          color: 'var(--text-secondary)',
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      >
                         {port.protocol}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-zinc-400 font-mono text-[11px]">
+                    <td
+                      style={{
+                        padding: '12px 16px',
+                        color: 'var(--text-muted)',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 11.5,
+                      }}
+                    >
                       {port.processName || 'dev server'}
                     </td>
-                    <td className="py-3 px-4 text-zinc-300 font-mono text-[11px]">
+                    <td
+                      style={{
+                        padding: '12px 16px',
+                        color: 'var(--text-primary)',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: 11.5,
+                      }}
+                    >
                       {port.targetUrl}
                     </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                    <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
                         <button
                           onClick={() => onOpenInBrowser && onOpenInBrowser(port.targetUrl)}
-                          className="flex items-center gap-1 px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded text-[11px] transition"
+                          className="btn btn-secondary btn-sm"
+                          style={{
+                            padding: '3px 8px',
+                            fontSize: 11,
+                            background: 'rgba(56, 189, 248, 0.1)',
+                            color: 'var(--accent-cyan)',
+                            borderColor: 'rgba(56, 189, 248, 0.3)',
+                          }}
                           title="Open in Workbench Integrated Browser"
                         >
-                          <Globe className="w-3 h-3" />
+                          <Globe size={13} />
                           <span>Browse</span>
                         </button>
                         <button
                           onClick={() => handleCopy(port.id, port.targetUrl)}
-                          className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition"
+                          className="btn-icon"
+                          style={{ width: 26, height: 26 }}
                           title="Copy URL"
                         >
-                          {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                          {isCopied ? <Check size={14} color="#34d399" /> : <Copy size={14} />}
                         </button>
                         <a
                           href={port.targetUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="p-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded transition"
+                          className="btn-icon"
+                          style={{
+                            width: 26,
+                            height: 26,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'var(--text-muted)',
+                          }}
                           title="Open in Safari / System Browser"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
+                          <ExternalLink size={14} />
                         </a>
                         <button
                           onClick={() => handleRemoveForward(port.id)}
-                          className="p-1 text-zinc-500 hover:text-rose-400 hover:bg-zinc-800 rounded transition"
+                          className="btn-icon"
+                          style={{ width: 26, height: 26, color: '#f87171' }}
                           title="Delete Mapping"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
@@ -258,74 +413,152 @@ export const PortForwardingPanel: React.FC<PortForwardingPanelProps> = ({ onOpen
 
       {/* Add Port Forward Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-              <h2 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-emerald-400" />
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+        >
+          <div
+            className="card"
+            style={{
+              width: '100%',
+              maxWidth: 420,
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-panel)',
+              borderRadius: 'var(--radius-lg)',
+              padding: 20,
+              boxShadow: 'var(--shadow-lg)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingBottom: 12,
+                borderBottom: '1px solid var(--border-panel)',
+                marginBottom: 16,
+              }}
+            >
+              <h2
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  margin: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <SlidersHorizontal size={16} color="var(--accent-cyan)" />
                 <span>Forward Port from Isolated VM</span>
               </h2>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-zinc-400 hover:text-zinc-200 text-xs"
+                className="btn-icon"
+                style={{ width: 24, height: 24 }}
               >
                 ✕
               </button>
             </div>
 
             {errorMsg && (
-              <div className="p-2.5 bg-rose-950/40 border border-rose-900 text-rose-300 rounded text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <div
+                style={{
+                  padding: '8px 12px',
+                  background: 'rgba(244, 63, 94, 0.15)',
+                  border: '1px solid rgba(244, 63, 94, 0.3)',
+                  color: '#fb7185',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: 12,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginBottom: 14,
+                }}
+              >
+                <AlertCircle size={14} />
                 <span>{errorMsg}</span>
               </div>
             )}
 
-            <form onSubmit={handleCreateForward} className="space-y-3">
+            <form onSubmit={handleCreateForward} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">Guest Port (Inside VM)</label>
+                <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                  Guest Port (Inside VM)
+                </label>
                 <input
                   type="number"
                   value={guestPortInput}
                   onChange={(e) => setGuestPortInput(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-100 font-mono outline-none focus:border-emerald-500"
+                  style={{
+                    width: '100%',
+                    fontFamily: 'var(--font-mono)',
+                    padding: '8px 12px',
+                  }}
                   placeholder="3000"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">Local Host Port (macOS)</label>
+                <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                  Local Host Port (macOS)
+                </label>
                 <input
                   type="number"
                   value={localPortInput}
                   onChange={(e) => handleCheckPort(e.target.value)}
-                  className={`w-full bg-zinc-950 border rounded-lg px-3 py-1.5 text-xs text-zinc-100 font-mono outline-none ${
-                    isConflict ? 'border-amber-500' : 'border-zinc-800 focus:border-emerald-500'
-                  }`}
+                  style={{
+                    width: '100%',
+                    fontFamily: 'var(--font-mono)',
+                    padding: '8px 12px',
+                    borderColor: isConflict ? '#f59e0b' : undefined,
+                  }}
                   placeholder="3000"
                   required
                 />
                 {isConflict && (
-                  <p className="text-[11px] text-amber-400 mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: '#fbbf24',
+                      marginTop: 4,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <AlertCircle size={12} />
                     Port is currently occupied by another host process.
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">Protocol</label>
-                <div className="grid grid-cols-3 gap-2">
+                <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                  Protocol
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                   {(['http', 'tcp', 'ws'] as const).map((proto) => (
                     <button
                       type="button"
                       key={proto}
                       onClick={() => setProtocolInput(proto)}
-                      className={`py-1.5 rounded text-xs font-mono uppercase transition border ${
-                        protocolInput === proto
-                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                          : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:text-zinc-200'
-                      }`}
+                      className={`btn btn-sm ${protocolInput === proto ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        textTransform: 'uppercase',
+                        padding: '6px 0',
+                      }}
                     >
                       {proto}
                     </button>
@@ -333,17 +566,27 @@ export const PortForwardingPanel: React.FC<PortForwardingPanelProps> = ({ onOpen
                 </div>
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-zinc-800">
+              <div
+                style={{
+                  paddingTop: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  gap: 8,
+                  borderTop: '1px solid var(--border-panel)',
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-750 text-zinc-300 rounded-lg text-xs"
+                  className="btn btn-secondary btn-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold"
+                  className="btn btn-primary btn-sm"
+                  style={{ background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none' }}
                 >
                   Create Forward
                 </button>

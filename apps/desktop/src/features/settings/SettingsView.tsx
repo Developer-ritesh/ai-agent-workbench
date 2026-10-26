@@ -19,9 +19,11 @@ import {
   ShieldCheck,
   Sliders,
   Search,
+  Boxes,
 } from 'lucide-react';
 import { ThemeMode, AuditEventRecord } from '../../types';
 import { TauriApi } from '../../services/tauriIpc';
+import { McpSkillsManager } from '../skills_mcp/McpSkillsManager';
 
 interface SettingsViewProps {
   theme: ThemeMode;
@@ -37,6 +39,7 @@ type SettingsCategory =
   | 'editor'
   | 'vm'
   | 'agent'
+  | 'skills_mcp'
   | 'security'
   | 'audit'
   | 'about';
@@ -359,6 +362,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           >
             <Bot size={15} />
             <span>AI Agent & OpenCode</span>
+          </button>
+
+          <button
+            className={`settings-nav-btn ${activeCategory === 'skills_mcp' ? 'active' : ''}`}
+            onClick={() => setActiveCategory('skills_mcp')}
+          >
+            <Boxes size={15} />
+            <span>Skills & MCP Servers</span>
           </button>
 
           <button
@@ -1063,6 +1074,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
               </div>
             </>
+          )}
+
+          {/* =========================================================================
+              CATEGORY: SKILLS & MCP SERVERS
+             ========================================================================= */}
+          {activeCategory === 'skills_mcp' && (
+            <div className="h-full min-h-[600px] flex flex-col -m-6">
+              <McpSkillsManager onNotify={showToast} />
+            </div>
           )}
 
           {/* =========================================================================

@@ -8,7 +8,6 @@ import {
   Trash2,
   Copy,
   Check,
-  Sparkles,
 } from 'lucide-react';
 import { DiagnosticLogEntry } from '../../types';
 
@@ -16,7 +15,7 @@ interface DiagnosticsPanelProps {
   onSendToAgent?: (prompt: string) => void;
 }
 
-export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({ onSendToAgent }) => {
+export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = () => {
   const [logs, setLogs] = useState<DiagnosticLogEntry[]>([
     {
       id: 'diag-1',
@@ -92,127 +91,177 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({ onSendToAgen
     setLogs([]);
   };
 
-  const handleDiagnoseWithAI = () => {
-    if (!onSendToAgent) return;
-    const errorsAndWarns = logs.filter((l) => l.level === 'error' || l.level === 'warn');
-    const sanitized = errorsAndWarns
-      .map((l) => `[${l.source}] ${l.message}\n${l.details || ''}`)
-      .join('\n---\n');
-
-    onSendToAgent(
-      `[AI System Diagnosis Request]\nPlease review the following runtime system and browser diagnostics collected across the microVM, frontend, and API clients:\n\n${sanitized}\n\nAnalyze the primary root causes, check for potential cascading failures or security boundary violations, and propose specific code or configuration remedies.`
-    );
-  };
 
   return (
-    <div className="flex flex-col h-full w-full bg-zinc-950 text-zinc-100 font-sans select-none overflow-hidden">
+    <div
+      className="diagnostics-panel-container"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        background: 'var(--bg-app)',
+        color: 'var(--text-primary)',
+        padding: '24px 28px',
+        overflowY: 'auto',
+      }}
+    >
       {/* Top Header */}
-      <div className="p-4 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg border border-emerald-500/20">
-            <Activity className="w-5 h-5" />
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingBottom: 16,
+          borderBottom: '1px solid var(--border-panel)',
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div
+            style={{
+              padding: 8,
+              background: 'rgba(56, 189, 248, 0.1)',
+              color: 'var(--accent-cyan)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(56, 189, 248, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Activity size={22} />
           </div>
           <div>
-            <h1 className="text-base font-bold text-zinc-100">Unified System Diagnostics</h1>
-            <p className="text-xs text-zinc-400">
-              Aggregated telemetry across microVM supervisor, Tauri IPC, browser console, and agent tasks
+            <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+              Unified System Diagnostics
+            </h1>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+              Aggregated telemetry across microVM supervisor, Tauri IPC, browser console, and background tasks
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleDiagnoseWithAI}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-semibold transition"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Diagnose with AI</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={handleCopy} className="btn btn-secondary btn-sm" title="Copy Logs">
+            {copied ? <Check size={14} color="#34d399" /> : <Copy size={14} />}
+            <span>Copy</span>
           </button>
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-750 text-zinc-300 border border-zinc-700 rounded-lg text-xs transition"
-            title="Copy Logs"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-          </button>
-          <button
-            onClick={handleClear}
-            className="p-1.5 bg-zinc-800 hover:bg-zinc-750 text-zinc-400 hover:text-rose-400 border border-zinc-700 rounded-lg text-xs transition"
-            title="Clear Logs"
-          >
-            <Trash2 className="w-4 h-4" />
+          <button onClick={handleClear} className="btn btn-secondary btn-sm" title="Clear Logs">
+            <Trash2 size={14} color="#f87171" />
+            <span>Clear</span>
           </button>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-3 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between gap-3 text-xs">
-        {/* Search */}
-        <div className="flex-1 flex items-center bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1 max-w-sm">
-          <Search className="w-3.5 h-3.5 text-zinc-500 mr-2" />
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          padding: '12px 0',
+          borderBottom: '1px solid var(--border-panel)',
+          flexShrink: 0,
+          flexWrap: 'wrap',
+        }}
+      >
+        {/* Search Input */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'var(--bg-input)',
+            border: '1px solid var(--border-panel)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '5px 10px',
+            width: 320,
+          }}
+        >
+          <Search size={14} color="var(--text-muted)" />
           <input
             type="text"
             placeholder="Search error messages or sources..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent text-xs text-zinc-200 outline-none placeholder-zinc-600 font-mono"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              fontSize: 12,
+              color: 'var(--text-primary)',
+              width: '100%',
+              outline: 'none',
+              boxShadow: 'none',
+            }}
           />
         </div>
 
         {/* Level Filters */}
-        <div className="flex items-center gap-1.5">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button
             onClick={() => setSelectedLevel('all')}
-            className={`px-2.5 py-1 rounded text-[11px] font-medium transition ${
-              selectedLevel === 'all'
-                ? 'bg-zinc-800 text-zinc-100'
-                : 'text-zinc-500 hover:text-zinc-300'
-            }`}
+            className={`btn btn-sm ${selectedLevel === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ fontSize: 11, padding: '4px 10px', borderRadius: 'var(--radius-full)' }}
           >
             All ({logs.length})
           </button>
           <button
             onClick={() => setSelectedLevel('error')}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition ${
-              selectedLevel === 'error'
-                ? 'bg-rose-950/80 text-rose-300 border border-rose-800'
-                : 'text-rose-400 hover:bg-rose-950/40'
-            }`}
+            className={`btn btn-sm ${selectedLevel === 'error' ? 'btn-danger' : 'btn-secondary'}`}
+            style={{
+              fontSize: 11,
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-full)',
+              color: selectedLevel === 'error' ? '#f87171' : undefined,
+            }}
           >
-            <AlertCircle className="w-3 h-3" />
+            <AlertCircle size={12} color="#f87171" />
             <span>Errors ({errorCount})</span>
           </button>
           <button
             onClick={() => setSelectedLevel('warn')}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition ${
-              selectedLevel === 'warn'
-                ? 'bg-amber-950/80 text-amber-300 border border-amber-800'
-                : 'text-amber-400 hover:bg-amber-950/40'
-            }`}
+            className={`btn btn-sm ${selectedLevel === 'warn' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{
+              fontSize: 11,
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-full)',
+              color: selectedLevel === 'warn' ? '#fbbf24' : undefined,
+            }}
           >
-            <AlertTriangle className="w-3 h-3" />
+            <AlertTriangle size={12} color="#fbbf24" />
             <span>Warnings ({warnCount})</span>
           </button>
           <button
             onClick={() => setSelectedLevel('info')}
-            className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition ${
-              selectedLevel === 'info'
-                ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
-                : 'text-emerald-400 hover:bg-emerald-950/40'
-            }`}
+            className={`btn btn-sm ${selectedLevel === 'info' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{
+              fontSize: 11,
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-full)',
+              color: selectedLevel === 'info' ? '#38bdf8' : undefined,
+            }}
           >
-            <Info className="w-3 h-3" />
+            <Info size={12} color="#38bdf8" />
             <span>Info ({infoCount})</span>
           </button>
         </div>
 
         {/* Source Dropdown */}
-        <div className="flex items-center gap-1">
-          <span className="text-zinc-500 text-[11px]">Source:</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Source:</span>
           <select
             value={selectedSource}
             onChange={(e) => setSelectedSource(e.target.value)}
-            className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-zinc-300 outline-none"
+            style={{
+              fontSize: 11.5,
+              padding: '4px 8px',
+              background: 'var(--bg-surface)',
+              borderColor: 'var(--border-panel)',
+              borderRadius: 'var(--radius-sm)',
+            }}
           >
             <option value="all">All Subsystems</option>
             <option value="vm">MicroVM</option>
@@ -220,57 +269,110 @@ export const DiagnosticsPanel: React.FC<DiagnosticsPanelProps> = ({ onSendToAgen
             <option value="ports">Ports Forwarder</option>
             <option value="api">API Studio</option>
             <option value="browser">Integrated Browser</option>
-            <option value="agent">AI Agent</option>
           </select>
         </div>
       </div>
 
-      {/* Logs Table */}
-      <div className="flex-1 overflow-y-auto p-3 font-mono text-xs space-y-1.5">
+      {/* Logs Terminal Stream */}
+      <div
+        style={{
+          marginTop: 18,
+          flex: 1,
+          background: '#05070d',
+          border: '1px solid #1a2234',
+          borderRadius: 'var(--radius-md)',
+          padding: 16,
+          fontFamily: 'var(--font-mono)',
+          fontSize: 12,
+          lineHeight: 1.6,
+          overflowY: 'auto',
+          boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.6)',
+        }}
+      >
         {filteredLogs.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-zinc-500">
-            <Activity className="w-8 h-8 mb-2 opacity-30 text-emerald-400" />
+          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
+            <Activity size={28} style={{ margin: '0 auto 8px', opacity: 0.4, color: 'var(--accent-cyan)' }} />
             <p>No diagnostic events match current filter criteria.</p>
           </div>
         ) : (
-          filteredLogs.map((log) => (
-            <div
-              key={log.id}
-              className={`p-2.5 rounded-lg border-l-4 transition ${
-                log.level === 'error'
-                  ? 'bg-rose-950/20 border-rose-500 text-rose-200'
-                  : log.level === 'warn'
-                  ? 'bg-amber-950/20 border-amber-500 text-amber-200'
-                  : 'bg-zinc-900/50 border-emerald-500/60 text-zinc-300'
-              }`}
-            >
-              <div className="flex items-center justify-between text-[11px] mb-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-zinc-500">{log.timestamp}</span>
+          filteredLogs.map((log) => {
+            const levelColor =
+              log.level === 'error'
+                ? '#f87171'
+                : log.level === 'warn'
+                ? '#fbbf24'
+                : '#38bdf8';
+
+            const levelBg =
+              log.level === 'error'
+                ? 'rgba(239, 68, 68, 0.12)'
+                : log.level === 'warn'
+                ? 'rgba(245, 158, 11, 0.12)'
+                : 'rgba(56, 189, 248, 0.08)';
+
+            return (
+              <div
+                key={log.id}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 6,
+                  borderLeft: `3px solid ${levelColor}`,
+                  background: levelBg,
+                  marginBottom: 8,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11, marginBottom: 4 }}>
+                  <span style={{ color: 'var(--text-muted)' }}>{log.timestamp}</span>
                   <span
-                    className={`uppercase font-bold px-1.5 py-0.2 rounded text-[10px] ${
-                      log.level === 'error'
-                        ? 'bg-rose-900/60 text-rose-300'
-                        : log.level === 'warn'
-                        ? 'bg-amber-900/60 text-amber-300'
-                        : 'bg-emerald-900/60 text-emerald-300'
-                    }`}
+                    style={{
+                      textTransform: 'uppercase',
+                      fontWeight: 700,
+                      fontSize: 10,
+                      padding: '1px 6px',
+                      borderRadius: 4,
+                      background: 'rgba(0, 0, 0, 0.35)',
+                      color: levelColor,
+                    }}
                   >
                     {log.level}
                   </span>
-                  <span className="text-zinc-400 px-1.5 py-0.2 rounded bg-zinc-800 text-[10px]">
-                    {log.source.toUpperCase()}
+                  <span
+                    style={{
+                      textTransform: 'uppercase',
+                      fontSize: 10,
+                      padding: '1px 6px',
+                      borderRadius: 4,
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
+                    {log.source}
                   </span>
                 </div>
+
+                <div style={{ color: 'var(--text-primary)', wordBreak: 'break-word' }}>
+                  {log.message}
+                </div>
+
+                {log.details && (
+                  <pre
+                    style={{
+                      marginTop: 6,
+                      padding: '6px 10px',
+                      background: 'rgba(0, 0, 0, 0.5)',
+                      borderRadius: 4,
+                      fontSize: 11,
+                      color: '#94a3b8',
+                      overflowX: 'auto',
+                      whiteSpace: 'pre-wrap',
+                    }}
+                  >
+                    {log.details}
+                  </pre>
+                )}
               </div>
-              <p className="text-zinc-100 font-medium">{log.message}</p>
-              {log.details && (
-                <pre className="mt-2 p-2 bg-black/40 rounded text-[10px] text-zinc-400 whitespace-pre-wrap">
-                  {log.details}
-                </pre>
-              )}
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

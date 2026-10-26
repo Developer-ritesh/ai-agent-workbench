@@ -16,6 +16,9 @@ import {
   BrowserEngineStatus,
   CdpTabTarget,
   CdpEvalResult,
+  OpencodeMcpServer,
+  OpencodeSkillInfo,
+  OpencodeSyncResult,
 } from '../types';
 
 let isTauriEnv = false;
@@ -477,6 +480,63 @@ function mockCall<T>(cmd: string, args: Record<string, unknown>): Promise<T> {
             } as unknown as T);
             break;
           }
+          case 'opencode_get_mcp_config': {
+            resolve([
+              { id: 'dart', type: 'local', enabled: true, command: ['dart', 'mcp-server'] },
+              { id: 'heroui', type: 'local', enabled: true, command: ['npx', '-y', '@heroui/react-mcp@latest'] },
+              { id: 'playwright', type: 'local', enabled: true, command: ['npx', '-y', '@playwright/mcp@latest'] },
+              { id: 'context7', type: 'remote', enabled: true, url: 'https://mcp.context7.com/mcp' },
+              { id: 'gh_grep', type: 'remote', enabled: true, url: 'https://mcp.grep.app' },
+              { id: 'stitch', type: 'remote', enabled: true, url: 'https://stitch.googleapis.com/mcp' },
+              { id: 'thinking', type: 'local', enabled: true, command: ['npx', '-y', '@modelcontextprotocol/server-sequential-thinking'] },
+              { id: 'filesystem', type: 'local', enabled: true, command: ['npx', '-y', '@modelcontextprotocol/server-filesystem', '/Users/developerritesh/Dev-Action-2026'] },
+              { id: 'google-search', type: 'local', enabled: true, command: ['npx', '-y', '@mcp-server/google-search-mcp@latest'] },
+              { id: 'memory', type: 'local', enabled: true, command: ['npx', '-y', '@modelcontextprotocol/server-memory'] },
+              { id: 'puppeteer', type: 'local', enabled: true, command: ['npx', '-y', '@modelcontextprotocol/server-puppeteer'] },
+              { id: 'supabase', type: 'remote', enabled: true, url: 'https://mcp.supabase.com/mcp' },
+              { id: 'sentry', type: 'remote', enabled: true, url: 'https://mcp.sentry.dev/mcp' },
+              { id: 'fetch', type: 'local', enabled: true, command: ['uvx', '--with', 'mcp<2', 'mcp-server-fetch'] },
+              { id: 'florence2', type: 'local', enabled: true, command: ['uvx', '--from', 'git+https://github.com/jkawamoto/mcp-florence2', 'mcp-florence2'] },
+              { id: 'rea', type: 'local', enabled: true, command: ['npx', '-y', 'rea-agents@6.5.0', 'mcp'] },
+              { id: 'chrome-devtools', type: 'local', enabled: true, command: ['npx', '-y', 'chrome-devtools-mcp@latest'] },
+            ] as unknown as T);
+            break;
+          }
+          case 'opencode_toggle_mcp_server': {
+            resolve(true as unknown as T);
+            break;
+          }
+          case 'opencode_save_mcp_server': {
+            resolve((args as any)?.server as unknown as T);
+            break;
+          }
+          case 'opencode_delete_mcp_server': {
+            resolve((args as any)?.serverId as unknown as T);
+            break;
+          }
+          case 'opencode_list_skills': {
+            resolve([
+              { name: 'accessibility', title: 'Accessibility (WCAG 2.2)', description: 'Design, implement, and audit inclusive digital products using WCAG 2.2 Level AA.', path: '/Users/developerritesh/Programming/opencode-config/skills/accessibility', has_skill_md: true, file_count: 3 },
+              { name: 'agent-architecture-audit', title: 'Agent Architecture Audit', description: 'Evaluate autonomous AI agents against safety, tool-use, and prompt-injection baselines.', path: '/Users/developerritesh/Programming/opencode-config/skills/agent-architecture-audit', has_skill_md: true, file_count: 3 },
+              { name: 'api-design', title: 'API Design', description: 'Design RESTful, gRPC, and GraphQL APIs with schema-first validation.', path: '/Users/developerritesh/Programming/opencode-config/skills/api-design', has_skill_md: true, file_count: 3 },
+              { name: 'react-patterns', title: 'React Modern Patterns', description: 'Best practices for React 19, hooks, Suspense, and state management.', path: '/Users/developerritesh/Programming/opencode-config/skills/react-patterns', has_skill_md: true, file_count: 4 },
+            ] as unknown as T);
+            break;
+          }
+          case 'opencode_get_skill_content': {
+            resolve('# Accessibility (WCAG 2.2)\n\nInclusive digital product design and automated auditing.' as unknown as T);
+            break;
+          }
+          case 'opencode_sync_from_path': {
+            resolve({
+              success: true,
+              skills_count: 413,
+              mcps_count: 17,
+              message: 'Successfully installed 413 skills and 17 MCP servers into OpenCode',
+              target_path: '~/.config/opencode',
+            } as unknown as T);
+            break;
+          }
           default:
             reject(new Error(`Unknown mock command: ${cmd}`));
         }
@@ -531,6 +591,20 @@ export const TauriApi = {
   clearOpencodeSessions: (path: string) => callTauri<string>('opencode_clear_sessions', { path }),
   clearOpencodeGlobalHistory: () => callTauri<string>('opencode_clear_global_history'),
   clearOpencodeCache: () => callTauri<string>('opencode_clear_cache'),
+
+  // OpenCode MCP & Skills Management
+  getOpencodeMcpConfig: () => callTauri<OpencodeMcpServer[]>('opencode_get_mcp_config'),
+  toggleOpencodeMcpServer: (serverId: string, enabled: boolean) =>
+    callTauri<boolean>('opencode_toggle_mcp_server', { serverId, enabled }),
+  saveOpencodeMcpServer: (server: OpencodeMcpServer) =>
+    callTauri<OpencodeMcpServer>('opencode_save_mcp_server', { server }),
+  deleteOpencodeMcpServer: (serverId: string) =>
+    callTauri<string>('opencode_delete_mcp_server', { serverId }),
+  listOpencodeSkills: () => callTauri<OpencodeSkillInfo[]>('opencode_list_skills'),
+  getOpencodeSkillContent: (skillName: string) =>
+    callTauri<string>('opencode_get_skill_content', { skillName }),
+  syncOpencodeFromPath: (sourcePath?: string) =>
+    callTauri<OpencodeSyncResult>('opencode_sync_from_path', { sourcePath }),
 
   // Terminal & Execution
   terminalExecute: (workspaceId: string, command: string) =>
