@@ -86,12 +86,45 @@
 }
 
 /* ==========================================================================
-   Base Resets
+   Base Resets & WebKit Native Controls Override
    ========================================================================== */
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background-color: transparent;
+  border: 0 solid transparent;
+  border-radius: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  color: inherit;
+  font: inherit;
+  background-color: transparent;
+  border: 0 solid transparent;
+  outline: none;
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
 }
 
 html, body, #root {
@@ -1991,12 +2024,9 @@ html, body, #root {
   box-sizing: border-box;
 }
 
-/* Common Button Styling */
-.api-studio-container button,
-.testing-engine-container button,
-.ports-panel-container button,
-.diagnostics-panel-container button,
-.provider-settings-container button {
+/* Common Button Styling Classes */
+.btn-default,
+.btn-surface {
   font-family: inherit;
   font-size: 12px;
   font-weight: 500;
@@ -2016,35 +2046,38 @@ html, body, #root {
   white-space: nowrap;
 }
 
-.api-studio-container button:hover,
-.testing-engine-container button:hover,
-.ports-panel-container button:hover,
-.diagnostics-panel-container button:hover,
-.provider-settings-container button:hover {
+.btn-default:hover,
+.btn-surface:hover {
   background: var(--bg-surface-hover);
   border-color: rgba(255, 255, 255, 0.18);
   color: #ffffff;
 }
 
-.api-studio-container button:active,
-.testing-engine-container button:active,
-.ports-panel-container button:active,
-.diagnostics-panel-container button:active,
-.provider-settings-container button:active {
+.btn-default:active,
+.btn-surface:active {
   transform: translateY(1px);
 }
 
+/* Checkbox and Radio styling */
+input[type="checkbox"],
+input[type="radio"] {
+  -webkit-appearance: auto !important;
+  appearance: auto !important;
+  accent-color: #38bdf8;
+  cursor: pointer;
+}
+
 /* Common Form & Input Styling */
-.api-studio-container input,
+.api-studio-container input:not([type="checkbox"]):not([type="radio"]),
 .api-studio-container select,
 .api-studio-container textarea,
-.testing-engine-container input,
+.testing-engine-container input:not([type="checkbox"]):not([type="radio"]),
 .testing-engine-container select,
-.ports-panel-container input,
+.ports-panel-container input:not([type="checkbox"]):not([type="radio"]),
 .ports-panel-container select,
-.diagnostics-panel-container input,
+.diagnostics-panel-container input:not([type="checkbox"]):not([type="radio"]),
 .diagnostics-panel-container select,
-.provider-settings-container input,
+.provider-settings-container input:not([type="checkbox"]):not([type="radio"]),
 .provider-settings-container select {
   font-family: inherit;
   font-size: 12px;
