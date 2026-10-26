@@ -6,15 +6,12 @@ import {
   ArrowRight,
   Shield,
   Smartphone,
-  Tablet,
   Monitor,
-  Laptop,
   ExternalLink,
   Camera,
   Plus,
   X,
   Search,
-  Sparkles,
   CheckCircle2,
   Bookmark,
   History,
@@ -32,6 +29,7 @@ import {
   Check,
   Trash2,
   Home,
+  Sliders,
 } from 'lucide-react';
 import {
   BrowserTab,
@@ -97,7 +95,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
   // Navigation and Zoom
   const [zoomPercent, setZoomPercent] = useState<number>(100);
   const [isSecure, setIsSecure] = useState<boolean>(true);
-  const [searchEngine, setSearchEngine] = useState<'direct' | 'google' | 'duckduckgo'>('direct');
+  const [searchEngine] = useState<'direct' | 'google' | 'duckduckgo'>('direct');
 
   // Find in page
   const [showFindInPage, setShowFindInPage] = useState<boolean>(false);
@@ -134,8 +132,10 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
     },
   ]);
 
-  // DevTools Dock State
-  const [devToolsOpen, setDevToolsOpen] = useState<boolean>(true);
+  // DevTools Dock State (collapsed by default to provide full workspace)
+  const [devToolsOpen, setDevToolsOpen] = useState<boolean>(false);
+  const [canvasTheme, setCanvasTheme] = useState<'dark' | 'light'>('dark');
+  const [showToolsMenu, setShowToolsMenu] = useState<boolean>(false);
   const [activeDevTab, setActiveDevTab] = useState<
     'elements' | 'console' | 'network' | 'sources' | 'application' | 'performance' | 'security' | 'automation'
   >('elements');
@@ -144,9 +144,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
   // Responsive & Emulation State
   const [throttling, setThrottling] = useState<'none' | 'fast3g' | 'slow3g' | 'offline'>('none');
   const [cpuThrottling, setCpuThrottling] = useState<number>(1);
-  const [colorScheme, setColorScheme] = useState<'auto' | 'light' | 'dark'>('dark');
-  const [touchEmulation, setTouchEmulation] = useState<boolean>(false);
-  const [dpr, setDpr] = useState<number>(2);
+  const [dpr] = useState<number>(2);
 
   // 1. Elements Inspector State
   const [selectedNodeId, setSelectedNodeId] = useState<number>(2);
@@ -355,9 +353,6 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
     },
   ]);
   const [isAutomationRunning, setIsAutomationRunning] = useState<boolean>(false);
-
-  // Ask AI to Debug Modal
-  const [showAiDebugModal, setShowAiDebugModal] = useState<boolean>(false);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
@@ -570,19 +565,6 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
     }
   };
 
-  // Ask AI to Debug
-  const handleConfirmAiDebug = () => {
-    setShowAiDebugModal(false);
-    if (onSendToAgent) {
-      const errLogs = consoleLogs.filter((c) => c.level === 'error').map((c) => `${c.message}\n${c.stackTrace || ''}`).join('\n---\n');
-      const failedNets = networkLogs.filter((n) => n.failed || n.status >= 400).map((n) => `${n.method} ${n.url} -> ${n.status} ${n.statusText || ''}`).join('\n');
-
-      onSendToAgent(
-        `[Contextual AI Browser Debugging Request]\nTarget URL: ${activeTab?.url}\nActive Component Source: ${activeSourceFile}\n\nConsole Errors:\n${errLogs}\n\nFailed Network Requests:\n${failedNets}\n\nPlease inspect the corresponding component source files, identify the root cause, and propose a corrective patch.`
-      );
-    }
-  };
-
   // Viewport Dimensions
   const getViewportDimensions = () => {
     switch (activeTab?.viewport) {
@@ -773,7 +755,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
         >
           <div
             onClick={() => setShowPermissionsModal(true)}
-            className="flex items-center gap-1 mr-2 text-emerald-400 cursor-pointer"
+            className="flex items-center gap-1.5 mr-2 text-emerald-400 cursor-pointer"
             title="Site Security & Permissions"
           >
             <Shield className="w-3.5 h-3.5" />
@@ -782,90 +764,52 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
             </span>
           </div>
 
-          <select
-            value={searchEngine}
-            onChange={(e) => setSearchEngine(e.target.value as any)}
-            className="bg-zinc-850 text-[10px] text-zinc-400 border border-zinc-750 rounded px-1.5 py-0.5 outline-none mr-2 font-mono"
-            title="Search Engine Selection"
-          >
-            <option value="direct">Direct</option>
-            <option value="google">Google</option>
-            <option value="duckduckgo">DuckDuckGo</option>
-          </select>
-
           <input
             type="text"
             value={inputUrl}
             onChange={(e) => setInputUrl(e.target.value)}
-            className="flex-1 bg-transparent text-xs text-zinc-100 outline-none font-mono placeholder-zinc-600"
-            placeholder="Search or enter web address..."
+            className="flex-1 bg-transparent text-xs text-zinc-100 outline-none font-mono placeholder-zinc-500"
+            placeholder="Search or enter URL (e.g. http://127.0.0.1:5173)..."
           />
 
-          <button
-            type="button"
-            onClick={handleAddBookmark}
-            className="text-zinc-400 hover:text-amber-400 transition mr-2"
-            title="Bookmark Page"
-          >
-            <Bookmark className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center gap-1.5 ml-2">
+            <button
+              type="button"
+              onClick={handleAddBookmark}
+              className="text-zinc-500 hover:text-amber-400 transition p-0.5"
+              title="Bookmark Page"
+            >
+              <Bookmark className="w-3.5 h-3.5" />
+            </button>
 
-          <button type="submit" className="text-zinc-400 hover:text-emerald-400 transition" title="Go">
-            <Search className="w-3.5 h-3.5" />
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(inputUrl);
+              }}
+              className="text-zinc-500 hover:text-zinc-200 transition p-0.5"
+              title="Copy URL"
+            >
+              <Copy className="w-3.5 h-3.5" />
+            </button>
+
+            <a
+              href={activeTab?.url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-zinc-500 hover:text-zinc-200 transition p-0.5"
+              title="Open in System Browser"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+
+            <button type="submit" className="text-zinc-400 hover:text-emerald-400 transition p-0.5" title="Navigate">
+              <Search className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </form>
 
-        {/* Browser Tools Menu */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setShowBookmarksModal(true)}
-            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded border border-zinc-800 transition"
-            title="All Bookmarks"
-          >
-            <Bookmark className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setShowHistoryModal(true)}
-            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded border border-zinc-800 transition"
-            title="Browsing History"
-          >
-            <History className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setShowDownloadsModal(true)}
-            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded border border-zinc-800 transition"
-            title="Downloads Manager"
-          >
-            <Download className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => setShowFindInPage(!showFindInPage)}
-            className={`p-1.5 rounded border transition ${
-              showFindInPage
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                : 'text-zinc-400 hover:text-zinc-200 border-zinc-800 hover:bg-zinc-900'
-            }`}
-            title="Find in Page (Cmd+F)"
-          >
-            <Search className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => handleZoom(10)}
-            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded border border-zinc-800 transition"
-            title={`Zoom In (${zoomPercent}%)`}
-          >
-            <ZoomIn className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => handleZoom(-10)}
-            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded border border-zinc-800 transition"
-            title={`Zoom Out (${zoomPercent}%)`}
-          >
-            <ZoomOut className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Viewport Presets Toolbar */}
+        {/* Viewport Presets: Desktop, Mobile */}
         <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5">
           <button
             onClick={() =>
@@ -874,37 +818,11 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
               )
             }
             className={`p-1.5 rounded transition ${
-              activeTab?.viewport === 'desktop' ? 'bg-zinc-800 text-emerald-400 shadow' : 'text-zinc-400 hover:text-zinc-200'
+              activeTab?.viewport === 'desktop' ? 'bg-zinc-800 text-emerald-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
             }`}
-            title="Desktop (100%)"
+            title="Desktop Fullscreen"
           >
             <Monitor className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() =>
-              setTabs((prev) =>
-                prev.map((t) => (t.id === activeTabId ? { ...t, viewport: 'laptop' } : t))
-              )
-            }
-            className={`p-1.5 rounded transition ${
-              activeTab?.viewport === 'laptop' ? 'bg-zinc-800 text-emerald-400 shadow' : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-            title="Laptop (1280px)"
-          >
-            <Laptop className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() =>
-              setTabs((prev) =>
-                prev.map((t) => (t.id === activeTabId ? { ...t, viewport: 'tablet' } : t))
-              )
-            }
-            className={`p-1.5 rounded transition ${
-              activeTab?.viewport === 'tablet' ? 'bg-zinc-800 text-emerald-400 shadow' : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-            title="Tablet (768px)"
-          >
-            <Tablet className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() =>
@@ -913,84 +831,109 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
               )
             }
             className={`p-1.5 rounded transition ${
-              activeTab?.viewport === 'mobile' ? 'bg-zinc-800 text-emerald-400 shadow' : 'text-zinc-400 hover:text-zinc-200'
+              activeTab?.viewport === 'mobile' ? 'bg-zinc-800 text-emerald-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
             }`}
-            title="Mobile (375px)"
+            title="Mobile (375x667)"
           >
             <Smartphone className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Emulation Controls: Throttling & DPR */}
-        <select
-          value={throttling}
-          onChange={(e) => setThrottling(e.target.value as any)}
-          className="bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg px-2 py-1 text-[11px] outline-none"
-          title="Network Throttling Profile"
-        >
-          <option value="none">Net: Full</option>
-          <option value="fast3g">Net: 3G Fast</option>
-          <option value="slow3g">Net: 3G Slow</option>
-          <option value="offline">Net: Offline</option>
-        </select>
+        {/* Settings / Emulation Dropdown Toggle */}
+        <div className="relative">
+          <button
+            onClick={() => setShowToolsMenu(!showToolsMenu)}
+            className={`p-1.5 rounded-lg border transition ${
+              showToolsMenu
+                ? 'bg-zinc-800 text-emerald-400 border-zinc-700'
+                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200'
+            }`}
+            title="Emulation & Browser Tools"
+          >
+            <Sliders className="w-3.5 h-3.5" />
+          </button>
 
-        <select
-          value={cpuThrottling}
-          onChange={(e) => setCpuThrottling(Number(e.target.value))}
-          className="bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg px-2 py-1 text-[11px] outline-none"
-          title="CPU Throttling"
-        >
-          <option value={1}>CPU: 1x</option>
-          <option value={4}>CPU: 4x Slow</option>
-          <option value={6}>CPU: 6x Slow</option>
-        </select>
+          {showToolsMenu && (
+            <div className="absolute right-0 top-full mt-1.5 w-64 bg-zinc-900 border border-zinc-750 shadow-2xl rounded-xl p-3 z-50 text-xs space-y-3 font-sans animate-in fade-in">
+              <div className="flex items-center justify-between pb-1 border-b border-zinc-800 text-[11px] font-bold text-zinc-300">
+                <span>Browser Tools & Emulation</span>
+                <button onClick={() => setShowToolsMenu(false)} className="text-zinc-500 hover:text-zinc-300">✕</button>
+              </div>
 
-        <select
-          value={colorScheme}
-          onChange={(e) => setColorScheme(e.target.value as any)}
-          className="bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg px-2 py-1 text-[11px] outline-none"
-          title="Color Scheme Emulation"
-        >
-          <option value="auto">Theme: Auto</option>
-          <option value="dark">Theme: Dark</option>
-          <option value="light">Theme: Light</option>
-        </select>
+              {/* Zoom */}
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400">Zoom: {zoomPercent}%</span>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => handleZoom(-10)} className="p-1 bg-zinc-800 hover:bg-zinc-750 rounded text-zinc-300">
+                    <ZoomOut className="w-3 h-3" />
+                  </button>
+                  <button onClick={() => setZoomPercent(100)} className="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-750 rounded text-[10px] text-zinc-300">
+                    Reset
+                  </button>
+                  <button onClick={() => handleZoom(10)} className="p-1 bg-zinc-800 hover:bg-zinc-750 rounded text-zinc-300">
+                    <ZoomIn className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
 
-        <select
-          value={dpr}
-          onChange={(e) => setDpr(Number(e.target.value))}
-          className="bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-lg px-2 py-1 text-[11px] outline-none"
-          title="Device Pixel Ratio (DPR)"
-        >
-          <option value={1}>1x DPR</option>
-          <option value={2}>2x DPR</option>
-          <option value={3}>3x DPR</option>
-        </select>
+              {/* Network Throttling */}
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400">Network:</span>
+                <select
+                  value={throttling}
+                  onChange={(e) => setThrottling(e.target.value as any)}
+                  className="bg-zinc-950 border border-zinc-800 text-zinc-200 rounded px-2 py-0.5 text-[11px] outline-none"
+                >
+                  <option value="none">Full Speed</option>
+                  <option value="fast3g">Fast 3G</option>
+                  <option value="slow3g">Slow 3G</option>
+                  <option value="offline">Offline</option>
+                </select>
+              </div>
 
-        <button
-          onClick={() => setTouchEmulation(!touchEmulation)}
-          className={`px-2 py-1 rounded-lg border text-[11px] transition ${
-            touchEmulation ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-zinc-900 text-zinc-400 border-zinc-800'
-          }`}
-          title="Touch Emulation"
-        >
-          Touch: {touchEmulation ? 'ON' : 'OFF'}
-        </button>
+              {/* CPU Throttling */}
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400">CPU Speed:</span>
+                <select
+                  value={cpuThrottling}
+                  onChange={(e) => setCpuThrottling(Number(e.target.value))}
+                  className="bg-zinc-950 border border-zinc-800 text-zinc-200 rounded px-2 py-0.5 text-[11px] outline-none"
+                >
+                  <option value={1}>1x (Normal)</option>
+                  <option value={4}>4x Slowdown</option>
+                  <option value={6}>6x Slowdown</option>
+                </select>
+              </div>
 
-        {/* Contextual Ask AI to Debug Action */}
-        <button
-          onClick={() => setShowAiDebugModal(true)}
-          className="flex items-center gap-1.5 px-3 py-1 bg-purple-900/30 hover:bg-purple-900/50 text-purple-200 border border-purple-700/60 rounded-lg text-xs font-semibold transition"
-          title="Ask AI to Debug Browser Errors"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-          <span>Ask AI to Debug</span>
-        </button>
+              {/* Modals Links */}
+              <div className="grid grid-cols-3 gap-1 pt-2 border-t border-zinc-800">
+                <button
+                  onClick={() => { setShowBookmarksModal(true); setShowToolsMenu(false); }}
+                  className="p-1.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 rounded text-center text-[10px] text-zinc-300"
+                >
+                  Bookmarks
+                </button>
+                <button
+                  onClick={() => { setShowHistoryModal(true); setShowToolsMenu(false); }}
+                  className="p-1.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 rounded text-center text-[10px] text-zinc-300"
+                >
+                  History
+                </button>
+                <button
+                  onClick={() => { setShowDownloadsModal(true); setShowToolsMenu(false); }}
+                  className="p-1.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 rounded text-center text-[10px] text-zinc-300"
+                >
+                  Downloads
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Snapshot / Screenshot Action */}
         <button
           onClick={handleCaptureScreenshot}
-          className="flex items-center gap-1 px-2.5 py-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded-lg text-xs transition"
+          className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded-lg text-xs transition"
           title="Capture Viewport Screenshot"
         >
           {screenshotSuccess ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Camera className="w-3.5 h-3.5 text-emerald-400" />}
@@ -1000,27 +943,16 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
         {/* Toggle DevTools Dock */}
         <button
           onClick={() => setDevToolsOpen(!devToolsOpen)}
-          className={`px-2.5 py-1 rounded-lg border text-xs font-medium transition flex items-center gap-1.5 ${
+          className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition flex items-center gap-1.5 ${
             devToolsOpen
-              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-              : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
+              : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850'
           }`}
-          title="Toggle Complete Developer Tools (F12 / Cmd+Option+I)"
+          title="Toggle Developer Tools (F12 / Cmd+Option+I)"
         >
           <Code className="w-3.5 h-3.5" />
-          <span>DevTools</span>
+          <span>{devToolsOpen ? 'Close DevTools' : 'Inspect DevTools'}</span>
         </button>
-
-        {/* Open in External Browser */}
-        <a
-          href={activeTab?.url}
-          target="_blank"
-          rel="noreferrer"
-          className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded-lg border border-zinc-800 transition"
-          title="Open in System Chrome"
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-        </a>
       </div>
 
       {/* Bookmarks Bar */}
@@ -1065,34 +997,62 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
             </button>
           </div>
         )}
-        <div className="flex-1 bg-zinc-950 flex items-center justify-center p-2 overflow-hidden relative">
+        <div className="flex-1 bg-zinc-950 flex flex-col overflow-hidden relative p-2.5">
           <div
             style={{
               ...viewportStyle,
               transform: `scale(${zoomPercent / 100})`,
               transformOrigin: 'center center',
             }}
-            className="relative bg-white shadow-2xl transition-all duration-150 flex flex-col overflow-hidden"
+            className="relative flex-1 bg-zinc-900 border border-zinc-800/90 rounded-xl shadow-2xl transition-all duration-150 flex flex-col overflow-hidden"
           >
-            {/* Sandboxed Notice Banner */}
-            <div className="bg-zinc-900/90 backdrop-blur text-zinc-400 text-[10px] py-0.5 px-3 flex items-center justify-between border-b border-zinc-800">
-              <span className="flex items-center gap-1 text-zinc-400">
-                <Shield className="w-3 h-3 text-emerald-400" />
-                Isolated Sandbox (No Privileged Host IPC Access)
-              </span>
-              <span className="font-mono text-zinc-500">
-                {(activeTab?.viewport || 'desktop').toUpperCase()} • {zoomPercent}% • {activeTab?.url}
-              </span>
+            {/* Frame Status Bar */}
+            <div className="bg-zinc-900/95 backdrop-blur text-zinc-400 text-[11px] py-1 px-3 flex items-center justify-between border-b border-zinc-800 shrink-0">
+              <div className="flex items-center gap-2">
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="font-mono text-zinc-300 font-medium truncate max-w-md">{activeTab?.url}</span>
+                <span className="text-zinc-600">•</span>
+                <span className="text-zinc-500 text-[10px]">Isolated Sandbox</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Canvas Theme Switcher */}
+                <div className="flex items-center bg-zinc-950 border border-zinc-800 rounded px-1.5 py-0.5 gap-1 text-[10px]">
+                  <span className="text-zinc-500 font-medium">Canvas:</span>
+                  <button
+                    onClick={() => setCanvasTheme('dark')}
+                    className={`px-1.5 py-0.2 rounded transition ${
+                      canvasTheme === 'dark' ? 'bg-zinc-800 text-zinc-200 font-bold' : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    Dark
+                  </button>
+                  <button
+                    onClick={() => setCanvasTheme('light')}
+                    className={`px-1.5 py-0.2 rounded transition ${
+                      canvasTheme === 'light' ? 'bg-zinc-200 text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    Light
+                  </button>
+                </div>
+
+                <span className="font-mono text-zinc-500 text-[10px]">
+                  {(activeTab?.viewport || 'desktop').toUpperCase()} ({zoomPercent}%)
+                </span>
+              </div>
             </div>
 
             {/* Embedded Sandboxed Webview */}
-            <iframe
-              ref={iframeRef}
-              src={activeTab?.url}
-              title={activeTab?.title}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-              className="w-full flex-1 border-none bg-white"
-            />
+            <div className={`flex-1 relative flex flex-col overflow-hidden ${canvasTheme === 'dark' ? 'bg-zinc-900' : 'bg-white'}`}>
+              <iframe
+                ref={iframeRef}
+                src={activeTab?.url}
+                title={activeTab?.title}
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                className={`w-full flex-1 border-none transition-colors ${canvasTheme === 'dark' ? 'bg-zinc-900' : 'bg-white'}`}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -1668,51 +1628,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
         </div>
       )}
 
-      {/* 5. Modals: Ask AI to Debug, History, Downloads, Permissions */}
-      {/* Ask AI to Debug Modal */}
-      {showAiDebugModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-              <div className="flex items-center gap-2 font-bold text-zinc-100 text-sm">
-                <Sparkles className="w-4 h-4 text-amber-300" />
-                <span>Ask AI to Debug Browser Failures</span>
-              </div>
-              <button onClick={() => setShowAiDebugModal(false)} className="text-zinc-400 hover:text-zinc-200">
-                ✕
-              </button>
-            </div>
-
-            <p className="text-xs text-zinc-300">
-              The workbench will sanitize credentials, tokens, and cookies, then dispatch the active page URL and error diagnostics to your AI Agent:
-            </p>
-
-            <div className="bg-zinc-950 border border-zinc-850 rounded-lg p-3 space-y-2 font-mono text-[11px] text-zinc-400">
-              <p className="text-emerald-400 font-bold">Collected Context Preview:</p>
-              <p>• URL: {activeTab?.url}</p>
-              <p>• Failed Network: GET /api/v1/products/list (500 Internal Server Error)</p>
-              <p>• Console Error: TypeError: Cannot read properties of undefined at ProductGrid.tsx:48</p>
-              <p className="text-zinc-500 text-[10px]">Authorization headers & cookies redacted.</p>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-zinc-800">
-              <button
-                onClick={() => setShowAiDebugModal(false)}
-                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-750 text-zinc-300 rounded text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmAiDebug}
-                className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold flex items-center gap-1.5"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span>Send to AI Agent</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 5. Modals: History, Downloads, Permissions */}
 
       {/* Bookmarks Modal */}
       {showBookmarksModal && (

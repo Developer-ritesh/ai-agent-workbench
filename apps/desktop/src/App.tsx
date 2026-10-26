@@ -262,7 +262,7 @@ export const App: React.FC = () => {
           currentTab={activityTab}
           onSelectTab={(tab) => {
             setActivityTab(tab);
-            if (['explorer', 'search', 'git', 'vm', 'terminal'].includes(tab)) {
+            if (['explorer', 'search', 'vm', 'terminal'].includes(tab)) {
               setShowLeftSidebar(true);
             }
             if (tab === 'terminal') {

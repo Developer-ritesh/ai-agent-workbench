@@ -130,7 +130,7 @@ export const WorkspaceDetail: React.FC<WorkspaceDetailProps> = ({
 
   // Determine whether left sidebar applies for the current activity tab
   const isSidebarVisible =
-    showLeftSidebar && ['explorer', 'search', 'git', 'vm', 'terminal'].includes(activityTab);
+    showLeftSidebar && ['explorer', 'search', 'vm', 'terminal'].includes(activityTab);
 
   return (
     <div className="ide-body relative flex flex-1 h-full w-full overflow-hidden">

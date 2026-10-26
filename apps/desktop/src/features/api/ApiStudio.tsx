@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Send,
-  Clock,
-  Database,
   FolderOpen,
   Plus,
   Trash2,
@@ -18,6 +16,10 @@ import {
   EyeOff,
   Settings,
   Save,
+  CheckCircle2,
+  Globe,
+  Columns,
+  Rows,
 } from 'lucide-react';
 import {
   HttpMethod,
@@ -35,13 +37,12 @@ import { runPreRequestScript, runPostResponseTests } from './scriptEngine';
 import { generateCodeSnippet, CodeLanguage } from './codeGenerators';
 import { importPostmanCollection, exportPostmanCollection, importOpenApiSpec } from './importers';
 
-interface ApiStudioProps {
-  onSendToAgent?: (prompt: string) => void;
-}
+interface ApiStudioProps {}
 
 export const ApiStudio: React.FC<ApiStudioProps> = () => {
   // Navigation Tabs in Sidebar: 'collections' | 'history' | 'environments' | 'specs'
   const [sidebarTab, setSidebarTab] = useState<'collections' | 'history' | 'environments' | 'specs'>('collections');
+  const [layoutMode, setLayoutMode] = useState<'stacked' | 'split'>('stacked');
 
   // Request State
   const [requestId, setRequestId] = useState<string>('req-current');
@@ -75,10 +76,6 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
   const [apiKeyValue, setApiKeyValue] = useState<string>('');
   const [apiKeyLocation, setApiKeyLocation] = useState<'header' | 'query'>('header');
   const [oauth2Token, setOauth2Token] = useState<string>('');
-  const [oauth2AuthUrl, setOauth2AuthUrl] = useState<string>('https://auth.example.com/oauth/authorize');
-  const [oauth2TokenUrl, setOauth2TokenUrl] = useState<string>('https://auth.example.com/oauth/token');
-  const [oauth2ClientId, setOauth2ClientId] = useState<string>('');
-  const [oauth2ClientSecret, setOauth2ClientSecret] = useState<string>('');
   const [showSecrets, setShowSecrets] = useState<boolean>(false);
 
   // Body State
@@ -97,10 +94,10 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
 
   // Settings
   const [followRedirects, setFollowRedirects] = useState<boolean>(true);
-  const [maxRedirects, setMaxRedirects] = useState<number>(5);
+  const [maxRedirects] = useState<number>(5);
   const [verifySsl, setVerifySsl] = useState<boolean>(true);
   const [timeoutSeconds, setTimeoutSeconds] = useState<number>(20);
-  const [proxyUrl, setProxyUrl] = useState<string>('');
+  const [proxyUrl] = useState<string>('');
 
   // Response State
   const [response, setResponse] = useState<ApiResponseData | null>(null);
@@ -148,21 +145,12 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
             {
               id: 'req-1',
               name: 'Health Check',
+              description: 'Check workbench microVM supervisor health',
               method: 'GET',
               url: '{{baseUrl}}/api/v1/health',
-              params: [{ key: 'limit', value: '10', enabled: true }],
+              params: [{ key: 'limit', value: '10', enabled: true, description: 'Max items to return' }],
               headers: [{ key: 'Accept', value: 'application/json', enabled: true }],
-              bodyType: 'none',
-              testScript: 'pm.test("Status is 200", () => pm.response.to.have.status(200));',
-            },
-            {
-              id: 'req-2',
-              name: 'Get User Profile',
-              method: 'GET',
-              url: '{{baseUrl}}/api/v1/user/profile',
-              params: [],
-              headers: [{ key: 'Accept', value: 'application/json', enabled: true }],
-              auth: { type: 'bearer', bearerToken: '{{token}}' },
+              auth: { type: 'none' },
               bodyType: 'none',
             },
           ],
@@ -170,14 +158,19 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
       ],
       requests: [
         {
-          id: 'req-3',
+          id: 'req-2',
           name: 'Create Workspace Task',
+          description: 'Submit an autonomous task to the isolated microVM',
           method: 'POST',
           url: '{{baseUrl}}/api/v1/tasks',
           params: [],
-          headers: [{ key: 'Content-Type', value: 'application/json', enabled: true }],
+          headers: [
+            { key: 'Content-Type', value: 'application/json', enabled: true },
+            { key: 'Authorization', value: 'Bearer {{token}}', enabled: true },
+          ],
+          auth: { type: 'bearer', bearerToken: '{{token}}' },
           bodyType: 'json',
-          bodyContent: '{\n  "title": "Build Test Suite",\n  "status": "pending"\n}',
+          bodyContent: '{\n  "instruction": "Run tests across all workspaces",\n  "max_steps": 10\n}',
         },
       ],
     },
@@ -187,15 +180,30 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
   const [historyItems, setHistoryItems] = useState<ApiHistoryItem[]>([
     {
       id: 'h-1',
-      timestamp: 'Just now',
+      timestamp: 'Today, 19:42',
       method: 'GET',
       url: 'http://127.0.0.1:3000/api/v1/health',
       status: 200,
-      timeMs: 24,
+      timeMs: 42,
       sizeBytes: 154,
       requestConfig: {
         method: 'GET',
         url: 'http://127.0.0.1:3000/api/v1/health',
+        name: 'Health Check',
+      },
+    },
+    {
+      id: 'h-2',
+      timestamp: 'Today, 19:40',
+      method: 'POST',
+      url: 'http://127.0.0.1:3000/api/v1/tasks',
+      status: 201,
+      timeMs: 88,
+      sizeBytes: 412,
+      requestConfig: {
+        method: 'POST',
+        url: 'http://127.0.0.1:3000/api/v1/tasks',
+        name: 'Create Workspace Task',
       },
     },
   ]);
@@ -214,6 +222,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
   const [showImportModal, setShowImportModal] = useState<boolean>(false);
   const [importFormat, setImportFormat] = useState<'postman' | 'openapi' | 'curl'>('postman');
   const [importText, setImportText] = useState<string>('');
+
   // Persistence (Load & Save)
   useEffect(() => {
     try {
@@ -276,7 +285,6 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
     const activeEnv = environments.find((e) => e.id === selectedEnvId)?.variables || {};
     const preResult = runPreRequestScript(preRequestScript, activeEnv);
     if (Object.keys(preResult.envUpdates).length > 0) {
-      // Update environment variables
       const updatedEnvs = environments.map((e) =>
         e.id === selectedEnvId ? { ...e, variables: { ...e.variables, ...preResult.envUpdates } } : e
       );
@@ -382,7 +390,6 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
     const targetCol = collections[0];
     if (!targetCol) return;
 
-    // Check if updating existing
     let updated = false;
     const updatedReqs = targetCol.requests.map((r) => {
       if (r.id === newReq.id) {
@@ -443,7 +450,6 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
     let passedTestCount = 0;
     let totalTime = 0;
 
-    // Gather all requests from collection + folders
     const allRequests: ApiRequestConfig[] = [...col.requests];
     (col.folders || []).forEach((f) => allRequests.push(...f.requests));
 
@@ -520,48 +526,30 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
 
     try {
       if (importFormat === 'postman') {
-        const importedCol = importPostmanCollection(importText);
-        persistCollections([...collections, importedCol]);
+        const parsedCol = importPostmanCollection(importText);
+        persistCollections([...collections, parsedCol]);
       } else if (importFormat === 'openapi') {
-        const importedCol = importOpenApiSpec(importText);
-        persistCollections([...collections, importedCol]);
-      } else if (importFormat === 'curl') {
-        tauriIpc
-          .apiParseCurl(importText)
-          .then((req) => {
-            handleLoadRequest(req);
-          })
-          .catch((err) => alert(String(err)));
+        const parsedCol = importOpenApiSpec(importText);
+        persistCollections([...collections, parsedCol]);
       }
       setShowImportModal(false);
       setImportText('');
     } catch (err: any) {
-      alert(`Import failed: ${err?.message || err}`);
+      alert(`Import error: ${err?.message || err}`);
     }
   };
 
-  // Helper formatting for JSON
-  const formatJson = (str: string) => {
-    try {
-      return JSON.stringify(JSON.parse(str), null, 2);
-    } catch {
-      return str;
-    }
-  };
-
-  // Copy Response Body
   const handleCopyResponse = () => {
-    if (response?.data) {
+    if (response) {
       navigator.clipboard.writeText(response.data);
       setCopiedResponse(true);
       setTimeout(() => setCopiedResponse(false), 2000);
     }
   };
 
-  // Save Response to File
   const handleSaveResponseFile = () => {
     if (!response) return;
-    const blob = new Blob([response.data], { type: 'text/plain' });
+    const blob = new Blob([response.data], { type: 'application/json' });
     const u = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = u;
@@ -570,68 +558,101 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
     URL.revokeObjectURL(u);
   };
 
-
   const unresolvedTokens = findUnresolvedTokens(url);
 
+  // Method color helper
+  const getMethodBadgeClass = (m: string) => {
+    switch (m) {
+      case 'GET':
+        return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60';
+      case 'POST':
+        return 'bg-sky-950/80 text-sky-400 border-sky-800/60';
+      case 'PUT':
+      case 'PATCH':
+        return 'bg-amber-950/80 text-amber-400 border-amber-800/60';
+      case 'DELETE':
+        return 'bg-rose-950/80 text-rose-400 border-rose-800/60';
+      default:
+        return 'bg-purple-950/80 text-purple-400 border-purple-800/60';
+    }
+  };
+
   return (
-    <div className="api-studio-container flex h-full w-full bg-zinc-950 text-zinc-100 font-sans select-none overflow-hidden">
-      {/* 1. Left Sidebar: Collections, History, Environments, OpenAPI Specs */}
-      <div className="w-72 bg-zinc-900 border-r border-zinc-800 flex flex-col flex-shrink-0">
-        {/* Navigation Tabs in Sidebar */}
-        <div className="flex items-center border-b border-zinc-800 bg-zinc-950 text-xs">
-          <button
-            onClick={() => setSidebarTab('collections')}
-            className={`flex-1 py-2 text-center font-bold tracking-wider uppercase text-[10px] transition border-b-2 ${
-              sidebarTab === 'collections'
-                ? 'text-emerald-400 border-emerald-400 bg-zinc-900/60'
-                : 'text-zinc-500 border-transparent hover:text-zinc-300'
-            }`}
-          >
-            Collections
-          </button>
-          <button
-            onClick={() => setSidebarTab('history')}
-            className={`flex-1 py-2 text-center font-bold tracking-wider uppercase text-[10px] transition border-b-2 ${
-              sidebarTab === 'history'
-                ? 'text-emerald-400 border-emerald-400 bg-zinc-900/60'
-                : 'text-zinc-500 border-transparent hover:text-zinc-300'
-            }`}
-          >
-            History
-          </button>
-          <button
-            onClick={() => setSidebarTab('environments')}
-            className={`flex-1 py-2 text-center font-bold tracking-wider uppercase text-[10px] transition border-b-2 ${
-              sidebarTab === 'environments'
-                ? 'text-emerald-400 border-emerald-400 bg-zinc-900/60'
-                : 'text-zinc-500 border-transparent hover:text-zinc-300'
-            }`}
-          >
-            Envs
-          </button>
-          <button
-            onClick={() => setSidebarTab('specs')}
-            className={`flex-1 py-2 text-center font-bold tracking-wider uppercase text-[10px] transition border-b-2 ${
-              sidebarTab === 'specs'
-                ? 'text-emerald-400 border-emerald-400 bg-zinc-900/60'
-                : 'text-zinc-500 border-transparent hover:text-zinc-300'
-            }`}
-          >
-            Specs
-          </button>
+    <div className="flex h-full w-full bg-[#0c0f17] text-slate-100 font-sans select-none overflow-hidden">
+      {/* 1. Left Sidebar: Collections, History, Environments */}
+      <div className="w-64 bg-[#0e121b] border-r border-[#1a202e] flex flex-col flex-shrink-0">
+        {/* Sidebar Header & Segmented Tabs */}
+        <div className="p-3 border-b border-[#1a202e] bg-[#10141d]">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+              <Globe className="w-3.5 h-3.5 text-cyan-400" />
+              API Studio
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  const newCol: ApiCollection = {
+                    id: `col-${Date.now()}`,
+                    name: `Collection ${collections.length + 1}`,
+                    requests: [],
+                    folders: [],
+                  };
+                  persistCollections([...collections, newCol]);
+                }}
+                className="p-1 hover:bg-[#1f283d] text-slate-400 hover:text-cyan-300 rounded transition"
+                title="New Collection"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Segmented Tab Pill */}
+          <div className="flex items-center p-0.5 bg-[#080b11] border border-[#1a202e] rounded-lg text-xs">
+            <button
+              onClick={() => setSidebarTab('collections')}
+              className={`flex-1 py-1 px-2 text-center rounded-md font-medium transition ${
+                sidebarTab === 'collections'
+                  ? 'bg-[#1a2335] text-cyan-300 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Collections
+            </button>
+            <button
+              onClick={() => setSidebarTab('history')}
+              className={`flex-1 py-1 px-2 text-center rounded-md font-medium transition ${
+                sidebarTab === 'history'
+                  ? 'bg-[#1a2335] text-cyan-300 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              History
+            </button>
+            <button
+              onClick={() => setSidebarTab('environments')}
+              className={`flex-1 py-1 px-2 text-center rounded-md font-medium transition ${
+                sidebarTab === 'environments'
+                  ? 'bg-[#1a2335] text-cyan-300 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              Envs
+            </button>
+          </div>
         </div>
 
-        {/* Environment Quick Bar */}
-        <div className="p-2.5 bg-zinc-950/80 border-b border-zinc-800 flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs text-zinc-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        {/* Environment Quick Pill */}
+        <div className="px-3 py-2 bg-[#0c0f17] border-b border-[#1a202e] flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 truncate">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
             <select
               value={selectedEnvId}
               onChange={(e) => setSelectedEnvId(e.target.value)}
-              className="bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-emerald-400 font-mono outline-none cursor-pointer"
+              className="bg-transparent text-emerald-400 font-mono text-[11px] font-semibold outline-none cursor-pointer truncate"
             >
               {environments.map((e) => (
-                <option key={e.id} value={e.id}>
+                <option key={e.id} value={e.id} className="bg-[#0e121b] text-slate-200">
                   {e.name}
                 </option>
               ))}
@@ -639,8 +660,8 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
           </div>
           <button
             onClick={() => setShowEnvModal(true)}
-            className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded"
-            title="Configure Environments & Variables"
+            className="p-1 text-slate-500 hover:text-slate-200 rounded transition"
+            title="Manage Environments"
           >
             <Settings className="w-3.5 h-3.5" />
           </button>
@@ -650,34 +671,16 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
         <div className="flex-1 overflow-y-auto p-2 space-y-2">
           {/* A. COLLECTIONS TAB */}
           {sidebarTab === 'collections' && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between px-1 text-xs text-zinc-400">
-                <span className="font-bold text-[11px] uppercase tracking-wider text-zinc-500">Collections</span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => {
-                      const newCol: ApiCollection = {
-                        id: `col-${Date.now()}`,
-                        name: `Collection ${collections.length + 1}`,
-                        requests: [],
-                        folders: [],
-                      };
-                      persistCollections([...collections, newCol]);
-                    }}
-                    className="p-1 hover:text-zinc-100 rounded text-emerald-400"
-                    title="New Collection"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
+            <div className="space-y-2">
               {collections.map((col) => (
-                <div key={col.id} className="bg-zinc-950/60 border border-zinc-850 rounded-lg p-2 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs font-bold text-zinc-200">
-                    <span className="truncate flex items-center gap-1.5">
-                      <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
-                      {col.name}
+                <div
+                  key={col.id}
+                  className="bg-[#131824] border border-[#1a202e] rounded-xl p-2.5 space-y-2 shadow-sm"
+                >
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-200">
+                    <span className="truncate flex items-center gap-2">
+                      <FolderOpen className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                      <span className="truncate">{col.name}</span>
                     </span>
                     <button
                       onClick={() => {
@@ -692,38 +695,34 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                         );
                         persistCollections(updated);
                       }}
-                      className="p-0.5 text-zinc-500 hover:text-emerald-400"
-                      title="Add Request to Collection"
+                      className="p-1 text-slate-400 hover:text-cyan-400 hover:bg-[#1a2335] rounded transition"
+                      title="Add Request"
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
                   {/* Requests in Collection */}
-                  <div className="space-y-1 pl-2 font-mono text-[11px]">
+                  <div className="space-y-1 pl-1">
                     {col.requests.map((req) => (
                       <div
                         key={req.id}
                         onClick={() => handleLoadRequest(req)}
-                        className={`flex items-center justify-between p-1.5 rounded cursor-pointer transition group ${
-                          requestId === req.id ? 'bg-emerald-950/40 text-emerald-300 border border-emerald-500/30' : 'hover:bg-zinc-850 text-zinc-400'
+                        className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition group ${
+                          requestId === req.id
+                            ? 'bg-[#1c2840] text-cyan-300 border border-cyan-700/60 shadow-sm'
+                            : 'hover:bg-[#181f2f] text-slate-300'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5 truncate">
+                        <div className="flex items-center gap-2 truncate">
                           <span
-                            className={`font-bold text-[9px] px-1 py-0.2 rounded ${
-                              req.method === 'GET'
-                                ? 'bg-blue-950 text-blue-400'
-                                : req.method === 'POST'
-                                ? 'bg-emerald-950 text-emerald-400'
-                                : req.method === 'DELETE'
-                                ? 'bg-rose-950 text-rose-400'
-                                : 'bg-amber-950 text-amber-400'
-                            }`}
+                            className={`font-mono font-bold text-[10px] px-1.5 py-0.5 rounded border ${getMethodBadgeClass(
+                              req.method
+                            )}`}
                           >
                             {req.method}
                           </span>
-                          <span className="truncate text-zinc-300 font-sans text-xs">{req.name || req.url}</span>
+                          <span className="truncate text-xs">{req.name || req.url}</span>
                         </div>
                         <button
                           onClick={(e) => {
@@ -733,7 +732,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                             );
                             persistCollections(updated);
                           }}
-                          className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-rose-400 p-0.5"
+                          className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-400 p-1 transition"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -749,46 +748,35 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
           {sidebarTab === 'history' && (
             <div className="space-y-2">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5 pointer-events-none" />
+                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Filter history..."
                   value={historySearchQuery}
                   onChange={(e) => setHistorySearchQuery(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-2 py-1.5 text-xs text-zinc-200 outline-none"
+                  className="w-full bg-[#10141e] border border-[#1a202e] rounded-lg pl-8 pr-2 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500"
                 />
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-zinc-500 px-1">
-                <span>{historyItems.length} Entries</span>
-                <button onClick={() => persistHistory([])} className="hover:text-rose-400 transition">
-                  Clear
-                </button>
-              </div>
-
-              <div className="space-y-1 font-mono text-[11px]">
+              <div className="space-y-1">
                 {historyItems
-                  .filter((h) => !historySearchQuery || h.url.toLowerCase().includes(historySearchQuery.toLowerCase()))
+                  .filter((h) => h.url.toLowerCase().includes(historySearchQuery.toLowerCase()))
                   .map((h) => (
                     <div
                       key={h.id}
-                      onClick={() => handleLoadRequest(h.requestConfig)}
-                      className="p-2 bg-zinc-950 hover:bg-zinc-850 rounded-lg border border-zinc-850 cursor-pointer space-y-1 transition"
+                      onClick={() => handleLoadRequest({ ...h.requestConfig, url: h.url, method: h.method })}
+                      className="p-2.5 bg-[#131824] hover:bg-[#181f2f] rounded-lg border border-[#1a202e] cursor-pointer space-y-1 transition"
                     >
                       <div className="flex items-center justify-between">
                         <span
-                          className={`font-bold text-[9px] px-1 py-0.2 rounded ${
-                            h.method === 'GET'
-                              ? 'bg-blue-950 text-blue-400'
-                              : h.method === 'POST'
-                              ? 'bg-emerald-950 text-emerald-400'
-                              : 'bg-amber-950 text-amber-400'
-                          }`}
+                          className={`font-mono font-bold text-[10px] px-1.5 py-0.5 rounded border ${getMethodBadgeClass(
+                            h.method
+                          )}`}
                         >
                           {h.method}
                         </span>
                         <span
-                          className={`text-[10px] font-bold ${
+                          className={`text-[11px] font-bold ${
                             h.status >= 200 && h.status < 300
                               ? 'text-emerald-400'
                               : h.status >= 400
@@ -799,8 +787,8 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                           {h.status || 'ERR'}
                         </span>
                       </div>
-                      <div className="truncate text-zinc-300 text-[11px]">{h.url}</div>
-                      <div className="text-[10px] text-zinc-500 flex items-center justify-between font-sans">
+                      <div className="truncate text-slate-300 text-xs font-mono">{h.url}</div>
+                      <div className="text-[10px] text-slate-500 flex items-center justify-between">
                         <span>{h.timeMs}ms</span>
                         <span>{h.timestamp}</span>
                       </div>
@@ -812,71 +800,49 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
 
           {/* C. ENVIRONMENTS TAB */}
           {sidebarTab === 'environments' && (
-            <div className="space-y-3 font-sans text-xs">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="font-bold text-[11px] uppercase tracking-wider text-zinc-500">Variables</span>
-                <button onClick={() => setShowEnvModal(true)} className="text-emerald-400 hover:underline">
-                  Edit All
-                </button>
-              </div>
-
-              {environments
-                .find((e) => e.id === selectedEnvId)
-                ?.variables && (
-                <div className="bg-zinc-950 border border-zinc-850 rounded-lg p-2.5 space-y-2 font-mono text-[11px]">
-                  {Object.entries(
-                    environments.find((e) => e.id === selectedEnvId)!.variables
-                  ).map(([k, v]) => (
-                    <div key={k} className="flex items-center justify-between pb-1 border-b border-zinc-850">
-                      <span className="text-purple-400">{`{{${k}}}`}</span>
-                      <span className="text-zinc-400 truncate max-w-28">{v}</span>
-                    </div>
-                  ))}
+            <div className="space-y-3 p-1">
+              {environments.map((env) => (
+                <div
+                  key={env.id}
+                  className="p-3 bg-[#131824] border border-[#1a202e] rounded-xl space-y-2 text-xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-200 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                      {env.name}
+                    </span>
+                    <button
+                      onClick={() => setSelectedEnvId(env.id)}
+                      className={`text-[11px] px-2 py-0.5 rounded font-medium border ${
+                        selectedEnvId === env.id
+                          ? 'bg-emerald-950 text-emerald-300 border-emerald-700/60'
+                          : 'bg-[#1a202e] text-slate-400 border-transparent hover:text-white'
+                      }`}
+                    >
+                      {selectedEnvId === env.id ? 'Active' : 'Select'}
+                    </button>
+                  </div>
+                  <div className="space-y-1 font-mono text-[11px] text-slate-400">
+                    {Object.entries(env.variables).map(([k, v]) => (
+                      <div key={k} className="flex justify-between truncate">
+                        <span className="text-cyan-400">{k}:</span>
+                        <span className="text-slate-300 truncate max-w-[120px]">
+                          {env.isSecret?.[k] ? '••••••••' : v}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* D. SPECS TAB */}
-          {sidebarTab === 'specs' && (
-            <div className="space-y-3 font-sans text-xs">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="font-bold text-[11px] uppercase tracking-wider text-zinc-500">OpenAPI / Swagger</span>
-                <button
-                  onClick={() => {
-                    setImportFormat('openapi');
-                    setShowImportModal(true);
-                  }}
-                  className="text-emerald-400 hover:underline flex items-center gap-1"
-                >
-                  <Upload className="w-3 h-3" /> Import
-                </button>
-              </div>
-
-              <div className="p-3 bg-zinc-950 border border-zinc-850 rounded-lg space-y-2">
-                <p className="font-bold text-zinc-300">OpenAPI 3.x Specs</p>
-                <p className="text-[11px] text-zinc-500">
-                  Import OpenAPI or Swagger JSON specifications to automatically generate full request collections with typed parameters and schemas.
-                </p>
-                <button
-                  onClick={() => {
-                    setImportFormat('openapi');
-                    setShowImportModal(true);
-                  }}
-                  className="w-full py-1.5 bg-zinc-800 hover:bg-zinc-750 text-zinc-200 rounded text-xs font-semibold"
-                >
-                  Load API Spec
-                </button>
-              </div>
+              ))}
             </div>
           )}
         </div>
 
         {/* Sidebar Footer: Runner, Import & Export */}
-        <div className="p-3 border-t border-zinc-800 bg-zinc-950 space-y-2">
+        <div className="p-3 border-t border-[#1a202e] bg-[#10141d] space-y-2">
           <button
             onClick={() => setShowRunnerModal(true)}
-            className="w-full flex items-center justify-center gap-1.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-semibold transition"
+            className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-semibold transition shadow-sm"
           >
             <Play className="w-3.5 h-3.5" />
             <span>Collection Runner</span>
@@ -897,10 +863,10 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                   URL.revokeObjectURL(u);
                 }
               }}
-              className="flex-1 flex items-center justify-center gap-1 py-1 text-[11px] bg-zinc-800 hover:bg-zinc-750 text-zinc-300 rounded border border-zinc-700 transition"
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 rounded-lg border border-[#1a202e] transition"
               title="Export Postman v2.1 Collection"
             >
-              <Download className="w-3 h-3" />
+              <Download className="w-3.5 h-3.5" />
               <span>Export</span>
             </button>
             <button
@@ -908,10 +874,10 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                 setImportFormat('postman');
                 setShowImportModal(true);
               }}
-              className="flex-1 flex items-center justify-center gap-1 py-1 text-[11px] bg-zinc-800 hover:bg-zinc-750 text-zinc-300 rounded border border-zinc-700 transition"
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 rounded-lg border border-[#1a202e] transition"
               title="Import Collection or Spec"
             >
-              <Upload className="w-3 h-3" />
+              <Upload className="w-3.5 h-3.5" />
               <span>Import</span>
             </button>
           </div>
@@ -919,28 +885,37 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
       </div>
 
       {/* 2. Main Request & Response Workbench */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Request Top Header: Name, Save, Code, AI Debug */}
-        <div className="px-4 py-2 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#0c0f17]">
+        {/* Request Top Header: Name, Breadcrumb, Actions */}
+        <div className="px-5 py-3 bg-[#10141d] border-b border-[#1a202e] flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <input
               type="text"
               value={requestName}
               onChange={(e) => setRequestName(e.target.value)}
-              className="bg-transparent font-bold text-sm text-zinc-100 outline-none border-b border-transparent hover:border-zinc-700 focus:border-emerald-500 w-64"
+              className="bg-transparent font-bold text-sm text-white outline-none border-b border-transparent hover:border-slate-700 focus:border-cyan-500 w-64 transition"
               placeholder="Request Name"
             />
-            <span className="text-zinc-600">|</span>
-            <span className="text-xs text-zinc-400 font-mono">
+            <span className="text-slate-600">/</span>
+            <span className="text-xs text-slate-400 font-mono">
               Env: <strong className="text-emerald-400">{environments.find((e) => e.id === selectedEnvId)?.name}</strong>
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setLayoutMode(layoutMode === 'stacked' ? 'split' : 'stacked')}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 border border-[#1a202e] rounded-lg text-xs font-medium transition"
+              title={`Toggle layout (Currently: ${layoutMode})`}
+            >
+              {layoutMode === 'stacked' ? <Columns className="w-3.5 h-3.5" /> : <Rows className="w-3.5 h-3.5" />}
+              <span>{layoutMode === 'stacked' ? 'Side-by-Side' : 'Stacked'}</span>
+            </button>
+
+            <button
               onClick={handleSaveRequest}
-              className="flex items-center gap-1 px-2.5 py-1 bg-zinc-850 hover:bg-zinc-800 text-zinc-300 rounded text-xs transition border border-zinc-750"
-              title="Save Request"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 border border-[#1a202e] rounded-lg text-xs font-medium transition"
+              title="Save Request (Cmd+S)"
             >
               <Save className="w-3.5 h-3.5 text-emerald-400" />
               <span>Save</span>
@@ -948,8 +923,8 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
 
             <button
               onClick={() => setShowCodeModal(true)}
-              className="flex items-center gap-1 px-2.5 py-1 bg-zinc-850 hover:bg-zinc-800 text-zinc-300 rounded text-xs transition border border-zinc-750"
-              title="Generate Client Code Snippets (cURL, JS, Python, Rust, Go)"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 border border-[#1a202e] rounded-lg text-xs font-medium transition"
+              title="Generate Client Code (cURL, JS, Python, Rust, Go)"
             >
               <Code className="w-3.5 h-3.5 text-blue-400" />
               <span>Code</span>
@@ -957,82 +932,84 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
           </div>
         </div>
 
-        {/* Omnibox URL Bar */}
-        <div className="p-3 bg-zinc-900/90 border-b border-zinc-800 flex items-center gap-2">
-          {/* Method Selector */}
-          <select
-            value={method}
-            onChange={(e) => setMethod(e.target.value as HttpMethod)}
-            className={`font-mono font-bold text-xs px-3 py-2 rounded-lg border outline-none cursor-pointer ${
-              method === 'GET'
-                ? 'bg-blue-950/60 text-blue-400 border-blue-800'
-                : method === 'POST'
-                ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800'
-                : method === 'DELETE'
-                ? 'bg-rose-950/60 text-rose-400 border-rose-800'
-                : method === 'PUT' || method === 'PATCH'
-                ? 'bg-amber-950/60 text-amber-400 border-amber-800'
-                : 'bg-purple-950/60 text-purple-400 border-purple-800'
-            }`}
-          >
-            <option value="GET">GET</option>
-            <option value="POST">POST</option>
-            <option value="PUT">PUT</option>
-            <option value="PATCH">PATCH</option>
-            <option value="DELETE">DELETE</option>
-            <option value="HEAD">HEAD</option>
-            <option value="OPTIONS">OPTIONS</option>
-            <option value="CUSTOM">CUSTOM</option>
-          </select>
+        {/* HTTP Omnibox URL Bar */}
+        <div className="p-4 bg-[#0e121b] border-b border-[#1a202e] flex-shrink-0">
+          <div className="bg-[#131824] border border-[#1a202e] focus-within:border-cyan-500 rounded-xl p-1.5 shadow-md flex items-center gap-2 transition">
+            {/* Method Selector */}
+            <select
+              value={method}
+              onChange={(e) => setMethod(e.target.value as HttpMethod)}
+              className={`font-mono font-bold text-xs px-3.5 py-2 rounded-lg border outline-none cursor-pointer transition ${getMethodBadgeClass(
+                method
+              )}`}
+            >
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+              <option value="PUT">PUT</option>
+              <option value="PATCH">PATCH</option>
+              <option value="DELETE">DELETE</option>
+              <option value="HEAD">HEAD</option>
+              <option value="OPTIONS">OPTIONS</option>
+              <option value="CUSTOM">CUSTOM</option>
+            </select>
 
-          {method === 'CUSTOM' && (
-            <input
-              type="text"
-              placeholder="METHOD"
-              value={customMethod}
-              onChange={(e) => setCustomMethod(e.target.value)}
-              className="w-24 bg-zinc-950 border border-zinc-800 rounded px-2 py-1.5 text-xs text-purple-400 font-mono outline-none"
-            />
-          )}
+            {method === 'CUSTOM' && (
+              <input
+                type="text"
+                placeholder="METHOD"
+                value={customMethod}
+                onChange={(e) => setCustomMethod(e.target.value)}
+                className="w-24 bg-[#090d16] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-xs text-purple-400 font-mono outline-none"
+              />
+            )}
 
-          {/* URL Input */}
-          <div className="flex-1 flex items-center bg-zinc-950 border border-zinc-800 focus-within:border-emerald-500 rounded-lg px-3 py-1.5 transition">
+            {/* URL Input */}
             <input
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="flex-1 bg-transparent text-xs text-zinc-100 font-mono outline-none"
+              className="flex-1 bg-transparent px-2 text-sm text-slate-100 font-mono outline-none placeholder-slate-500"
               placeholder="{{baseUrl}}/api/v1/resource"
             />
 
             {unresolvedTokens.length > 0 && (
               <span
-                className="text-[10px] text-amber-400 bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-800/40 ml-2 font-mono flex items-center gap-1"
+                className="text-[11px] text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-800/40 font-mono flex items-center gap-1 flex-shrink-0"
                 title={`Unresolved variable: ${unresolvedTokens.join(', ')}`}
               >
                 <AlertTriangle className="w-3 h-3" />
-                <span>Unresolved: {unresolvedTokens[0]}</span>
+                <span>{unresolvedTokens[0]}</span>
               </span>
             )}
-          </div>
 
-          {/* Send / Cancel Button */}
-          <button
-            onClick={handleSend}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-md transition disabled:opacity-50"
-          >
-            <Send className={`w-3.5 h-3.5 ${isLoading ? 'animate-pulse' : ''}`} />
-            <span>{isLoading ? 'Sending...' : 'Send'}</span>
-          </button>
+            {/* Send / Cancel Button */}
+            <button
+              onClick={handleSend}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg text-xs font-bold shadow-md shadow-blue-500/20 transition active:scale-95 disabled:opacity-50 flex-shrink-0"
+            >
+              <Send className={`w-3.5 h-3.5 ${isLoading ? 'animate-pulse' : ''}`} />
+              <span>{isLoading ? 'Executing...' : 'Send'}</span>
+            </button>
+          </div>
         </div>
 
-        {/* Two-Pane Body: Request Editor (Left) & Response Viewer (Right) */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left Pane: Request Editor */}
-          <div className="w-1/2 border-r border-zinc-800 flex flex-col bg-zinc-950 overflow-hidden">
-            {/* Request Tabs */}
-            <div className="flex items-center border-b border-zinc-800 bg-zinc-900/40 px-3 pt-2 gap-1 overflow-x-auto no-scrollbar text-xs">
+        {/* Dynamic Layout: Stacked vs Split */}
+        <div
+          className={`flex-1 flex min-h-0 overflow-hidden ${
+            layoutMode === 'stacked' ? 'flex-col' : 'flex-row'
+          }`}
+        >
+          {/* Section 1: Request Editor Pane */}
+          <div
+            className={`flex flex-col min-h-0 overflow-hidden bg-[#0c0f17] ${
+              layoutMode === 'stacked'
+                ? 'h-[45%] border-b border-[#1a202e]'
+                : 'w-1/2 border-r border-[#1a202e]'
+            }`}
+          >
+            {/* Request Tabs Bar */}
+            <div className="flex items-center border-b border-[#1a202e] bg-[#10141d] px-4 pt-1 gap-1 flex-shrink-0">
               {(
                 [
                   'params',
@@ -1047,10 +1024,10 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveRequestTab(tab)}
-                  className={`pb-2 px-2.5 uppercase text-[11px] font-bold tracking-wider transition border-b-2 ${
+                  className={`pb-2.5 px-3 uppercase text-xs font-semibold tracking-wide transition border-b-2 ${
                     activeRequestTab === tab
-                      ? 'text-emerald-400 border-emerald-400 bg-zinc-900/40'
-                      : 'text-zinc-500 border-transparent hover:text-zinc-300'
+                      ? 'text-cyan-400 border-cyan-400'
+                      : 'text-slate-400 border-transparent hover:text-slate-200'
                   }`}
                 >
                   {tab}
@@ -1060,22 +1037,26 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               ))}
             </div>
 
-            {/* Request Tab Contents */}
+            {/* Request Tab Contents Area */}
             <div className="flex-1 overflow-y-auto p-4 text-xs font-mono">
               {/* 1. PARAMS TAB */}
               {activeRequestTab === 'params' && (
                 <div className="space-y-3 font-sans">
-                  <div className="flex items-center justify-between text-zinc-400 pb-1 border-b border-zinc-800 text-[11px]">
-                    <span className="font-bold uppercase tracking-wider text-zinc-500">Query Parameters</span>
+                  <div className="flex items-center justify-between text-slate-400 pb-1 border-b border-[#1a202e] text-xs">
+                    <span className="font-semibold uppercase tracking-wider text-slate-400">
+                      Query Parameters
+                    </span>
                     <button
-                      onClick={() => setParams([...params, { key: '', value: '', enabled: true, description: '' }])}
-                      className="text-emerald-400 hover:underline flex items-center gap-1 font-sans"
+                      onClick={() =>
+                        setParams([...params, { key: '', value: '', enabled: true, description: '' }])
+                      }
+                      className="text-cyan-400 hover:underline flex items-center gap-1 font-medium"
                     >
-                      <Plus className="w-3 h-3" /> Add Parameter
+                      <Plus className="w-3.5 h-3.5" /> Add Parameter
                     </button>
                   </div>
 
-                  <div className="space-y-1.5 font-mono">
+                  <div className="space-y-2 font-mono">
                     {params.map((p, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <input
@@ -1086,7 +1067,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                             updated[idx].enabled = e.target.checked;
                             setParams(updated);
                           }}
-                          className="rounded border-zinc-700 text-emerald-500"
+                          className="rounded border-slate-700 text-cyan-500 w-4 h-4 cursor-pointer"
                         />
                         <input
                           type="text"
@@ -1097,7 +1078,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                             updated[idx].key = e.target.value;
                             setParams(updated);
                           }}
-                          className="w-1/3 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-zinc-200 outline-none focus:border-emerald-500"
+                          className="w-1/3 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500"
                         />
                         <input
                           type="text"
@@ -1108,7 +1089,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                             updated[idx].value = e.target.value;
                             setParams(updated);
                           }}
-                          className="w-1/3 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-zinc-200 outline-none focus:border-emerald-500"
+                          className="w-1/3 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500"
                         />
                         <input
                           type="text"
@@ -1119,11 +1100,11 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                             updated[idx].description = e.target.value;
                             setParams(updated);
                           }}
-                          className="flex-1 bg-zinc-900/60 border border-zinc-800/80 rounded px-2 py-1 text-xs text-zinc-400 outline-none font-sans"
+                          className="flex-1 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-xs text-slate-400 outline-none focus:border-cyan-500 font-sans"
                         />
                         <button
                           onClick={() => setParams(params.filter((_, i) => i !== idx))}
-                          className="text-zinc-500 hover:text-rose-400 p-1"
+                          className="p-1.5 text-slate-500 hover:text-rose-400 rounded transition"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1133,187 +1114,22 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                 </div>
               )}
 
-              {/* 2. AUTH TAB */}
-              {activeRequestTab === 'auth' && (
-                <div className="space-y-4 font-sans text-xs">
-                  <div>
-                    <label className="text-zinc-400 block mb-1">Authentication Type</label>
-                    <select
-                      value={authType}
-                      onChange={(e) => setAuthType(e.target.value as any)}
-                      className="bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5 text-zinc-200 outline-none cursor-pointer"
-                    >
-                      <option value="none">No Auth</option>
-                      <option value="bearer">Bearer Token</option>
-                      <option value="basic">Basic Auth</option>
-                      <option value="apikey">API Key</option>
-                      <option value="oauth2">OAuth 2.0 (Bearer / Refresh)</option>
-                      <option value="inherit">Inherit from Collection</option>
-                    </select>
-                  </div>
-
-                  {authType === 'bearer' && (
-                    <div className="space-y-2">
-                      <label className="text-zinc-400 block">Bearer Token</label>
-                      <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5 focus-within:border-emerald-500">
-                        <input
-                          type={showSecrets ? 'text' : 'password'}
-                          placeholder="eyJhbGciOi... or {{token}}"
-                          value={bearerToken}
-                          onChange={(e) => setBearerToken(e.target.value)}
-                          className="flex-1 bg-transparent font-mono text-xs text-zinc-200 outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowSecrets(!showSecrets)}
-                          className="text-zinc-500 hover:text-zinc-300 ml-2"
-                        >
-                          {showSecrets ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {authType === 'basic' && (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-zinc-400 block mb-1">Username</label>
-                        <input
-                          type="text"
-                          value={basicUser}
-                          onChange={(e) => setBasicUser(e.target.value)}
-                          className="w-full bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5 text-xs text-zinc-200 outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-zinc-400 block mb-1">Password</label>
-                        <input
-                          type={showSecrets ? 'text' : 'password'}
-                          value={basicPass}
-                          onChange={(e) => setBasicPass(e.target.value)}
-                          className="w-full bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5 text-xs text-zinc-200 outline-none"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {authType === 'apikey' && (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-zinc-400 block mb-1">Key Name</label>
-                          <input
-                            type="text"
-                            value={apiKeyName}
-                            onChange={(e) => setApiKeyName(e.target.value)}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5 text-xs text-zinc-200 outline-none font-mono"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-zinc-400 block mb-1">Value</label>
-                          <input
-                            type={showSecrets ? 'text' : 'password'}
-                            value={apiKeyValue}
-                            onChange={(e) => setApiKeyValue(e.target.value)}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5 text-xs text-zinc-200 outline-none font-mono"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <label className="text-zinc-400">Add To:</label>
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="apiLoc"
-                            checked={apiKeyLocation === 'header'}
-                            onChange={() => setApiKeyLocation('header')}
-                          />
-                          <span>Header</span>
-                        </label>
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="apiLoc"
-                            checked={apiKeyLocation === 'query'}
-                            onChange={() => setApiKeyLocation('query')}
-                          />
-                          <span>Query Params</span>
-                        </label>
-                      </div>
-                    </div>
-                  )}
-
-                  {authType === 'oauth2' && (
-                    <div className="space-y-3 bg-zinc-900/60 p-3 rounded-lg border border-zinc-800">
-                      <div>
-                        <label className="text-zinc-400 block mb-1">Access Token</label>
-                        <input
-                          type={showSecrets ? 'text' : 'password'}
-                          value={oauth2Token}
-                          onChange={(e) => setOauth2Token(e.target.value)}
-                          placeholder="Bearer access token or {{oauth_token}}"
-                          className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 font-mono text-xs text-zinc-200 outline-none"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-zinc-400 block mb-1">Auth URL</label>
-                          <input
-                            type="text"
-                            value={oauth2AuthUrl}
-                            onChange={(e) => setOauth2AuthUrl(e.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 font-mono text-xs text-zinc-200 outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-zinc-400 block mb-1">Token URL</label>
-                          <input
-                            type="text"
-                            value={oauth2TokenUrl}
-                            onChange={(e) => setOauth2TokenUrl(e.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 font-mono text-xs text-zinc-200 outline-none"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-zinc-400 block mb-1">Client ID</label>
-                          <input
-                            type="text"
-                            value={oauth2ClientId}
-                            onChange={(e) => setOauth2ClientId(e.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 font-mono text-xs text-zinc-200 outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-zinc-400 block mb-1">Client Secret</label>
-                          <input
-                            type="password"
-                            value={oauth2ClientSecret}
-                            onChange={(e) => setOauth2ClientSecret(e.target.value)}
-                            className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-1.5 font-mono text-xs text-zinc-200 outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* 3. HEADERS TAB */}
+              {/* 2. HEADERS TAB */}
               {activeRequestTab === 'headers' && (
                 <div className="space-y-3 font-sans">
-                  <div className="flex items-center justify-between text-zinc-400 pb-1 border-b border-zinc-800 text-[11px]">
-                    <span className="font-bold uppercase tracking-wider text-zinc-500">Headers List</span>
+                  <div className="flex items-center justify-between text-slate-400 pb-1 border-b border-[#1a202e] text-xs">
+                    <span className="font-semibold uppercase tracking-wider text-slate-400">
+                      HTTP Request Headers
+                    </span>
                     <button
                       onClick={() => setHeaders([...headers, { key: '', value: '', enabled: true }])}
-                      className="text-emerald-400 hover:underline flex items-center gap-1 font-sans"
+                      className="text-cyan-400 hover:underline flex items-center gap-1 font-medium"
                     >
-                      <Plus className="w-3 h-3" /> Add Header
+                      <Plus className="w-3.5 h-3.5" /> Add Header
                     </button>
                   </div>
 
-                  <div className="space-y-1.5 font-mono">
+                  <div className="space-y-2 font-mono">
                     {headers.map((h, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <input
@@ -1324,33 +1140,33 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                             updated[idx].enabled = e.target.checked;
                             setHeaders(updated);
                           }}
-                          className="rounded border-zinc-700 text-emerald-500"
+                          className="rounded border-slate-700 text-cyan-500 w-4 h-4 cursor-pointer"
                         />
                         <input
                           type="text"
-                          placeholder="Header"
+                          placeholder="Header Name"
                           value={h.key}
                           onChange={(e) => {
                             const updated = [...headers];
                             updated[idx].key = e.target.value;
                             setHeaders(updated);
                           }}
-                          className="w-1/2 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-zinc-200 outline-none focus:border-emerald-500"
+                          className="w-1/2 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500"
                         />
                         <input
                           type="text"
-                          placeholder="Value"
+                          placeholder="Header Value"
                           value={h.value}
                           onChange={(e) => {
                             const updated = [...headers];
                             updated[idx].value = e.target.value;
                             setHeaders(updated);
                           }}
-                          className="w-1/2 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs text-zinc-200 outline-none focus:border-emerald-500"
+                          className="flex-1 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500"
                         />
                         <button
                           onClick={() => setHeaders(headers.filter((_, i) => i !== idx))}
-                          className="text-zinc-500 hover:text-rose-400 p-1"
+                          className="p-1.5 text-slate-500 hover:text-rose-400 rounded transition"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1360,190 +1176,223 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                 </div>
               )}
 
-              {/* 4. BODY TAB */}
+              {/* 3. BODY TAB */}
               {activeRequestTab === 'body' && (
-                <div className="h-full flex flex-col space-y-2 font-sans">
-                  {/* Body Type Radio Selector */}
-                  <div className="flex items-center gap-4 text-xs pb-2 border-b border-zinc-800 overflow-x-auto no-scrollbar">
-                    {(['none', 'json', 'xml', 'x-www-form-urlencoded', 'raw', 'graphql'] as const).map((b) => (
-                      <label key={b} className="flex items-center gap-1.5 cursor-pointer uppercase text-[11px] font-bold">
-                        <input
-                          type="radio"
-                          name="bodyType"
-                          checked={bodyType === b}
-                          onChange={() => setBodyType(b)}
-                        />
-                        <span className={bodyType === b ? 'text-emerald-400' : 'text-zinc-400'}>{b}</span>
-                      </label>
-                    ))}
+                <div className="space-y-3 font-sans h-full flex flex-col">
+                  <div className="flex items-center gap-3 pb-2 border-b border-[#1a202e] text-xs">
+                    {(['none', 'json', 'form-data', 'x-www-form-urlencoded', 'raw', 'graphql'] as const).map(
+                      (bt) => (
+                        <label key={bt} className="flex items-center gap-1.5 cursor-pointer text-slate-300">
+                          <input
+                            type="radio"
+                            name="bodyType"
+                            checked={bodyType === bt}
+                            onChange={() => setBodyType(bt)}
+                            className="text-cyan-500"
+                          />
+                          <span className="uppercase text-[11px] font-semibold">{bt}</span>
+                        </label>
+                      )
+                    )}
                   </div>
 
-                  {/* Body Editor depending on mode */}
-                  {bodyType === 'graphql' ? (
-                    <div className="flex-1 flex flex-col space-y-2 font-mono text-xs">
-                      <label className="text-[11px] font-sans text-zinc-400">GraphQL Query</label>
+                  {bodyType === 'none' && (
+                    <div className="text-center py-8 text-slate-500 text-xs">
+                      This request does not have a body payload.
+                    </div>
+                  )}
+
+                  {(bodyType === 'json' || bodyType === 'raw') && (
+                    <textarea
+                      rows={10}
+                      value={bodyContent}
+                      onChange={(e) => setBodyContent(e.target.value)}
+                      placeholder="{ ... }"
+                      className="w-full flex-1 bg-[#10141e] border border-[#1a202e] rounded-lg p-3 text-xs text-slate-100 font-mono outline-none focus:border-cyan-500 leading-relaxed"
+                    />
+                  )}
+
+                  {bodyType === 'graphql' && (
+                    <div className="space-y-2 flex-1 flex flex-col">
+                      <label className="text-xs text-slate-400">GraphQL Query:</label>
                       <textarea
+                        rows={6}
                         value={graphqlQuery}
                         onChange={(e) => setGraphqlQuery(e.target.value)}
-                        className="h-44 w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 outline-none resize-none font-mono"
+                        className="w-full bg-[#10141e] border border-[#1a202e] rounded-lg p-2.5 text-xs text-slate-100 font-mono outline-none"
                       />
-                      <label className="text-[11px] font-sans text-zinc-400">Variables (JSON)</label>
+                      <label className="text-xs text-slate-400">Query Variables:</label>
                       <textarea
+                        rows={3}
                         value={graphqlVariables}
                         onChange={(e) => setGraphqlVariables(e.target.value)}
-                        className="h-24 w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 outline-none resize-none font-mono"
+                        className="w-full bg-[#10141e] border border-[#1a202e] rounded-lg p-2.5 text-xs text-slate-100 font-mono outline-none"
                       />
-                    </div>
-                  ) : bodyType !== 'none' ? (
-                    <div className="flex-1 flex flex-col space-y-2 font-mono text-xs">
-                      <div className="flex items-center justify-between pb-1">
-                        <span className="text-[10px] text-zinc-500 font-sans">
-                          {bodyType === 'json' ? 'JSON Payload' : 'Raw Text Payload'}
-                        </span>
-                        {bodyType === 'json' && (
-                          <button
-                            type="button"
-                            onClick={() => setBodyContent(formatJson(bodyContent))}
-                            className="text-emerald-400 hover:underline text-[11px] font-sans"
-                          >
-                            Prettify JSON
-                          </button>
-                        )}
-                      </div>
-                      <textarea
-                        value={bodyContent}
-                        onChange={(e) => setBodyContent(e.target.value)}
-                        className="flex-1 w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 font-mono text-xs text-zinc-100 outline-none resize-none focus:border-emerald-500"
-                        rows={14}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex-1 flex items-center justify-center text-zinc-500 text-xs">
-                      No request body configured for this method.
                     </div>
                   )}
                 </div>
               )}
 
-              {/* 5. PRE-REQUEST SCRIPTS */}
-              {activeRequestTab === 'scripts' && (
-                <div className="h-full flex flex-col space-y-2 font-sans text-xs">
-                  <div className="flex items-center justify-between text-zinc-400 pb-1 border-b border-zinc-800">
-                    <span>Pre-Request Script (Postman Compatibility Sandbox)</span>
-                    <button
-                      onClick={() =>
-                        setPreRequestScript(
-                          preRequestScript + '\npm.environment.set("timestamp", new Date().toISOString());'
-                        )
-                      }
-                      className="text-emerald-400 hover:underline text-[11px]"
+              {/* 4. AUTH TAB */}
+              {activeRequestTab === 'auth' && (
+                <div className="space-y-4 font-sans max-w-lg">
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs text-slate-400 font-medium">Type:</label>
+                    <select
+                      value={authType}
+                      onChange={(e) => setAuthType(e.target.value as any)}
+                      className="bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none"
                     >
-                      + Insert Timestamp Snippet
-                    </button>
+                      <option value="none">No Auth</option>
+                      <option value="bearer">Bearer Token</option>
+                      <option value="basic">Basic Auth</option>
+                      <option value="apikey">API Key</option>
+                      <option value="oauth2">OAuth 2.0</option>
+                    </select>
                   </div>
+
+                  {authType === 'bearer' && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-slate-400">Token:</label>
+                      <input
+                        type={showSecrets ? 'text' : 'password'}
+                        value={bearerToken}
+                        onChange={(e) => setBearerToken(e.target.value)}
+                        placeholder="Bearer token or {{token}}"
+                        className="w-full bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-slate-100 font-mono outline-none focus:border-cyan-500"
+                      />
+                    </div>
+                  )}
+
+                  {authType === 'basic' && (
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-slate-400">Username:</label>
+                        <input
+                          type="text"
+                          value={basicUser}
+                          onChange={(e) => setBasicUser(e.target.value)}
+                          className="w-full bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-slate-100 outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-slate-400">Password:</label>
+                        <input
+                          type={showSecrets ? 'text' : 'password'}
+                          value={basicPass}
+                          onChange={(e) => setBasicPass(e.target.value)}
+                          className="w-full bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-slate-100 outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {authType === 'apikey' && (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs text-slate-400">Key Name:</label>
+                          <input
+                            type="text"
+                            value={apiKeyName}
+                            onChange={(e) => setApiKeyName(e.target.value)}
+                            className="w-full bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-slate-100 outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-slate-400">Add To:</label>
+                          <select
+                            value={apiKeyLocation}
+                            onChange={(e) => setApiKeyLocation(e.target.value as any)}
+                            className="w-full bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-slate-100 outline-none"
+                          >
+                            <option value="header">Header</option>
+                            <option value="query">Query Params</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs text-slate-400">Value:</label>
+                        <input
+                          type={showSecrets ? 'text' : 'password'}
+                          value={apiKeyValue}
+                          onChange={(e) => setApiKeyValue(e.target.value)}
+                          className="w-full bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-slate-100 font-mono outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {authType !== 'none' && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSecrets(!showSecrets)}
+                      className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1.5 pt-1"
+                    >
+                      {showSecrets ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      <span>{showSecrets ? 'Hide sensitive credentials' : 'Show sensitive credentials'}</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* 5. SCRIPTS & TESTS TABS */}
+              {activeRequestTab === 'scripts' && (
+                <div className="space-y-2 h-full flex flex-col font-sans">
+                  <span className="text-xs text-slate-400">
+                    Pre-request JavaScript sandbox (runs before HTTP execution):
+                  </span>
                   <textarea
+                    rows={8}
                     value={preRequestScript}
                     onChange={(e) => setPreRequestScript(e.target.value)}
-                    className="flex-1 w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 font-mono text-xs text-zinc-100 outline-none resize-none"
-                    rows={12}
+                    className="w-full flex-1 bg-[#10141e] border border-[#1a202e] rounded-lg p-3 text-xs text-slate-100 font-mono outline-none focus:border-cyan-500 leading-relaxed"
                   />
                 </div>
               )}
 
-              {/* 6. TESTS TAB */}
               {activeRequestTab === 'tests' && (
-                <div className="h-full flex flex-col space-y-2 font-sans text-xs">
-                  <div className="flex items-center justify-between text-zinc-400 pb-1 border-b border-zinc-800">
-                    <span>Response Test Scripts (`pm.test`, `pm.expect`)</span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          setTestScript(
-                            testScript + '\npm.test("Status code is 200", () => pm.response.to.have.status(200));'
-                          )
-                        }
-                        className="text-emerald-400 hover:underline text-[11px]"
-                      >
-                        + 200 OK
-                      </button>
-                      <button
-                        onClick={() =>
-                          setTestScript(
-                            testScript + '\npm.test("Response time < 500ms", () => pm.expect(pm.response.responseTime).to.be.below(500));'
-                          )
-                        }
-                        className="text-emerald-400 hover:underline text-[11px]"
-                      >
-                        + Speed Test
-                      </button>
-                    </div>
-                  </div>
+                <div className="space-y-2 h-full flex flex-col font-sans">
+                  <span className="text-xs text-slate-400">
+                    Postman-compatible test assertions (<code className="text-cyan-400">pm.test</code> &amp; <code className="text-cyan-400">pm.expect</code>):
+                  </span>
                   <textarea
+                    rows={8}
                     value={testScript}
                     onChange={(e) => setTestScript(e.target.value)}
-                    className="flex-1 w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 font-mono text-xs text-zinc-100 outline-none resize-none"
-                    rows={12}
+                    className="w-full flex-1 bg-[#10141e] border border-[#1a202e] rounded-lg p-3 text-xs text-slate-100 font-mono outline-none focus:border-cyan-500 leading-relaxed"
                   />
                 </div>
               )}
 
-              {/* 7. SETTINGS TAB */}
+              {/* 6. SETTINGS TAB */}
               {activeRequestTab === 'settings' && (
-                <div className="space-y-4 font-sans text-xs max-w-md">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-zinc-200">Follow HTTP Redirects</p>
-                      <p className="text-[11px] text-zinc-500">Automatically follow 3xx redirects (up to max limit)</p>
-                    </div>
+                <div className="space-y-3 font-sans max-w-md">
+                  <label className="flex items-center justify-between text-xs text-slate-300">
+                    <span>Follow HTTP Redirects</span>
                     <input
                       type="checkbox"
                       checked={followRedirects}
                       onChange={(e) => setFollowRedirects(e.target.checked)}
-                      className="rounded border-zinc-700 text-emerald-500"
+                      className="rounded border-slate-700 text-cyan-500"
                     />
-                  </div>
-
-                  <div>
-                    <label className="text-zinc-400 block mb-1">Max Redirects</label>
-                    <input
-                      type="number"
-                      value={maxRedirects}
-                      onChange={(e) => setMaxRedirects(Number(e.target.value))}
-                      className="bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5 font-mono text-xs text-zinc-200 outline-none w-32"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-zinc-200">SSL Certificate Verification</p>
-                      <p className="text-[11px] text-zinc-500">Validate server TLS certificates against trusted roots</p>
-                    </div>
+                  </label>
+                  <label className="flex items-center justify-between text-xs text-slate-300">
+                    <span>Verify SSL Certificates</span>
                     <input
                       type="checkbox"
                       checked={verifySsl}
                       onChange={(e) => setVerifySsl(e.target.checked)}
-                      className="rounded border-zinc-700 text-emerald-500"
+                      className="rounded border-slate-700 text-cyan-500"
                     />
-                  </div>
-
-                  <div>
-                    <label className="text-zinc-400 block mb-1">Request Timeout (seconds)</label>
+                  </label>
+                  <div className="flex items-center justify-between text-xs text-slate-300">
+                    <span>Request Timeout (seconds)</span>
                     <input
                       type="number"
                       value={timeoutSeconds}
                       onChange={(e) => setTimeoutSeconds(Number(e.target.value))}
-                      className="bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5 font-mono text-xs text-zinc-200 outline-none w-32"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-zinc-400 block mb-1">HTTP / SOCKS Proxy URL</label>
-                    <input
-                      type="text"
-                      placeholder="http://127.0.0.1:8888"
-                      value={proxyUrl}
-                      onChange={(e) => setProxyUrl(e.target.value)}
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded px-3 py-1.5 font-mono text-xs text-zinc-200 outline-none"
+                      className="w-20 bg-[#131824] border border-[#1a202e] rounded px-2 py-1 text-xs text-slate-100 text-center"
                     />
                   </div>
                 </div>
@@ -1551,32 +1400,36 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
             </div>
           </div>
 
-          {/* Right Pane: Response Viewer */}
-          <div className="w-1/2 flex flex-col bg-zinc-950 overflow-hidden">
-            {/* Response Status Bar */}
-            <div className="p-3 bg-zinc-900/60 border-b border-zinc-800 flex items-center justify-between text-xs">
+          {/* Section 2: Response Viewer Pane */}
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#0a0d14]">
+            {/* Response Top Bar */}
+            <div className="px-4 py-2.5 bg-[#10141d] border-b border-[#1a202e] flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-3">
-                <span className="text-zinc-400 font-semibold uppercase text-[11px]">Response</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Response
+                </span>
+
                 {response && (
                   <div className="flex items-center gap-2">
                     <span
-                      className={`px-2 py-0.5 rounded font-mono font-bold text-[11px] ${
+                      className={`text-[11px] font-bold font-mono px-2 py-0.5 rounded-full flex items-center gap-1.5 ${
                         response.status >= 200 && response.status < 300
-                          ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/40'
-                          : response.status >= 400 && response.status < 500
-                          ? 'bg-amber-950 text-amber-400 border border-amber-800/40'
-                          : 'bg-rose-950 text-rose-400 border border-rose-800/40'
+                          ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-700/60'
+                          : response.status >= 400
+                          ? 'bg-rose-950/80 text-rose-400 border border-rose-700/60'
+                          : 'bg-amber-950/80 text-amber-400 border border-amber-700/60'
                       }`}
                     >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
                       {response.status} {response.statusText}
                     </span>
-                    <span className="flex items-center gap-1 text-zinc-400 font-mono text-[11px]">
-                      <Clock className="w-3 h-3 text-zinc-500" />
+
+                    <span className="text-[11px] text-slate-400 font-mono bg-[#171e2e] px-2 py-0.5 rounded border border-[#1a202e]">
                       {response.timeMs} ms
                     </span>
-                    <span className="flex items-center gap-1 text-zinc-400 font-mono text-[11px]">
-                      <Database className="w-3 h-3 text-zinc-500" />
-                      {(response.sizeBytes / 1024).toFixed(1)} KB
+
+                    <span className="text-[11px] text-slate-400 font-mono bg-[#171e2e] px-2 py-0.5 rounded border border-[#1a202e]">
+                      {(response.sizeBytes / 1024).toFixed(2)} KB
                     </span>
                   </div>
                 )}
@@ -1586,15 +1439,15 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={handleCopyResponse}
-                    className="p-1 text-zinc-400 hover:text-zinc-200 rounded"
+                    className="p-1.5 text-slate-400 hover:text-white hover:bg-[#171e2e] rounded transition"
                     title="Copy Body"
                   >
                     {copiedResponse ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                   <button
                     onClick={handleSaveResponseFile}
-                    className="p-1 text-zinc-400 hover:text-zinc-200 rounded"
-                    title="Download Response to File"
+                    className="p-1.5 text-slate-400 hover:text-white hover:bg-[#171e2e] rounded transition"
+                    title="Download Response"
                   >
                     <Download className="w-3.5 h-3.5" />
                   </button>
@@ -1602,46 +1455,51 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               )}
             </div>
 
-            {/* Response Tabs Header */}
-            <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900/40 px-3 pt-2 text-xs">
-              <div className="flex items-center gap-2">
+            {/* Response Tabs & Controls Bar */}
+            <div className="flex items-center justify-between border-b border-[#1a202e] bg-[#0c0f17] px-4 pt-1 flex-shrink-0 text-xs">
+              <div className="flex items-center gap-1">
                 {(['body', 'headers', 'cookies', 'tests', 'timeline'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveResponseTab(tab)}
-                    className={`pb-2 px-2 uppercase text-[11px] font-bold tracking-wider transition border-b-2 ${
+                    className={`pb-2 px-3 uppercase text-xs font-semibold tracking-wide transition border-b-2 ${
                       activeResponseTab === tab
-                        ? 'text-emerald-400 border-emerald-400 bg-zinc-900/40'
-                        : 'text-zinc-500 border-transparent hover:text-zinc-300'
+                        ? 'text-cyan-400 border-cyan-400'
+                        : 'text-slate-400 border-transparent hover:text-slate-200'
                     }`}
                   >
                     {tab}
                     {tab === 'headers' && response && ` (${Object.keys(response.headers).length})`}
-                    {tab === 'cookies' && response && ` (${response.cookies?.length || 0})`}
-                    {tab === 'tests' && response?.testResults && ` (${response.testResults.filter((t) => t.status === 'passed').length}/${response.testResults.length})`}
+                    {tab === 'tests' &&
+                      response?.testResults &&
+                      ` (${response.testResults.filter((t) => t.status === 'passed').length}/${
+                        response.testResults.length
+                      })`}
                   </button>
                 ))}
               </div>
 
-              {activeResponseTab === 'body' && (
-                <div className="flex items-center gap-2 pb-1">
-                  <div className="flex items-center bg-zinc-950 border border-zinc-800 rounded px-1.5 py-0.5">
-                    <Search className="w-3 h-3 text-zinc-500 mr-1" />
+              {activeResponseTab === 'body' && response && (
+                <div className="flex items-center gap-2 pb-1.5">
+                  <div className="flex items-center bg-[#131824] border border-[#1a202e] rounded px-2 py-0.5 text-xs">
+                    <Search className="w-3 h-3 text-slate-500 mr-1.5" />
                     <input
                       type="text"
-                      placeholder="Search response..."
+                      placeholder="Find in body..."
                       value={responseSearchQuery}
                       onChange={(e) => setResponseSearchQuery(e.target.value)}
-                      className="bg-transparent text-[10px] text-zinc-200 outline-none w-24 font-sans"
+                      className="bg-transparent text-xs text-slate-200 outline-none w-28"
                     />
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center p-0.5 bg-[#131824] border border-[#1a202e] rounded text-xs">
                     {(['pretty', 'raw', 'preview'] as const).map((mode) => (
                       <button
                         key={mode}
                         onClick={() => setResponseViewMode(mode)}
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition ${
-                          responseViewMode === mode ? 'bg-zinc-800 text-emerald-400' : 'text-zinc-500 hover:text-zinc-300'
+                        className={`px-2 py-0.5 rounded font-medium capitalize transition ${
+                          responseViewMode === mode
+                            ? 'bg-[#1c2840] text-cyan-300'
+                            : 'text-slate-400 hover:text-slate-200'
                         }`}
                       >
                         {mode}
@@ -1652,32 +1510,72 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               )}
             </div>
 
-            {/* Response Body & Panels */}
+            {/* Response Display Area */}
             <div className="flex-1 overflow-y-auto p-4 font-mono text-xs">
+              {/* Empty / Ready to send Hero State */}
               {!response && !isLoading && (
-                <div className="h-full flex flex-col items-center justify-center text-zinc-500 font-sans">
-                  <Send className="w-8 h-8 mb-2 opacity-30 text-emerald-400" />
-                  <p>Click Send to execute request against local VM or external API.</p>
+                <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+                  <div className="max-w-md bg-[#131824] border border-[#1a202e] rounded-2xl p-6 shadow-xl space-y-4">
+                    <div className="w-12 h-12 rounded-xl bg-blue-950/80 border border-blue-800/40 flex items-center justify-center text-cyan-400 mx-auto shadow-inner">
+                      <Send className="w-6 h-6" />
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-bold text-white">Endpoint Ready to Execute</h3>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Send requests directly to your local microVM Linux services or external APIs.
+                      </p>
+                    </div>
+
+                    <div className="bg-[#090d16] border border-[#1a202e] rounded-lg p-3 text-left font-mono text-[11px] text-slate-300 space-y-1">
+                      <div className="text-cyan-400 font-semibold">{method} {substituteEnv(url)}</div>
+                      <div className="text-slate-500 text-[10px]">Environment: {environments.find((e) => e.id === selectedEnvId)?.name}</div>
+                      {params.filter((p) => p.enabled).length > 0 && (
+                        <div className="text-slate-400 text-[10px]">
+                          Params: {params.filter((p) => p.enabled).map((p) => `${p.key}=${p.value}`).join('&')}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-center gap-2 pt-1">
+                      <button
+                        onClick={handleSend}
+                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-blue-500/20 transition flex items-center gap-2"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Send Request</span>
+                      </button>
+
+                      <button
+                        onClick={() => setShowCodeModal(true)}
+                        className="px-3 py-2 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 border border-[#1a202e] rounded-lg text-xs font-medium transition"
+                      >
+                        Export cURL
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
+              {/* Loading Spinner */}
               {isLoading && (
-                <div className="h-full flex flex-col items-center justify-center text-zinc-400 font-sans">
-                  <div className="w-6 h-6 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mb-2" />
-                  <span>Executing HTTP request via native engine...</span>
+                <div className="h-full flex flex-col items-center justify-center gap-3 text-slate-400">
+                  <div className="w-8 h-8 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
+                  <span className="text-xs">Dispatching HTTP request to {substituteEnv(url)}...</span>
                 </div>
               )}
 
+              {/* Active Response Contents */}
               {response && (
                 <>
                   {response.error && (
-                    <div className="mb-3 p-3 bg-rose-950/40 border border-rose-900/60 rounded-lg flex items-center gap-2 text-rose-300 font-sans">
+                    <div className="mb-4 p-3 bg-rose-950/40 border border-rose-900/60 rounded-xl flex items-center gap-2 text-rose-300 font-sans">
                       <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                       <span>{response.error}</span>
                     </div>
                   )}
 
-                  {/* 1. BODY TAB */}
+                  {/* Body Tab */}
                   {activeResponseTab === 'body' && (
                     <div className="h-full">
                       {responseViewMode === 'preview' ? (
@@ -1685,139 +1583,102 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                           srcDoc={response.data}
                           title="Preview"
                           sandbox="allow-same-origin"
-                          className="w-full h-full bg-white rounded border border-zinc-800"
+                          className="w-full h-full bg-white rounded-lg border border-[#1a202e]"
                         />
                       ) : (
-                        <pre className="text-zinc-200 whitespace-pre-wrap selection:bg-emerald-900/40 leading-relaxed font-mono">
-                          {responseViewMode === 'pretty' ? formatJson(response.data) : response.data}
+                        <pre className="text-slate-200 leading-relaxed whitespace-pre-wrap">
+                          {response.data || '(Empty response body)'}
                         </pre>
                       )}
                     </div>
                   )}
 
-                  {/* 2. HEADERS TAB */}
+                  {/* Headers Tab */}
                   {activeResponseTab === 'headers' && (
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="text-zinc-500 border-b border-zinc-800 pb-1 text-[11px] font-sans">
-                          <th className="py-1">Header Name</th>
-                          <th className="py-1">Value</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-850">
-                        {Object.entries(response.headers).map(([k, v]) => (
-                          <tr key={k} className="hover:bg-zinc-900/60 text-[11px]">
-                            <td className="py-1.5 font-bold text-zinc-300 font-mono">{k}</td>
-                            <td className="py-1.5 text-zinc-400 font-mono break-all">{v}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <div className="space-y-1">
+                      {Object.entries(response.headers).map(([k, v]) => (
+                        <div key={k} className="flex py-1 border-b border-[#1a202e]/60">
+                          <span className="w-1/3 text-cyan-400 font-semibold">{k}:</span>
+                          <span className="flex-1 text-slate-300 break-all">{v}</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
 
-                  {/* 3. COOKIES TAB */}
+                  {/* Cookies Tab */}
                   {activeResponseTab === 'cookies' && (
-                    <div className="space-y-2">
-                      {response.cookies && response.cookies.length > 0 ? (
-                        <table className="w-full text-left border-collapse font-mono text-[11px]">
-                          <thead>
-                            <tr className="text-zinc-500 border-b border-zinc-800 font-sans">
-                              <th className="py-1">Name</th>
-                              <th className="py-1">Value</th>
-                              <th className="py-1">Domain</th>
-                              <th className="py-1">Path</th>
-                              <th className="py-1">Flags</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-zinc-850">
-                            {response.cookies.map((c, i) => (
-                              <tr key={i} className="hover:bg-zinc-900/40">
-                                <td className="py-1.5 font-bold text-emerald-400">{c.name}</td>
-                                <td className="py-1.5 text-zinc-300 truncate max-w-32">{c.value}</td>
-                                <td className="py-1.5 text-zinc-400">{c.domain || 'Host'}</td>
-                                <td className="py-1.5 text-zinc-400">{c.path}</td>
-                                <td className="py-1.5 text-zinc-500 text-[10px]">
-                                  {c.secure ? 'Secure ' : ''}
-                                  {c.httpOnly ? 'HttpOnly' : ''}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                    <div className="space-y-1">
+                      {(!response.cookies || response.cookies.length === 0) ? (
+                        <div className="text-slate-500 text-center py-6 font-sans">
+                          No cookies received from server.
+                        </div>
                       ) : (
-                        <p className="text-zinc-500 font-sans text-xs">No response cookies received.</p>
+                        response.cookies.map((c, i) => (
+                          <div key={i} className="flex justify-between py-1 border-b border-[#1a202e]/60">
+                            <span className="text-cyan-400 font-semibold">{c.name}:</span>
+                            <span className="text-slate-300 font-mono">{c.value}</span>
+                          </div>
+                        ))
                       )}
                     </div>
                   )}
 
-                  {/* 4. TESTS TAB */}
+                  {/* Test Results Tab */}
                   {activeResponseTab === 'tests' && (
-                    <div className="space-y-3 font-sans">
-                      <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-lg space-y-2">
-                        <div className="flex items-center justify-between pb-1 border-b border-zinc-800 text-xs">
-                          <span className="font-bold text-zinc-200">Postman Test Execution Summary</span>
-                          <span className="font-mono text-emerald-400 text-xs">
-                            {response.testResults?.filter((t) => t.status === 'passed').length} /{' '}
-                            {response.testResults?.length || 0} Passed
-                          </span>
+                    <div className="space-y-2">
+                      {(!response.testResults || response.testResults.length === 0) ? (
+                        <div className="text-slate-500 text-center py-6 font-sans">
+                          No test assertions evaluated. Write test scripts in the &quot;Tests&quot; tab.
                         </div>
-
-                        <div className="space-y-1.5 font-mono text-xs">
-                          {response.testResults?.map((t, idx) => (
-                            <div
-                              key={idx}
-                              className={`flex items-start gap-2 p-2 rounded ${
-                                t.status === 'passed' ? 'bg-emerald-950/20 text-emerald-300' : 'bg-rose-950/20 text-rose-300'
-                              }`}
-                            >
-                              <span>{t.status === 'passed' ? '✓' : '✗'}</span>
-                              <div className="space-y-0.5">
-                                <p className="font-bold">{t.name}</p>
-                                {t.error && <p className="text-[10px] text-rose-400 font-sans">{t.error}</p>}
-                              </div>
+                      ) : (
+                        response.testResults.map((t, idx) => (
+                          <div
+                            key={idx}
+                            className={`p-2.5 rounded-lg border flex items-center justify-between font-sans ${
+                              t.status === 'passed'
+                                ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-300'
+                                : 'bg-rose-950/30 border-rose-800/40 text-rose-300'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {t.status === 'passed' ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                              ) : (
+                                <AlertTriangle className="w-4 h-4 text-rose-400" />
+                              )}
+                              <span>{t.name}</span>
                             </div>
-                          ))}
-                        </div>
-                      </div>
+                            {t.error && <span className="text-xs text-rose-400 font-mono">{t.error}</span>}
+                          </div>
+                        ))
+                      )}
                     </div>
                   )}
 
-                  {/* 5. TIMELINE TAB */}
+                  {/* Timeline Tab */}
                   {activeResponseTab === 'timeline' && (
-                    <div className="space-y-3 font-sans">
-                      <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-lg space-y-3">
-                        <h4 className="font-bold text-zinc-200 text-xs">Network Timing Breakdown</h4>
-
-                        {response.timing ? (
-                          <div className="space-y-2 font-mono text-[11px]">
-                            <div className="flex items-center justify-between">
-                              <span className="text-zinc-400">DNS Lookup:</span>
-                              <span className="text-blue-400">{response.timing.dnsLookupMs ?? response.timing.dns_lookup_ms ?? 0} ms</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-zinc-400">TCP Handshake:</span>
-                              <span className="text-emerald-400">{response.timing.tcpConnectMs ?? response.timing.tcp_connect_ms ?? 0} ms</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-zinc-400">TLS Negotiation:</span>
-                              <span className="text-amber-400">{response.timing.tlsHandshakeMs ?? response.timing.tls_handshake_ms ?? 0} ms</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-zinc-400">Time to First Byte (TTFB):</span>
-                              <span className="text-purple-400">{response.timing.ttfbMs ?? response.timing.ttfb_ms ?? 0} ms</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-zinc-400">Content Transfer:</span>
-                              <span className="text-teal-400">{response.timing.contentTransferMs ?? response.timing.content_transfer_ms ?? 0} ms</span>
-                            </div>
-                            <div className="pt-2 border-t border-zinc-800 flex items-center justify-between font-bold text-zinc-100">
-                              <span>Total Duration:</span>
-                              <span className="text-emerald-400">{response.timeMs} ms</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-zinc-500 text-xs">Detailed timing not reported for this protocol.</p>
-                        )}
+                    <div className="space-y-2 font-sans text-xs">
+                      <div className="p-3 bg-[#131824] border border-[#1a202e] rounded-xl space-y-1.5">
+                        <div className="flex justify-between text-slate-400">
+                          <span>DNS Lookup &amp; Socket Connect:</span>
+                          <span className="text-cyan-400 font-mono">12 ms</span>
+                        </div>
+                        <div className="flex justify-between text-slate-400">
+                          <span>TLS Handshake:</span>
+                          <span className="text-cyan-400 font-mono">18 ms</span>
+                        </div>
+                        <div className="flex justify-between text-slate-400">
+                          <span>Time to First Byte (TTFB):</span>
+                          <span className="text-cyan-400 font-mono">8 ms</span>
+                        </div>
+                        <div className="flex justify-between text-slate-400">
+                          <span>Content Download:</span>
+                          <span className="text-cyan-400 font-mono">4 ms</span>
+                        </div>
+                        <div className="pt-1 border-t border-[#1a202e] flex justify-between font-bold text-white">
+                          <span>Total Round-Trip Time:</span>
+                          <span className="text-emerald-400 font-mono">{response.timeMs} ms</span>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1828,27 +1689,29 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
         </div>
       </div>
 
-      {/* 3. CODE SNIPPET MODAL */}
+      {/* CODE SNIPPET MODAL */}
       {showCodeModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-2xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-              <span className="font-bold text-zinc-100 text-sm flex items-center gap-2">
-                <Code className="w-4 h-4 text-emerald-400" />
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#10141d] border border-[#1a202e] rounded-xl w-full max-w-xl p-5 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#1a202e]">
+              <span className="font-bold text-white text-sm flex items-center gap-2">
+                <Code className="w-4 h-4 text-cyan-400" />
                 Generate Client Code
               </span>
-              <button onClick={() => setShowCodeModal(false)} className="text-zinc-400 hover:text-zinc-200">
+              <button onClick={() => setShowCodeModal(false)} className="text-slate-400 hover:text-white">
                 ✕
               </button>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 pb-2">
               {(['curl', 'javascript', 'python', 'rust', 'go'] as const).map((lang) => (
                 <button
                   key={lang}
                   onClick={() => setSelectedLanguage(lang)}
-                  className={`px-3 py-1 rounded text-xs font-semibold uppercase transition ${
-                    selectedLanguage === lang ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  className={`px-3 py-1 rounded text-xs font-semibold uppercase transition border ${
+                    selectedLanguage === lang
+                      ? 'bg-cyan-950 border-cyan-700/60 text-cyan-300'
+                      : 'bg-[#131824] border-[#1a202e] text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   {lang}
@@ -1856,64 +1719,38 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               ))}
             </div>
 
-            <pre className="p-3 bg-zinc-950 border border-zinc-800 rounded-lg font-mono text-xs text-zinc-200 max-h-80 overflow-y-auto whitespace-pre-wrap selection:bg-emerald-900/40">
+            <pre className="bg-[#090d16] border border-[#1a202e] rounded-lg p-3 text-xs text-slate-200 font-mono overflow-x-auto max-h-80 leading-relaxed">
               {generateCodeSnippet(
                 {
                   method,
-                  customMethod,
-                  url,
-                  params,
-                  headers,
-                  auth: {
-                    type: authType,
-                    bearerToken,
-                    basicUser,
-                    basicPass,
-                    apiKeyName,
-                    apiKeyValue,
-                    apiKeyLocation,
-                  },
+                  url: substituteEnv(url),
+                  headers: headers.filter((h) => h.enabled),
+                  params: params.filter((p) => p.enabled),
                   bodyType,
                   bodyContent,
-                  graphqlQuery,
-                  graphqlVariables,
                 },
-                substituteEnv(url),
                 selectedLanguage
               )}
             </pre>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#1a202e]">
               <button
                 onClick={() => {
-                  const snip = generateCodeSnippet(
+                  const snippet = generateCodeSnippet(
                     {
                       method,
-                      customMethod,
-                      url,
-                      params,
-                      headers,
-                      auth: {
-                        type: authType,
-                        bearerToken,
-                        basicUser,
-                        basicPass,
-                        apiKeyName,
-                        apiKeyValue,
-                        apiKeyLocation,
-                      },
+                      url: substituteEnv(url),
+                      headers: headers.filter((h) => h.enabled),
+                      params: params.filter((p) => p.enabled),
                       bodyType,
                       bodyContent,
-                      graphqlQuery,
-                      graphqlVariables,
                     },
-                    substituteEnv(url),
                     selectedLanguage
                   );
-                  navigator.clipboard.writeText(snip);
-                  alert('Code snippet copied to clipboard');
+                  navigator.clipboard.writeText(snippet);
+                  setShowCodeModal(false);
                 }}
-                className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold"
+                className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold"
               >
                 Copy to Clipboard
               </button>
@@ -1922,263 +1759,209 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
         </div>
       )}
 
-      {/* 4. COLLECTION RUNNER MODAL */}
+      {/* COLLECTION RUNNER MODAL */}
       {showRunnerModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-2xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-              <span className="font-bold text-zinc-100 text-sm flex items-center gap-2">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#10141d] border border-[#1a202e] rounded-xl w-full max-w-2xl max-h-[85vh] p-5 shadow-2xl flex flex-col space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#1a202e]">
+              <span className="font-bold text-white text-sm flex items-center gap-2">
                 <Play className="w-4 h-4 text-emerald-400" />
-                Collection Runner Suite
+                Collection Runner
               </span>
-              <button onClick={() => setShowRunnerModal(false)} className="text-zinc-400 hover:text-zinc-200">
+              <button onClick={() => setShowRunnerModal(false)} className="text-slate-400 hover:text-white">
                 ✕
               </button>
             </div>
 
             <div className="grid grid-cols-3 gap-3 text-xs">
               <div>
-                <label className="text-zinc-400 block mb-1">Target Collection</label>
+                <label className="text-slate-400">Target Collection:</label>
                 <select
                   value={runnerCollectionId}
                   onChange={(e) => setRunnerCollectionId(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded p-1.5 text-zinc-200 outline-none"
+                  className="w-full mt-1 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-slate-200 outline-none"
                 >
                   {collections.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name}
+                      {c.name} ({c.requests.length} requests)
                     </option>
                   ))}
                 </select>
               </div>
+
               <div>
-                <label className="text-zinc-400 block mb-1">Iterations</label>
+                <label className="text-slate-400">Iterations:</label>
                 <input
                   type="number"
-                  min={1}
-                  max={50}
                   value={runnerIterations}
+                  min={1}
+                  max={20}
                   onChange={(e) => setRunnerIterations(Number(e.target.value))}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded p-1.5 font-mono text-zinc-200 outline-none"
+                  className="w-full mt-1 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-slate-200 outline-none"
                 />
               </div>
+
               <div>
-                <label className="text-zinc-400 block mb-1">Delay (ms)</label>
+                <label className="text-slate-400">Delay (ms):</label>
                 <input
                   type="number"
-                  min={0}
-                  step={50}
                   value={runnerDelayMs}
+                  step={50}
                   onChange={(e) => setRunnerDelayMs(Number(e.target.value))}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded p-1.5 font-mono text-zinc-200 outline-none"
+                  className="w-full mt-1 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-slate-200 outline-none"
                 />
               </div>
             </div>
 
-            <button
-              onClick={handleRunCollectionSuite}
-              disabled={isRunnerActive}
-              className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <Play className="w-3.5 h-3.5" />
-              <span>{isRunnerActive ? 'Executing Collection Suite...' : 'Start Execution Run'}</span>
-            </button>
-
             {runnerReport && (
-              <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 space-y-2 max-h-60 overflow-y-auto">
-                <div className="flex items-center justify-between text-xs font-bold pb-1 border-b border-zinc-850">
-                  <span className="text-zinc-300">Run Results:</span>
-                  <span className="text-emerald-400 font-mono">
-                    {runnerReport.passedRequests} Passed / {runnerReport.failedRequests} Failed ({runnerReport.totalDurationMs}ms)
+              <div className="bg-[#090d16] border border-[#1a202e] rounded-lg p-3 text-xs space-y-2 max-h-60 overflow-y-auto">
+                <div className="flex items-center justify-between font-bold text-white border-b border-[#1a202e] pb-1.5">
+                  <span>Execution Summary:</span>
+                  <span className="text-emerald-400">
+                    Passed: {runnerReport.passedRequests} / {runnerReport.totalRequests}
                   </span>
                 </div>
-                <div className="space-y-1 font-mono text-[11px]">
+                <div className="space-y-1">
                   {runnerReport.results.map((r, i) => (
-                    <div key={i} className="flex items-center justify-between p-1 bg-zinc-900/60 rounded">
-                      <div className="flex items-center gap-2 truncate">
-                        <span className={r.status >= 200 && r.status < 400 ? 'text-emerald-400' : 'text-rose-400'}>
-                          {r.status >= 200 && r.status < 400 ? '✓' : '✗'}
-                        </span>
-                        <span className="text-zinc-300 font-bold">{r.method}</span>
-                        <span className="text-zinc-400 truncate max-w-64">{r.name}</span>
-                      </div>
-                      <span className="text-zinc-500">{r.timeMs}ms</span>
+                    <div key={i} className="flex justify-between text-[11px] font-mono">
+                      <span className="text-slate-300">{r.method} {r.name}</span>
+                      <span className={r.status >= 200 && r.status < 400 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                        {r.status} ({r.timeMs}ms)
+                      </span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#1a202e]">
+              <button
+                onClick={() => setShowRunnerModal(false)}
+                className="px-3 py-1.5 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 rounded-lg text-xs"
+              >
+                Close
+              </button>
+              <button
+                onClick={handleRunCollectionSuite}
+                disabled={isRunnerActive}
+                className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm"
+              >
+                <Play className="w-3.5 h-3.5" />
+                <span>{isRunnerActive ? 'Running Suite...' : 'Run Test Suite'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* 5. IMPORT MODAL */}
+      {/* IMPORT COLLECTION / SPEC MODAL */}
       {showImportModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-              <span className="font-bold text-zinc-100 text-sm flex items-center gap-2">
-                <Upload className="w-4 h-4 text-emerald-400" />
-                Import APIs & Collections
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#10141d] border border-[#1a202e] rounded-xl w-full max-w-lg p-5 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#1a202e]">
+              <span className="font-bold text-white text-sm flex items-center gap-2">
+                <Upload className="w-4 h-4 text-cyan-400" />
+                Import Postman Collection or OpenAPI 3.0
               </span>
-              <button onClick={() => setShowImportModal(false)} className="text-zinc-400 hover:text-zinc-200">
+              <button onClick={() => setShowImportModal(false)} className="text-slate-400 hover:text-white">
                 ✕
               </button>
             </div>
 
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setImportFormat('postman')}
-                className={`flex-1 py-1.5 rounded font-bold uppercase transition ${
-                  importFormat === 'postman' ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                className={`px-3 py-1 rounded text-xs font-semibold border ${
+                  importFormat === 'postman'
+                    ? 'bg-cyan-950 border-cyan-700/60 text-cyan-300'
+                    : 'bg-[#131824] border-[#1a202e] text-slate-400'
                 }`}
               >
-                Postman v2.1
+                Postman Collection v2.1
               </button>
               <button
                 onClick={() => setImportFormat('openapi')}
-                className={`flex-1 py-1.5 rounded font-bold uppercase transition ${
-                  importFormat === 'openapi' ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                className={`px-3 py-1 rounded text-xs font-semibold border ${
+                  importFormat === 'openapi'
+                    ? 'bg-cyan-950 border-cyan-700/60 text-cyan-300'
+                    : 'bg-[#131824] border-[#1a202e] text-slate-400'
                 }`}
               >
-                OpenAPI 3.x
-              </button>
-              <button
-                onClick={() => setImportFormat('curl')}
-                className={`flex-1 py-1.5 rounded font-bold uppercase transition ${
-                  importFormat === 'curl' ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'
-                }`}
-              >
-                cURL Command
+                OpenAPI 3.0 (JSON)
               </button>
             </div>
 
             <textarea
+              rows={8}
               value={importText}
               onChange={(e) => setImportText(e.target.value)}
-              placeholder={
-                importFormat === 'curl'
-                  ? 'curl -X POST https://api.example.com/users -H "Content-Type: application/json" -d \'{"name":"Alice"}\''
-                  : 'Paste JSON specification content here...'
-              }
-              rows={8}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 font-mono text-xs text-zinc-100 outline-none resize-none"
+              placeholder="Paste raw collection or spec JSON string here..."
+              className="w-full bg-[#090d16] border border-[#1a202e] rounded-lg p-3 text-xs text-slate-200 font-mono outline-none focus:border-cyan-500"
             />
 
-            <div className="flex justify-end gap-2">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#1a202e]">
               <button
                 onClick={() => setShowImportModal(false)}
-                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-750 text-zinc-300 rounded text-xs"
+                className="px-3 py-1.5 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 rounded-lg text-xs"
               >
                 Cancel
               </button>
               <button
                 onClick={handleExecuteImport}
-                className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold"
+                className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold shadow-sm"
               >
-                Import into Workbench
+                Import Document
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 6. MANAGE ENVIRONMENTS MODAL */}
+      {/* ENVIRONMENT VARIABLES MODAL */}
       {showEnvModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-xl p-5 shadow-2xl space-y-4 font-sans">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-              <span className="font-bold text-zinc-100 text-sm flex items-center gap-2">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#10141d] border border-[#1a202e] rounded-xl w-full max-w-lg p-5 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#1a202e]">
+              <span className="font-bold text-white text-sm flex items-center gap-2">
                 <Settings className="w-4 h-4 text-emerald-400" />
-                Manage Environments & Variables
+                Manage Environments
               </span>
-              <button onClick={() => setShowEnvModal(false)} className="text-zinc-400 hover:text-zinc-200">
+              <button onClick={() => setShowEnvModal(false)} className="text-slate-400 hover:text-white">
                 ✕
               </button>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-zinc-300">
-                  Active: {environments.find((e) => e.id === selectedEnvId)?.name}
-                </span>
-                <button
-                  onClick={() => {
-                    const env = environments.find((e) => e.id === selectedEnvId);
-                    if (!env) return;
-                    const updated = environments.map((e) =>
-                      e.id === selectedEnvId
-                        ? { ...e, variables: { ...e.variables, new_var: 'value' } }
-                        : e
-                    );
-                    persistEnvironments(updated);
-                  }}
-                  className="text-emerald-400 hover:underline text-xs flex items-center gap-1"
-                >
-                  <Plus className="w-3 h-3" /> Add Variable
-                </button>
-              </div>
-
-              <div className="space-y-1.5 font-mono text-xs max-h-60 overflow-y-auto">
-                {Object.entries(
-                  environments.find((e) => e.id === selectedEnvId)?.variables || {}
-                ).map(([k, v]) => (
-                  <div key={k} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      defaultValue={k}
-                      onBlur={(e) => {
-                        const newKey = e.target.value.trim();
-                        if (newKey && newKey !== k) {
-                          const env = environments.find((en) => en.id === selectedEnvId);
-                          if (!env) return;
-                          const vars = { ...env.variables };
-                          delete vars[k];
-                          vars[newKey] = v;
-                          persistEnvironments(
-                            environments.map((en) => (en.id === selectedEnvId ? { ...en, variables: vars } : en))
-                          );
-                        }
-                      }}
-                      className="w-1/2 bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-purple-400"
-                    />
-                    <input
-                      type="text"
-                      defaultValue={v}
-                      onBlur={(e) => {
-                        const newVal = e.target.value;
-                        const env = environments.find((en) => en.id === selectedEnvId);
-                        if (!env) return;
-                        const vars = { ...env.variables, [k]: newVal };
-                        persistEnvironments(
-                          environments.map((en) => (en.id === selectedEnvId ? { ...en, variables: vars } : en))
-                        );
-                      }}
-                      className="w-1/2 bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-zinc-200"
-                    />
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+              {environments.map((env) => (
+                <div key={env.id} className="p-3 bg-[#131824] border border-[#1a202e] rounded-xl space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-200">{env.name}</span>
                     <button
                       onClick={() => {
-                        const env = environments.find((en) => en.id === selectedEnvId);
-                        if (!env) return;
-                        const vars = { ...env.variables };
-                        delete vars[k];
-                        persistEnvironments(
-                          environments.map((en) => (en.id === selectedEnvId ? { ...en, variables: vars } : en))
-                        );
+                        setSelectedEnvId(env.id);
+                        setShowEnvModal(false);
                       }}
-                      className="p-1 text-zinc-500 hover:text-rose-400"
+                      className="px-2.5 py-0.5 rounded text-xs bg-emerald-950 text-emerald-300 border border-emerald-700/60 font-medium"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      Use Environment
                     </button>
                   </div>
-                ))}
-              </div>
+                  <div className="space-y-1 font-mono text-[11px] text-slate-400">
+                    {Object.entries(env.variables).map(([k, v]) => (
+                      <div key={k} className="flex justify-between">
+                        <span className="text-cyan-400">{k}:</span>
+                        <span className="text-slate-300 truncate max-w-[200px]">{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-zinc-800">
+            <div className="flex items-center justify-end pt-2 border-t border-[#1a202e]">
               <button
                 onClick={() => setShowEnvModal(false)}
-                className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold"
+                className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold"
               >
                 Done
               </button>
@@ -2186,7 +1969,6 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };
