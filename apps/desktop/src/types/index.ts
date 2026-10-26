@@ -89,6 +89,23 @@ export interface VmStatusResponse {
   activeMounts: string[];
 }
 
+export interface HostSystemInfo {
+  osName: string;
+  osVersion: string;
+  kernelRelease: string;
+  unameFull: string;
+  deviceModel: string;
+  cpuBrand: string;
+  cpuArch: string;
+  cpuCores: number;
+  totalMemoryBytes: number;
+  hostIp: string;
+  activeInterface: string;
+  diskTotalGb: number;
+  diskFreeGb: number;
+  virtualizationSupport: string;
+}
+
 export interface TerminalExecResult {
   exitCode: number;
   stdout: string;

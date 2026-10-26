@@ -1,6 +1,7 @@
 import {
   Workspace,
   VmStatusResponse,
+  HostSystemInfo,
   AgentSession,
   ProviderProfile,
   TerminalExecResult,
@@ -565,6 +566,8 @@ export const TauriApi = {
     callTauri<VmStatusResponse>('vm_status', { workspaceId }),
   rotateVm: (workspaceId: string) =>
     callTauri<VmStatusResponse>('vm_rotate', { workspaceId }),
+  getHostSystemInfo: () =>
+    callTauri<HostSystemInfo>('system_get_host_info'),
 
   // Window Management
   dragWindow: () => callTauri<void>('drag_window'),

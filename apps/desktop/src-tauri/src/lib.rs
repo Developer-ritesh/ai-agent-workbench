@@ -39,6 +39,7 @@ pub fn run() {
             commands::vm_stop,
             commands::vm_status,
             commands::vm_rotate,
+            commands::system_get_host_info,
             commands::drag_window,
             commands::toggle_maximize_window,
             commands::terminal_execute,
