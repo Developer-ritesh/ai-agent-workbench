@@ -616,22 +616,22 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-zinc-950 text-zinc-100 font-sans select-none overflow-hidden">
-      {/* 1. Browser Tab Strip */}
-      <div className="flex items-center bg-zinc-900 border-b border-zinc-800 px-2 pt-1 gap-1 overflow-x-auto no-scrollbar">
+    <div className="flex flex-col h-full w-full bg-[#08090d] text-zinc-100 font-sans select-none overflow-hidden">
+      {/* 1. Arc/Chrome Style Frosted Tab Strip */}
+      <div className="flex items-center bg-[#0c0e17]/90 backdrop-blur-xl border-b border-white/[0.07] px-3 pt-2 gap-1.5 overflow-x-auto no-scrollbar">
         {tabs.map((tab) => {
           const isActive = tab.id === activeTabId;
           return (
             <div
               key={tab.id}
               onClick={() => setActiveTabId(tab.id)}
-              className={`group flex items-center gap-2 px-3 py-1.5 rounded-t-lg text-xs font-medium cursor-pointer transition-colors max-w-56 border-t border-x ${
+              className={`group flex items-center gap-2.5 px-3.5 py-1.5 rounded-t-xl text-xs font-medium cursor-pointer transition-all max-w-64 border-t border-x ${
                 isActive
-                  ? 'bg-zinc-950 text-emerald-400 border-zinc-800 border-b-transparent shadow-sm'
-                  : 'bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 border-transparent hover:bg-zinc-850'
+                  ? 'bg-white/[0.07] text-cyan-300 border-white/[0.1] border-b-transparent shadow-lg shadow-black/40'
+                  : 'bg-white/[0.02] text-zinc-400 hover:text-zinc-200 border-transparent hover:bg-white/[0.05]'
               }`}
             >
-              <Globe className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : 'text-zinc-500'}`} />
+              <Globe className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : 'text-zinc-500'}`} />
               <span className="truncate flex-1 font-mono text-[11px]">{tab.title || 'New Tab'}</span>
               {tabs.length > 1 && (
                 <button
@@ -648,7 +648,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
 
         <button
           onClick={() => handleAddTab()}
-          className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition ml-1"
+          className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-lg transition ml-1"
           title="New Tab (Cmd+T)"
         >
           <Plus className="w-3.5 h-3.5" />
@@ -656,7 +656,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
 
         <button
           onClick={handleDuplicateTab}
-          className="p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-md transition ml-1"
+          className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-lg transition ml-1"
           title="Duplicate Current Tab"
         >
           <Copy className="w-3.5 h-3.5" />
@@ -676,11 +676,11 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
         {/* Engine Status & Discovered Ports */}
         <div className="ml-auto flex items-center gap-2 py-1 text-xs text-zinc-400 pr-2">
           <div
-            className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-800/80 border border-zinc-750 text-[10px] font-mono cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[10px] font-mono cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.15)]"
             title={`CDP Target: ${engineStatus.cdpUrl} (PID: ${engineStatus.pid || 'Active'})\nProfile: ${engineStatus.profileDir}`}
           >
             <span className={`w-1.5 h-1.5 rounded-full ${engineStatus.isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-            <span className="text-zinc-300">CDP :{engineStatus.cdpPort}</span>
+            <span className="text-emerald-300 font-bold">CDP :{engineStatus.cdpPort}</span>
           </div>
 
           <div className="flex items-center gap-1 text-[11px] font-mono">
@@ -689,10 +689,10 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
               <button
                 key={port}
                 onClick={() => handleNavigate(`http://127.0.0.1:${port}`)}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-mono transition border ${
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-mono transition border ${
                   activeTab?.url.includes(`:${port}`)
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                    : 'bg-zinc-850 text-zinc-400 hover:text-zinc-200 border-zinc-700'
+                    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 font-bold shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+                    : 'bg-white/[0.03] text-zinc-400 hover:text-zinc-200 border-white/[0.08] hover:bg-white/[0.08]'
                 }`}
                 title={`Navigate to port ${port}`}
               >
@@ -704,19 +704,19 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
       </div>
 
       {/* 2. Navigation & Controls Toolbar */}
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-950 border-b border-zinc-800 text-xs">
+      <div className="flex items-center gap-2 px-4 py-2 bg-[#0a0c13]/90 backdrop-blur-xl border-b border-white/[0.07] text-xs">
         {/* Navigation Buttons */}
         <div className="flex items-center gap-1">
           <button
             onClick={() => {}}
-            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded transition"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition shadow-sm"
             title="Back"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => {}}
-            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded transition"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition shadow-sm"
             title="Forward"
           >
             <ArrowRight className="w-3.5 h-3.5" />
@@ -731,14 +731,14 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
                 }, 50);
               }
             }}
-            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded transition"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition shadow-sm"
             title="Reload (Cmd+R)"
           >
             <RotateCw className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => handleNavigate('http://127.0.0.1:5173')}
-            className="p-1.5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 rounded transition"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition shadow-sm"
             title="Home"
           >
             <Home className="w-3.5 h-3.5" />
@@ -751,15 +751,15 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
             e.preventDefault();
             handleNavigate(inputUrl);
           }}
-          className="flex-1 flex items-center bg-zinc-900 border border-zinc-800 hover:border-zinc-700 focus-within:border-emerald-500 rounded-lg px-2.5 py-1 transition"
+          className="flex-1 flex items-center bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.14] focus-within:border-cyan-500/50 focus-within:ring-2 focus-within:ring-cyan-500/20 rounded-xl px-3 py-1.5 transition shadow-inner"
         >
           <div
             onClick={() => setShowPermissionsModal(true)}
             className="flex items-center gap-1.5 mr-2 text-emerald-400 cursor-pointer"
             title="Site Security & Permissions"
           >
-            <Shield className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">
+            <Shield className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
               {isSecure ? 'Secure' : 'HTTP'}
             </span>
           </div>
@@ -772,7 +772,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
             placeholder="Search or enter URL (e.g. http://127.0.0.1:5173)..."
           />
 
-          <div className="flex items-center gap-1.5 ml-2">
+          <div className="flex items-center gap-2 ml-2">
             <button
               type="button"
               onClick={handleAddBookmark}
@@ -803,26 +803,27 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
 
-            <button type="submit" className="text-zinc-400 hover:text-emerald-400 transition p-0.5" title="Navigate">
+            <button type="submit" className="text-zinc-400 hover:text-cyan-400 transition p-0.5" title="Navigate">
               <Search className="w-3.5 h-3.5" />
             </button>
           </div>
         </form>
 
         {/* Viewport Presets: Desktop, Mobile */}
-        <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5">
+        <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-xl p-0.5">
           <button
             onClick={() =>
               setTabs((prev) =>
                 prev.map((t) => (t.id === activeTabId ? { ...t, viewport: 'desktop' } : t))
               )
             }
-            className={`p-1.5 rounded transition ${
-              activeTab?.viewport === 'desktop' ? 'bg-zinc-800 text-emerald-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
+              activeTab?.viewport === 'desktop' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25' : 'text-zinc-400 hover:text-zinc-200'
             }`}
             title="Desktop Fullscreen"
           >
-            <Monitor className="w-3.5 h-3.5" />
+            <Monitor className="w-3.5 h-3.5 inline mr-1" />
+            <span>Desktop</span>
           </button>
           <button
             onClick={() =>
@@ -830,12 +831,13 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
                 prev.map((t) => (t.id === activeTabId ? { ...t, viewport: 'mobile' } : t))
               )
             }
-            className={`p-1.5 rounded transition ${
-              activeTab?.viewport === 'mobile' ? 'bg-zinc-800 text-emerald-400 shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
+              activeTab?.viewport === 'mobile' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25' : 'text-zinc-400 hover:text-zinc-200'
             }`}
             title="Mobile (375x667)"
           >
-            <Smartphone className="w-3.5 h-3.5" />
+            <Smartphone className="w-3.5 h-3.5 inline mr-1" />
+            <span>Mobile</span>
           </button>
         </div>
 
@@ -843,10 +845,10 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowToolsMenu(!showToolsMenu)}
-            className={`p-1.5 rounded-lg border transition ${
+            className={`p-1.5 rounded-xl border transition ${
               showToolsMenu
-                ? 'bg-zinc-800 text-emerald-400 border-zinc-700'
-                : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200'
+                ? 'bg-white/[0.1] text-cyan-400 border-white/[0.2]'
+                : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:text-zinc-200 hover:bg-white/[0.07]'
             }`}
             title="Emulation & Browser Tools"
           >
@@ -854,9 +856,9 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
           </button>
 
           {showToolsMenu && (
-            <div className="absolute right-0 top-full mt-1.5 w-64 bg-zinc-900 border border-zinc-750 shadow-2xl rounded-xl p-3 z-50 text-xs space-y-3 font-sans animate-in fade-in">
-              <div className="flex items-center justify-between pb-1 border-b border-zinc-800 text-[11px] font-bold text-zinc-300">
-                <span>Browser Tools & Emulation</span>
+            <div className="absolute right-0 top-full mt-2 w-68 bg-[#0e111d]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl rounded-2xl p-4 z-50 text-xs space-y-3.5 font-sans animate-in fade-in">
+              <div className="flex items-center justify-between pb-1.5 border-b border-white/[0.08] text-[11px] font-bold text-zinc-200">
+                <span>Browser Tools &amp; Emulation</span>
                 <button onClick={() => setShowToolsMenu(false)} className="text-zinc-500 hover:text-zinc-300">✕</button>
               </div>
 
@@ -864,13 +866,13 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
               <div className="flex items-center justify-between">
                 <span className="text-zinc-400">Zoom: {zoomPercent}%</span>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => handleZoom(-10)} className="p-1 bg-zinc-800 hover:bg-zinc-750 rounded text-zinc-300">
+                  <button onClick={() => handleZoom(-10)} className="p-1 bg-white/[0.04] hover:bg-white/[0.08] rounded-lg text-zinc-300">
                     <ZoomOut className="w-3 h-3" />
                   </button>
-                  <button onClick={() => setZoomPercent(100)} className="px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-750 rounded text-[10px] text-zinc-300">
-                    Reset
+                  <button onClick={() => setZoomPercent(100)} className="px-2 py-0.5 bg-white/[0.04] hover:bg-white/[0.08] rounded-lg text-[10px] text-zinc-300 font-mono">
+                    100%
                   </button>
-                  <button onClick={() => handleZoom(10)} className="p-1 bg-zinc-800 hover:bg-zinc-750 rounded text-zinc-300">
+                  <button onClick={() => handleZoom(10)} className="p-1 bg-white/[0.04] hover:bg-white/[0.08] rounded-lg text-zinc-300">
                     <ZoomIn className="w-3 h-3" />
                   </button>
                 </div>
@@ -882,7 +884,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
                 <select
                   value={throttling}
                   onChange={(e) => setThrottling(e.target.value as any)}
-                  className="bg-zinc-950 border border-zinc-800 text-zinc-200 rounded px-2 py-0.5 text-[11px] outline-none"
+                  className="bg-black/60 border border-white/[0.1] text-zinc-200 rounded-lg px-2.5 py-1 text-[11px] outline-none"
                 >
                   <option value="none">Full Speed</option>
                   <option value="fast3g">Fast 3G</option>
@@ -897,7 +899,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
                 <select
                   value={cpuThrottling}
                   onChange={(e) => setCpuThrottling(Number(e.target.value))}
-                  className="bg-zinc-950 border border-zinc-800 text-zinc-200 rounded px-2 py-0.5 text-[11px] outline-none"
+                  className="bg-black/60 border border-white/[0.1] text-zinc-200 rounded-lg px-2.5 py-1 text-[11px] outline-none"
                 >
                   <option value={1}>1x (Normal)</option>
                   <option value={4}>4x Slowdown</option>
@@ -906,22 +908,22 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
               </div>
 
               {/* Modals Links */}
-              <div className="grid grid-cols-3 gap-1 pt-2 border-t border-zinc-800">
+              <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-white/[0.08]">
                 <button
                   onClick={() => { setShowBookmarksModal(true); setShowToolsMenu(false); }}
-                  className="p-1.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 rounded text-center text-[10px] text-zinc-300"
+                  className="p-2 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.07] rounded-xl text-center text-[10px] text-zinc-300 transition"
                 >
                   Bookmarks
                 </button>
                 <button
                   onClick={() => { setShowHistoryModal(true); setShowToolsMenu(false); }}
-                  className="p-1.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 rounded text-center text-[10px] text-zinc-300"
+                  className="p-2 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.07] rounded-xl text-center text-[10px] text-zinc-300 transition"
                 >
                   History
                 </button>
                 <button
                   onClick={() => { setShowDownloadsModal(true); setShowToolsMenu(false); }}
-                  className="p-1.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 rounded text-center text-[10px] text-zinc-300"
+                  className="p-2 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.07] rounded-xl text-center text-[10px] text-zinc-300 transition"
                 >
                   Downloads
                 </button>
@@ -930,10 +932,10 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
           )}
         </div>
 
-        {/* Snapshot / Screenshot Action */}
+        {/* Snapshot Action */}
         <button
           onClick={handleCaptureScreenshot}
-          className="flex items-center gap-1 px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded-lg text-xs transition"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 border border-white/[0.08] rounded-xl text-xs font-medium transition active:scale-95 shadow-sm"
           title="Capture Viewport Screenshot"
         >
           {screenshotSuccess ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Camera className="w-3.5 h-3.5 text-emerald-400" />}
@@ -943,10 +945,10 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
         {/* Toggle DevTools Dock */}
         <button
           onClick={() => setDevToolsOpen(!devToolsOpen)}
-          className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition flex items-center gap-1.5 ${
+          className={`px-3.5 py-1.5 rounded-xl border text-xs font-semibold transition active:scale-95 flex items-center gap-1.5 ${
             devToolsOpen
-              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
-              : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-850'
+              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+              : 'bg-white/[0.04] text-zinc-300 border-white/[0.08] hover:bg-white/[0.08]'
           }`}
           title="Toggle Developer Tools (F12 / Cmd+Option+I)"
         >
@@ -956,16 +958,16 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
       </div>
 
       {/* Bookmarks Bar */}
-      <div className="flex items-center px-3 py-1 bg-zinc-950/80 border-b border-zinc-850 gap-2 text-[11px] overflow-x-auto no-scrollbar">
-        <span className="text-zinc-600 font-semibold uppercase text-[10px]">Bookmarks:</span>
+      <div className="flex items-center px-4 py-1.5 bg-[#08090d] border-b border-white/[0.06] gap-3 text-xs overflow-x-auto no-scrollbar">
+        <span className="text-zinc-500 font-bold uppercase text-[10px] tracking-wider">Bookmarks:</span>
         {bookmarks.map((bm) => (
           <button
             key={bm.id}
             onClick={() => handleNavigate(bm.url)}
-            className="flex items-center gap-1 text-zinc-400 hover:text-emerald-400 transition truncate max-w-48"
+            className="flex items-center gap-1.5 text-zinc-400 hover:text-cyan-300 transition truncate max-w-48 bg-white/[0.02] px-2 py-0.5 rounded-md hover:bg-white/[0.06]"
           >
             <Globe className="w-3 h-3 text-zinc-500" />
-            <span className="truncate">{bm.title}</span>
+            <span className="truncate text-[11px] font-mono">{bm.title}</span>
           </button>
         ))}
       </div>
@@ -973,7 +975,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
       {/* 3. Main Center Viewport Area */}
       <div className="flex-1 flex overflow-hidden relative">
         {showFindInPage && (
-          <div className="absolute top-3 right-6 z-40 bg-zinc-900/95 backdrop-blur-md border border-zinc-750 shadow-2xl rounded-lg p-2 flex items-center gap-2 text-xs">
+          <div className="absolute top-3 right-6 z-40 bg-[#0e111d]/95 backdrop-blur-xl border border-white/[0.12] shadow-2xl rounded-xl p-2.5 flex items-center gap-2 text-xs">
             <Search className="w-3.5 h-3.5 text-zinc-400" />
             <input
               type="text"
@@ -983,7 +985,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
                 setFindMatchesCount(e.target.value ? Math.floor(Math.random() * 5) + 1 : 0);
               }}
               placeholder="Find in page..."
-              className="bg-zinc-950 border border-zinc-800 rounded px-2 py-0.5 text-xs text-zinc-100 outline-none w-48 font-mono"
+              className="bg-black/40 border border-white/[0.08] rounded px-2.5 py-1 text-xs text-zinc-100 outline-none w-48 font-mono"
               autoFocus
             />
             <span className="text-[10px] text-zinc-400 font-mono">
@@ -997,39 +999,39 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
             </button>
           </div>
         )}
-        <div className="flex-1 bg-zinc-950 flex flex-col overflow-hidden relative p-2.5">
+        <div className="flex-1 bg-[#08090d] flex flex-col overflow-hidden relative p-3">
           <div
             style={{
               ...viewportStyle,
               transform: `scale(${zoomPercent / 100})`,
               transformOrigin: 'center center',
             }}
-            className="relative flex-1 bg-zinc-900 border border-zinc-800/90 rounded-xl shadow-2xl transition-all duration-150 flex flex-col overflow-hidden"
+            className="relative flex-1 bg-[#0d101b] border border-white/[0.09] rounded-2xl shadow-2xl transition-all duration-150 flex flex-col overflow-hidden"
           >
             {/* Frame Status Bar */}
-            <div className="bg-zinc-900/95 backdrop-blur text-zinc-400 text-[11px] py-1 px-3 flex items-center justify-between border-b border-zinc-800 shrink-0">
-              <div className="flex items-center gap-2">
+            <div className="bg-[#0e111d]/90 backdrop-blur-xl text-zinc-400 text-xs py-2 px-4 flex items-center justify-between border-b border-white/[0.07] shrink-0">
+              <div className="flex items-center gap-2.5">
                 <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="font-mono text-zinc-300 font-medium truncate max-w-md">{activeTab?.url}</span>
+                <span className="font-mono text-zinc-200 font-semibold truncate max-w-md">{activeTab?.url}</span>
                 <span className="text-zinc-600">•</span>
-                <span className="text-zinc-500 text-[10px]">Isolated Sandbox</span>
+                <span className="text-zinc-500 text-[10px]">Isolated Guest Sandbox</span>
               </div>
 
               <div className="flex items-center gap-3">
                 {/* Canvas Theme Switcher */}
-                <div className="flex items-center bg-zinc-950 border border-zinc-800 rounded px-1.5 py-0.5 gap-1 text-[10px]">
-                  <span className="text-zinc-500 font-medium">Canvas:</span>
+                <div className="flex items-center bg-black/40 border border-white/[0.08] rounded-lg p-0.5 gap-1 text-[10px]">
+                  <span className="text-zinc-500 font-medium pl-1.5">Canvas:</span>
                   <button
                     onClick={() => setCanvasTheme('dark')}
-                    className={`px-1.5 py-0.2 rounded transition ${
-                      canvasTheme === 'dark' ? 'bg-zinc-800 text-zinc-200 font-bold' : 'text-zinc-500 hover:text-zinc-300'
+                    className={`px-2 py-0.5 rounded-md transition ${
+                      canvasTheme === 'dark' ? 'bg-white/[0.1] text-zinc-100 font-bold' : 'text-zinc-500 hover:text-zinc-300'
                     }`}
                   >
                     Dark
                   </button>
                   <button
                     onClick={() => setCanvasTheme('light')}
-                    className={`px-1.5 py-0.2 rounded transition ${
+                    className={`px-2 py-0.5 rounded-md transition ${
                       canvasTheme === 'light' ? 'bg-zinc-200 text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-300'
                     }`}
                   >
@@ -1044,13 +1046,13 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
             </div>
 
             {/* Embedded Sandboxed Webview */}
-            <div className={`flex-1 relative flex flex-col overflow-hidden ${canvasTheme === 'dark' ? 'bg-zinc-900' : 'bg-white'}`}>
+            <div className={`flex-1 relative flex flex-col overflow-hidden ${canvasTheme === 'dark' ? 'bg-[#0d101b]' : 'bg-white'}`}>
               <iframe
                 ref={iframeRef}
                 src={activeTab?.url}
                 title={activeTab?.title}
                 sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                className={`w-full flex-1 border-none transition-colors ${canvasTheme === 'dark' ? 'bg-zinc-900' : 'bg-white'}`}
+                className={`w-full flex-1 border-none transition-colors ${canvasTheme === 'dark' ? 'bg-[#0d101b]' : 'bg-white'}`}
               />
             </div>
           </div>

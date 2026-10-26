@@ -10,36 +10,37 @@
   --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* macOS Window & IDE Colors (Dark Theme Default) */
-  --bg-app: #0c0f17;
-  --bg-topbar: #10141d;
-  --bg-activity-bar: #090c12;
-  --bg-sidebar: #0e121b;
-  --bg-editor: #0c0f17;
-  --bg-bottom-panel: #080b10;
-  --bg-right-panel: #0e121b;
+  /* Master Linear / Raycast / Cursor Dark Theme */
+  --bg-app: #08090d;
+  --bg-topbar: rgba(12, 14, 22, 0.85);
+  --bg-activity-bar: #06070a;
+  --bg-sidebar: rgba(13, 15, 24, 0.85);
+  --bg-editor: #08090d;
+  --bg-bottom-panel: rgba(10, 12, 19, 0.9);
+  --bg-right-panel: rgba(13, 15, 24, 0.85);
   
-  --bg-surface: #131824;
-  --bg-surface-hover: #1c2233;
-  --bg-surface-active: #232b40;
-  --bg-input: #10141e;
+  --bg-surface: rgba(22, 26, 40, 0.6);
+  --bg-surface-hover: rgba(255, 255, 255, 0.06);
+  --bg-surface-active: rgba(255, 255, 255, 0.1);
+  --bg-input: rgba(14, 17, 27, 0.85);
 
   /* Borders & Dividers */
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-panel: #1a202e;
-  --border-focus: #3b82f6;
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-panel: rgba(255, 255, 255, 0.08);
+  --border-focus: #6366f1;
+  --border-glow: rgba(99, 102, 241, 0.35);
 
   /* Text Colors */
-  --text-primary: #f1f5f9;
+  --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --text-code: #e2e8f0;
+  --text-code: #f1f5f9;
 
   /* Accents */
-  --accent-blue: #2563eb;
-  --accent-blue-hover: #1d4ed8;
-  --accent-cyan: #38bdf8;
+  --accent-blue: #3b82f6;
+  --accent-indigo: #6366f1;
   --accent-purple: #8b5cf6;
+  --accent-cyan: #06b6d4;
   --status-emerald: #10b981;
   --status-amber: #f59e0b;
   --status-rose: #f43f5e;
@@ -49,12 +50,17 @@
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-full: 9999px;
 
-  /* Shadows */
+  /* Shadows & Glow */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.7);
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+  --glow-indigo: 0 0 24px rgba(99, 102, 241, 0.25);
+  --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.25);
+  --glow-emerald: 0 0 20px rgba(16, 185, 129, 0.25);
 }
 
 /* Light Theme Support */
@@ -98,25 +104,16 @@ button,
 input[type="button"],
 input[type="submit"],
 input[type="reset"] {
-  -webkit-appearance: none !important;
-  appearance: none !important;
-  background-color: transparent;
-  border: 0 solid transparent;
-  border-radius: 0;
-  color: inherit;
-  font: inherit;
+  -webkit-appearance: none;
+  appearance: none;
   cursor: pointer;
 }
 
 input,
 select,
 textarea {
-  -webkit-appearance: none !important;
-  appearance: none !important;
-  color: inherit;
-  font: inherit;
-  background-color: transparent;
-  border: 0 solid transparent;
+  -webkit-appearance: none;
+  appearance: none;
   outline: none;
 }
 

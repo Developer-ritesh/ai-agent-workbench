@@ -564,27 +564,27 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
   const getMethodBadgeClass = (m: string) => {
     switch (m) {
       case 'GET':
-        return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60';
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
       case 'POST':
-        return 'bg-sky-950/80 text-sky-400 border-sky-800/60';
+        return 'bg-sky-500/10 text-sky-400 border-sky-500/30';
       case 'PUT':
       case 'PATCH':
-        return 'bg-amber-950/80 text-amber-400 border-amber-800/60';
+        return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
       case 'DELETE':
-        return 'bg-rose-950/80 text-rose-400 border-rose-800/60';
+        return 'bg-rose-500/10 text-rose-400 border-rose-500/30';
       default:
-        return 'bg-purple-950/80 text-purple-400 border-purple-800/60';
+        return 'bg-purple-500/10 text-purple-400 border-purple-500/30';
     }
   };
 
   return (
-    <div className="flex h-full w-full bg-[#0c0f17] text-slate-100 font-sans select-none overflow-hidden">
+    <div className="flex h-full w-full bg-[#08090d] text-zinc-100 font-sans select-none overflow-hidden">
       {/* 1. Left Sidebar: Collections, History, Environments */}
-      <div className="w-64 bg-[#0e121b] border-r border-[#1a202e] flex flex-col flex-shrink-0">
+      <div className="w-64 bg-[#0c0e17]/80 backdrop-blur-xl border-r border-white/[0.08] flex flex-col flex-shrink-0">
         {/* Sidebar Header & Segmented Tabs */}
-        <div className="p-3 border-b border-[#1a202e] bg-[#10141d]">
+        <div className="p-3 border-b border-white/[0.08] bg-[#0c0e17]/80 backdrop-blur-xl">
           <div className="flex items-center justify-between mb-2.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
               <Globe className="w-3.5 h-3.5 text-cyan-400" />
               API Studio
             </span>
@@ -599,7 +599,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                   };
                   persistCollections([...collections, newCol]);
                 }}
-                className="p-1 hover:bg-[#1f283d] text-slate-400 hover:text-cyan-300 rounded transition"
+                className="p-1 hover:bg-white/[0.08] text-zinc-400 hover:text-cyan-300 rounded transition"
                 title="New Collection"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -608,13 +608,13 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
           </div>
 
           {/* Segmented Tab Pill */}
-          <div className="flex items-center p-0.5 bg-[#080b11] border border-[#1a202e] rounded-lg text-xs">
+          <div className="flex items-center p-0.5 bg-black/40 border border-white/[0.08] rounded-lg text-xs">
             <button
               onClick={() => setSidebarTab('collections')}
               className={`flex-1 py-1 px-2 text-center rounded-md font-medium transition ${
                 sidebarTab === 'collections'
-                  ? 'bg-[#1a2335] text-cyan-300 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white/[0.1] text-cyan-300 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               Collections
@@ -623,8 +623,8 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               onClick={() => setSidebarTab('history')}
               className={`flex-1 py-1 px-2 text-center rounded-md font-medium transition ${
                 sidebarTab === 'history'
-                  ? 'bg-[#1a2335] text-cyan-300 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white/[0.1] text-cyan-300 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               History
@@ -633,8 +633,8 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               onClick={() => setSidebarTab('environments')}
               className={`flex-1 py-1 px-2 text-center rounded-md font-medium transition ${
                 sidebarTab === 'environments'
-                  ? 'bg-[#1a2335] text-cyan-300 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white/[0.1] text-cyan-300 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               Envs
@@ -643,7 +643,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
         </div>
 
         {/* Environment Quick Pill */}
-        <div className="px-3 py-2 bg-[#0c0f17] border-b border-[#1a202e] flex items-center justify-between text-xs">
+        <div className="px-3 py-2 bg-[#08090d] border-b border-white/[0.08] flex items-center justify-between text-xs">
           <div className="flex items-center gap-2 truncate">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
             <select
@@ -652,7 +652,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               className="bg-transparent text-emerald-400 font-mono text-[11px] font-semibold outline-none cursor-pointer truncate"
             >
               {environments.map((e) => (
-                <option key={e.id} value={e.id} className="bg-[#0e121b] text-slate-200">
+                <option key={e.id} value={e.id} className="bg-[#0c0e17]/80 backdrop-blur-xl text-zinc-200">
                   {e.name}
                 </option>
               ))}
@@ -660,7 +660,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
           </div>
           <button
             onClick={() => setShowEnvModal(true)}
-            className="p-1 text-slate-500 hover:text-slate-200 rounded transition"
+            className="p-1 text-zinc-500 hover:text-zinc-200 rounded transition"
             title="Manage Environments"
           >
             <Settings className="w-3.5 h-3.5" />
@@ -675,9 +675,9 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               {collections.map((col) => (
                 <div
                   key={col.id}
-                  className="bg-[#131824] border border-[#1a202e] rounded-xl p-2.5 space-y-2 shadow-sm"
+                  className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-2.5 space-y-2 shadow-sm"
                 >
-                  <div className="flex items-center justify-between text-xs font-semibold text-slate-200">
+                  <div className="flex items-center justify-between text-xs font-semibold text-zinc-200">
                     <span className="truncate flex items-center gap-2">
                       <FolderOpen className="w-4 h-4 text-amber-400 flex-shrink-0" />
                       <span className="truncate">{col.name}</span>
@@ -695,7 +695,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                         );
                         persistCollections(updated);
                       }}
-                      className="p-1 text-slate-400 hover:text-cyan-400 hover:bg-[#1a2335] rounded transition"
+                      className="p-1 text-zinc-400 hover:text-cyan-400 hover:bg-white/[0.1] rounded transition"
                       title="Add Request"
                     >
                       <Plus className="w-3.5 h-3.5" />
@@ -710,8 +710,8 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                         onClick={() => handleLoadRequest(req)}
                         className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition group ${
                           requestId === req.id
-                            ? 'bg-[#1c2840] text-cyan-300 border border-cyan-700/60 shadow-sm'
-                            : 'hover:bg-[#181f2f] text-slate-300'
+                            ? 'bg-indigo-500/20 text-cyan-300 border border-cyan-700/60 shadow-sm'
+                            : 'hover:bg-white/[0.06] text-zinc-300'
                         }`}
                       >
                         <div className="flex items-center gap-2 truncate">
@@ -732,7 +732,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                             );
                             persistCollections(updated);
                           }}
-                          className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-rose-400 p-1 transition"
+                          className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-rose-400 p-1 transition"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -748,13 +748,13 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
           {sidebarTab === 'history' && (
             <div className="space-y-2">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5 pointer-events-none" />
+                <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-2.5 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Filter history..."
                   value={historySearchQuery}
                   onChange={(e) => setHistorySearchQuery(e.target.value)}
-                  className="w-full bg-[#10141e] border border-[#1a202e] rounded-lg pl-8 pr-2 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500"
+                  className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg pl-8 pr-2 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30"
                 />
               </div>
 
@@ -765,7 +765,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                     <div
                       key={h.id}
                       onClick={() => handleLoadRequest({ ...h.requestConfig, url: h.url, method: h.method })}
-                      className="p-2.5 bg-[#131824] hover:bg-[#181f2f] rounded-lg border border-[#1a202e] cursor-pointer space-y-1 transition"
+                      className="p-2.5 bg-white/[0.03] hover:bg-white/[0.06] rounded-lg border border-white/[0.08] cursor-pointer space-y-1 transition"
                     >
                       <div className="flex items-center justify-between">
                         <span
@@ -787,8 +787,8 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                           {h.status || 'ERR'}
                         </span>
                       </div>
-                      <div className="truncate text-slate-300 text-xs font-mono">{h.url}</div>
-                      <div className="text-[10px] text-slate-500 flex items-center justify-between">
+                      <div className="truncate text-zinc-300 text-xs font-mono">{h.url}</div>
+                      <div className="text-[10px] text-zinc-500 flex items-center justify-between">
                         <span>{h.timeMs}ms</span>
                         <span>{h.timestamp}</span>
                       </div>
@@ -804,10 +804,10 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               {environments.map((env) => (
                 <div
                   key={env.id}
-                  className="p-3 bg-[#131824] border border-[#1a202e] rounded-xl space-y-2 text-xs"
+                  className="p-3 bg-white/[0.03] border border-white/[0.08] rounded-xl space-y-2 text-xs"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-200 flex items-center gap-1.5">
+                    <span className="font-bold text-zinc-200 flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-400" />
                       {env.name}
                     </span>
@@ -816,17 +816,17 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                       className={`text-[11px] px-2 py-0.5 rounded font-medium border ${
                         selectedEnvId === env.id
                           ? 'bg-emerald-950 text-emerald-300 border-emerald-700/60'
-                          : 'bg-[#1a202e] text-slate-400 border-transparent hover:text-white'
+                          : 'bg-[#1a202e] text-zinc-400 border-transparent hover:text-white'
                       }`}
                     >
                       {selectedEnvId === env.id ? 'Active' : 'Select'}
                     </button>
                   </div>
-                  <div className="space-y-1 font-mono text-[11px] text-slate-400">
+                  <div className="space-y-1 font-mono text-[11px] text-zinc-400">
                     {Object.entries(env.variables).map(([k, v]) => (
                       <div key={k} className="flex justify-between truncate">
                         <span className="text-cyan-400">{k}:</span>
-                        <span className="text-slate-300 truncate max-w-[120px]">
+                        <span className="text-zinc-300 truncate max-w-[120px]">
                           {env.isSecret?.[k] ? '••••••••' : v}
                         </span>
                       </div>
@@ -839,7 +839,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
         </div>
 
         {/* Sidebar Footer: Runner, Import & Export */}
-        <div className="p-3 border-t border-[#1a202e] bg-[#10141d] space-y-2">
+        <div className="p-3 border-t border-white/[0.08] bg-[#0c0e17]/80 backdrop-blur-xl space-y-2">
           <button
             onClick={() => setShowRunnerModal(true)}
             className="w-full flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-semibold transition shadow-sm"
@@ -863,7 +863,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                   URL.revokeObjectURL(u);
                 }
               }}
-              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 rounded-lg border border-[#1a202e] transition"
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 rounded-lg border border-white/[0.08] transition"
               title="Export Postman v2.1 Collection"
             >
               <Download className="w-3.5 h-3.5" />
@@ -874,7 +874,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                 setImportFormat('postman');
                 setShowImportModal(true);
               }}
-              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 rounded-lg border border-[#1a202e] transition"
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 rounded-lg border border-white/[0.08] transition"
               title="Import Collection or Spec"
             >
               <Upload className="w-3.5 h-3.5" />
@@ -885,19 +885,19 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
       </div>
 
       {/* 2. Main Request & Response Workbench */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#0c0f17]">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#08090d]">
         {/* Request Top Header: Name, Breadcrumb, Actions */}
-        <div className="px-5 py-3 bg-[#10141d] border-b border-[#1a202e] flex items-center justify-between flex-shrink-0">
+        <div className="px-5 py-3 bg-[#0c0e17]/80 backdrop-blur-xl border-b border-white/[0.08] flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <input
               type="text"
               value={requestName}
               onChange={(e) => setRequestName(e.target.value)}
-              className="bg-transparent font-bold text-sm text-white outline-none border-b border-transparent hover:border-slate-700 focus:border-cyan-500 w-64 transition"
+              className="bg-transparent font-bold text-sm text-white outline-none border-b border-transparent hover:border-slate-700 focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 w-64 transition"
               placeholder="Request Name"
             />
-            <span className="text-slate-600">/</span>
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-zinc-600">/</span>
+            <span className="text-xs text-zinc-400 font-mono">
               Env: <strong className="text-emerald-400">{environments.find((e) => e.id === selectedEnvId)?.name}</strong>
             </span>
           </div>
@@ -905,7 +905,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setLayoutMode(layoutMode === 'stacked' ? 'split' : 'stacked')}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 border border-[#1a202e] rounded-lg text-xs font-medium transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border border-white/[0.08] rounded-lg text-xs font-medium transition"
               title={`Toggle layout (Currently: ${layoutMode})`}
             >
               {layoutMode === 'stacked' ? <Columns className="w-3.5 h-3.5" /> : <Rows className="w-3.5 h-3.5" />}
@@ -914,7 +914,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
 
             <button
               onClick={handleSaveRequest}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 border border-[#1a202e] rounded-lg text-xs font-medium transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border border-white/[0.08] rounded-lg text-xs font-medium transition"
               title="Save Request (Cmd+S)"
             >
               <Save className="w-3.5 h-3.5 text-emerald-400" />
@@ -923,7 +923,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
 
             <button
               onClick={() => setShowCodeModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 border border-[#1a202e] rounded-lg text-xs font-medium transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border border-white/[0.08] rounded-lg text-xs font-medium transition"
               title="Generate Client Code (cURL, JS, Python, Rust, Go)"
             >
               <Code className="w-3.5 h-3.5 text-blue-400" />
@@ -933,13 +933,13 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
         </div>
 
         {/* HTTP Omnibox URL Bar */}
-        <div className="p-4 bg-[#0e121b] border-b border-[#1a202e] flex-shrink-0">
-          <div className="bg-[#131824] border border-[#1a202e] focus-within:border-cyan-500 rounded-xl p-1.5 shadow-md flex items-center gap-2 transition">
+        <div className="p-4 bg-transparent border-b border-white/[0.07] flex-shrink-0">
+          <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.09] focus-within:border-indigo-500/60 focus-within:ring-2 focus-within:ring-indigo-500/20 rounded-2xl p-1.5 shadow-2xl flex items-center gap-2 transition">
             {/* Method Selector */}
             <select
               value={method}
               onChange={(e) => setMethod(e.target.value as HttpMethod)}
-              className={`font-mono font-bold text-xs px-3.5 py-2 rounded-lg border outline-none cursor-pointer transition ${getMethodBadgeClass(
+              className={`font-mono font-bold text-xs px-3.5 py-2 rounded-xl border outline-none cursor-pointer transition ${getMethodBadgeClass(
                 method
               )}`}
             >
@@ -959,7 +959,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                 placeholder="METHOD"
                 value={customMethod}
                 onChange={(e) => setCustomMethod(e.target.value)}
-                className="w-24 bg-[#090d16] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-xs text-purple-400 font-mono outline-none"
+                className="w-24 bg-black/40 border border-white/[0.08] rounded-xl px-2.5 py-1.5 text-xs text-purple-400 font-mono outline-none"
               />
             )}
 
@@ -968,16 +968,16 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="flex-1 bg-transparent px-2 text-sm text-slate-100 font-mono outline-none placeholder-slate-500"
+              className="flex-1 bg-transparent px-3 text-xs text-zinc-100 font-mono outline-none placeholder-zinc-500"
               placeholder="{{baseUrl}}/api/v1/resource"
             />
 
             {unresolvedTokens.length > 0 && (
               <span
-                className="text-[11px] text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-800/40 font-mono flex items-center gap-1 flex-shrink-0"
+                className="text-[11px] text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/25 font-mono flex items-center gap-1.5 flex-shrink-0"
                 title={`Unresolved variable: ${unresolvedTokens.join(', ')}`}
               >
-                <AlertTriangle className="w-3 h-3" />
+                <AlertTriangle className="w-3 h-3 text-amber-400" />
                 <span>{unresolvedTokens[0]}</span>
               </span>
             )}
@@ -986,7 +986,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
             <button
               onClick={handleSend}
               disabled={isLoading}
-              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg text-xs font-bold shadow-md shadow-blue-500/20 transition active:scale-95 disabled:opacity-50 flex-shrink-0"
+              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/25 transition active:scale-95 disabled:opacity-50 flex-shrink-0"
             >
               <Send className={`w-3.5 h-3.5 ${isLoading ? 'animate-pulse' : ''}`} />
               <span>{isLoading ? 'Executing...' : 'Send'}</span>
@@ -1002,14 +1002,14 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
         >
           {/* Section 1: Request Editor Pane */}
           <div
-            className={`flex flex-col min-h-0 overflow-hidden bg-[#0c0f17] ${
+            className={`flex flex-col min-h-0 overflow-hidden bg-[#08090d] ${
               layoutMode === 'stacked'
-                ? 'h-[45%] border-b border-[#1a202e]'
-                : 'w-1/2 border-r border-[#1a202e]'
+                ? 'h-[45%] border-b border-white/[0.08]'
+                : 'w-1/2 border-r border-white/[0.08]'
             }`}
           >
             {/* Request Tabs Bar */}
-            <div className="flex items-center border-b border-[#1a202e] bg-[#10141d] px-4 pt-1 gap-1 flex-shrink-0">
+            <div className="flex items-center border-b border-white/[0.08] bg-[#0c0e17]/80 backdrop-blur-xl px-4 pt-1 gap-1 flex-shrink-0">
               {(
                 [
                   'params',
@@ -1027,7 +1027,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                   className={`pb-2.5 px-3 uppercase text-xs font-semibold tracking-wide transition border-b-2 ${
                     activeRequestTab === tab
                       ? 'text-cyan-400 border-cyan-400'
-                      : 'text-slate-400 border-transparent hover:text-slate-200'
+                      : 'text-zinc-400 border-transparent hover:text-zinc-200'
                   }`}
                 >
                   {tab}
@@ -1042,8 +1042,8 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               {/* 1. PARAMS TAB */}
               {activeRequestTab === 'params' && (
                 <div className="space-y-3 font-sans">
-                  <div className="flex items-center justify-between text-slate-400 pb-1 border-b border-[#1a202e] text-xs">
-                    <span className="font-semibold uppercase tracking-wider text-slate-400">
+                  <div className="flex items-center justify-between text-zinc-400 pb-1 border-b border-white/[0.08] text-xs">
+                    <span className="font-semibold uppercase tracking-wider text-zinc-400">
                       Query Parameters
                     </span>
                     <button
@@ -1078,7 +1078,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                             updated[idx].key = e.target.value;
                             setParams(updated);
                           }}
-                          className="w-1/3 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500"
+                          className="w-1/3 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30"
                         />
                         <input
                           type="text"
@@ -1089,7 +1089,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                             updated[idx].value = e.target.value;
                             setParams(updated);
                           }}
-                          className="w-1/3 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500"
+                          className="w-1/3 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30"
                         />
                         <input
                           type="text"
@@ -1100,11 +1100,11 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                             updated[idx].description = e.target.value;
                             setParams(updated);
                           }}
-                          className="flex-1 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-xs text-slate-400 outline-none focus:border-cyan-500 font-sans"
+                          className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-400 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 font-sans"
                         />
                         <button
                           onClick={() => setParams(params.filter((_, i) => i !== idx))}
-                          className="p-1.5 text-slate-500 hover:text-rose-400 rounded transition"
+                          className="p-1.5 text-zinc-500 hover:text-rose-400 rounded transition"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1117,8 +1117,8 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               {/* 2. HEADERS TAB */}
               {activeRequestTab === 'headers' && (
                 <div className="space-y-3 font-sans">
-                  <div className="flex items-center justify-between text-slate-400 pb-1 border-b border-[#1a202e] text-xs">
-                    <span className="font-semibold uppercase tracking-wider text-slate-400">
+                  <div className="flex items-center justify-between text-zinc-400 pb-1 border-b border-white/[0.08] text-xs">
+                    <span className="font-semibold uppercase tracking-wider text-zinc-400">
                       HTTP Request Headers
                     </span>
                     <button
@@ -1151,7 +1151,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                             updated[idx].key = e.target.value;
                             setHeaders(updated);
                           }}
-                          className="w-1/2 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500"
+                          className="w-1/2 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30"
                         />
                         <input
                           type="text"
@@ -1162,11 +1162,11 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                             updated[idx].value = e.target.value;
                             setHeaders(updated);
                           }}
-                          className="flex-1 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-cyan-500"
+                          className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30"
                         />
                         <button
                           onClick={() => setHeaders(headers.filter((_, i) => i !== idx))}
-                          className="p-1.5 text-slate-500 hover:text-rose-400 rounded transition"
+                          className="p-1.5 text-zinc-500 hover:text-rose-400 rounded transition"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1179,10 +1179,10 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               {/* 3. BODY TAB */}
               {activeRequestTab === 'body' && (
                 <div className="space-y-3 font-sans h-full flex flex-col">
-                  <div className="flex items-center gap-3 pb-2 border-b border-[#1a202e] text-xs">
+                  <div className="flex items-center gap-3 pb-2 border-b border-white/[0.08] text-xs">
                     {(['none', 'json', 'form-data', 'x-www-form-urlencoded', 'raw', 'graphql'] as const).map(
                       (bt) => (
-                        <label key={bt} className="flex items-center gap-1.5 cursor-pointer text-slate-300">
+                        <label key={bt} className="flex items-center gap-1.5 cursor-pointer text-zinc-300">
                           <input
                             type="radio"
                             name="bodyType"
@@ -1197,7 +1197,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                   </div>
 
                   {bodyType === 'none' && (
-                    <div className="text-center py-8 text-slate-500 text-xs">
+                    <div className="text-center py-8 text-zinc-500 text-xs">
                       This request does not have a body payload.
                     </div>
                   )}
@@ -1208,25 +1208,25 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                       value={bodyContent}
                       onChange={(e) => setBodyContent(e.target.value)}
                       placeholder="{ ... }"
-                      className="w-full flex-1 bg-[#10141e] border border-[#1a202e] rounded-lg p-3 text-xs text-slate-100 font-mono outline-none focus:border-cyan-500 leading-relaxed"
+                      className="w-full flex-1 bg-white/[0.03] border border-white/[0.08] rounded-lg p-3 text-xs text-zinc-100 font-mono outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 leading-relaxed"
                     />
                   )}
 
                   {bodyType === 'graphql' && (
                     <div className="space-y-2 flex-1 flex flex-col">
-                      <label className="text-xs text-slate-400">GraphQL Query:</label>
+                      <label className="text-xs text-zinc-400">GraphQL Query:</label>
                       <textarea
                         rows={6}
                         value={graphqlQuery}
                         onChange={(e) => setGraphqlQuery(e.target.value)}
-                        className="w-full bg-[#10141e] border border-[#1a202e] rounded-lg p-2.5 text-xs text-slate-100 font-mono outline-none"
+                        className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg p-2.5 text-xs text-zinc-100 font-mono outline-none"
                       />
-                      <label className="text-xs text-slate-400">Query Variables:</label>
+                      <label className="text-xs text-zinc-400">Query Variables:</label>
                       <textarea
                         rows={3}
                         value={graphqlVariables}
                         onChange={(e) => setGraphqlVariables(e.target.value)}
-                        className="w-full bg-[#10141e] border border-[#1a202e] rounded-lg p-2.5 text-xs text-slate-100 font-mono outline-none"
+                        className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg p-2.5 text-xs text-zinc-100 font-mono outline-none"
                       />
                     </div>
                   )}
@@ -1237,11 +1237,11 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               {activeRequestTab === 'auth' && (
                 <div className="space-y-4 font-sans max-w-lg">
                   <div className="flex items-center gap-3">
-                    <label className="text-xs text-slate-400 font-medium">Type:</label>
+                    <label className="text-xs text-zinc-400 font-medium">Type:</label>
                     <select
                       value={authType}
                       onChange={(e) => setAuthType(e.target.value as any)}
-                      className="bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-1.5 text-xs text-slate-100 outline-none"
+                      className="bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-zinc-100 outline-none"
                     >
                       <option value="none">No Auth</option>
                       <option value="bearer">Bearer Token</option>
@@ -1253,13 +1253,13 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
 
                   {authType === 'bearer' && (
                     <div className="space-y-1.5">
-                      <label className="text-xs text-slate-400">Token:</label>
+                      <label className="text-xs text-zinc-400">Token:</label>
                       <input
                         type={showSecrets ? 'text' : 'password'}
                         value={bearerToken}
                         onChange={(e) => setBearerToken(e.target.value)}
                         placeholder="Bearer token or {{token}}"
-                        className="w-full bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-slate-100 font-mono outline-none focus:border-cyan-500"
+                        className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-zinc-100 font-mono outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30"
                       />
                     </div>
                   )}
@@ -1267,21 +1267,21 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                   {authType === 'basic' && (
                     <div className="space-y-2">
                       <div>
-                        <label className="text-xs text-slate-400">Username:</label>
+                        <label className="text-xs text-zinc-400">Username:</label>
                         <input
                           type="text"
                           value={basicUser}
                           onChange={(e) => setBasicUser(e.target.value)}
-                          className="w-full bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-slate-100 outline-none"
+                          className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-zinc-100 outline-none"
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-slate-400">Password:</label>
+                        <label className="text-xs text-zinc-400">Password:</label>
                         <input
                           type={showSecrets ? 'text' : 'password'}
                           value={basicPass}
                           onChange={(e) => setBasicPass(e.target.value)}
-                          className="w-full bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-slate-100 outline-none"
+                          className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-zinc-100 outline-none"
                         />
                       </div>
                     </div>
@@ -1291,20 +1291,20 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                     <div className="space-y-2">
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-xs text-slate-400">Key Name:</label>
+                          <label className="text-xs text-zinc-400">Key Name:</label>
                           <input
                             type="text"
                             value={apiKeyName}
                             onChange={(e) => setApiKeyName(e.target.value)}
-                            className="w-full bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-slate-100 outline-none"
+                            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-zinc-100 outline-none"
                           />
                         </div>
                         <div>
-                          <label className="text-xs text-slate-400">Add To:</label>
+                          <label className="text-xs text-zinc-400">Add To:</label>
                           <select
                             value={apiKeyLocation}
                             onChange={(e) => setApiKeyLocation(e.target.value as any)}
-                            className="w-full bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-slate-100 outline-none"
+                            className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-zinc-100 outline-none"
                           >
                             <option value="header">Header</option>
                             <option value="query">Query Params</option>
@@ -1312,12 +1312,12 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                         </div>
                       </div>
                       <div>
-                        <label className="text-xs text-slate-400">Value:</label>
+                        <label className="text-xs text-zinc-400">Value:</label>
                         <input
                           type={showSecrets ? 'text' : 'password'}
                           value={apiKeyValue}
                           onChange={(e) => setApiKeyValue(e.target.value)}
-                          className="w-full bg-[#131824] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-slate-100 font-mono outline-none"
+                          className="w-full bg-white/[0.03] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-zinc-100 font-mono outline-none"
                         />
                       </div>
                     </div>
@@ -1327,7 +1327,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                     <button
                       type="button"
                       onClick={() => setShowSecrets(!showSecrets)}
-                      className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1.5 pt-1"
+                      className="text-xs text-zinc-400 hover:text-zinc-200 flex items-center gap-1.5 pt-1"
                     >
                       {showSecrets ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       <span>{showSecrets ? 'Hide sensitive credentials' : 'Show sensitive credentials'}</span>
@@ -1339,28 +1339,28 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               {/* 5. SCRIPTS & TESTS TABS */}
               {activeRequestTab === 'scripts' && (
                 <div className="space-y-2 h-full flex flex-col font-sans">
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-zinc-400">
                     Pre-request JavaScript sandbox (runs before HTTP execution):
                   </span>
                   <textarea
                     rows={8}
                     value={preRequestScript}
                     onChange={(e) => setPreRequestScript(e.target.value)}
-                    className="w-full flex-1 bg-[#10141e] border border-[#1a202e] rounded-lg p-3 text-xs text-slate-100 font-mono outline-none focus:border-cyan-500 leading-relaxed"
+                    className="w-full flex-1 bg-white/[0.03] border border-white/[0.08] rounded-lg p-3 text-xs text-zinc-100 font-mono outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 leading-relaxed"
                   />
                 </div>
               )}
 
               {activeRequestTab === 'tests' && (
                 <div className="space-y-2 h-full flex flex-col font-sans">
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-zinc-400">
                     Postman-compatible test assertions (<code className="text-cyan-400">pm.test</code> &amp; <code className="text-cyan-400">pm.expect</code>):
                   </span>
                   <textarea
                     rows={8}
                     value={testScript}
                     onChange={(e) => setTestScript(e.target.value)}
-                    className="w-full flex-1 bg-[#10141e] border border-[#1a202e] rounded-lg p-3 text-xs text-slate-100 font-mono outline-none focus:border-cyan-500 leading-relaxed"
+                    className="w-full flex-1 bg-white/[0.03] border border-white/[0.08] rounded-lg p-3 text-xs text-zinc-100 font-mono outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 leading-relaxed"
                   />
                 </div>
               )}
@@ -1368,7 +1368,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               {/* 6. SETTINGS TAB */}
               {activeRequestTab === 'settings' && (
                 <div className="space-y-3 font-sans max-w-md">
-                  <label className="flex items-center justify-between text-xs text-slate-300">
+                  <label className="flex items-center justify-between text-xs text-zinc-300">
                     <span>Follow HTTP Redirects</span>
                     <input
                       type="checkbox"
@@ -1377,7 +1377,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                       className="rounded border-slate-700 text-cyan-500"
                     />
                   </label>
-                  <label className="flex items-center justify-between text-xs text-slate-300">
+                  <label className="flex items-center justify-between text-xs text-zinc-300">
                     <span>Verify SSL Certificates</span>
                     <input
                       type="checkbox"
@@ -1386,13 +1386,13 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                       className="rounded border-slate-700 text-cyan-500"
                     />
                   </label>
-                  <div className="flex items-center justify-between text-xs text-slate-300">
+                  <div className="flex items-center justify-between text-xs text-zinc-300">
                     <span>Request Timeout (seconds)</span>
                     <input
                       type="number"
                       value={timeoutSeconds}
                       onChange={(e) => setTimeoutSeconds(Number(e.target.value))}
-                      className="w-20 bg-[#131824] border border-[#1a202e] rounded px-2 py-1 text-xs text-slate-100 text-center"
+                      className="w-20 bg-white/[0.03] border border-white/[0.08] rounded px-2 py-1 text-xs text-zinc-100 text-center"
                     />
                   </div>
                 </div>
@@ -1401,11 +1401,11 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
           </div>
 
           {/* Section 2: Response Viewer Pane */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#0a0d14]">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#08090d]">
             {/* Response Top Bar */}
-            <div className="px-4 py-2.5 bg-[#10141d] border-b border-[#1a202e] flex items-center justify-between flex-shrink-0">
+            <div className="px-4 py-2.5 bg-[#0c0e17]/80 backdrop-blur-xl border-b border-white/[0.08] flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                   Response
                 </span>
 
@@ -1424,11 +1424,11 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                       {response.status} {response.statusText}
                     </span>
 
-                    <span className="text-[11px] text-slate-400 font-mono bg-[#171e2e] px-2 py-0.5 rounded border border-[#1a202e]">
+                    <span className="text-[11px] text-zinc-400 font-mono bg-white/[0.04] px-2 py-0.5 rounded border border-white/[0.08]">
                       {response.timeMs} ms
                     </span>
 
-                    <span className="text-[11px] text-slate-400 font-mono bg-[#171e2e] px-2 py-0.5 rounded border border-[#1a202e]">
+                    <span className="text-[11px] text-zinc-400 font-mono bg-white/[0.04] px-2 py-0.5 rounded border border-white/[0.08]">
                       {(response.sizeBytes / 1024).toFixed(2)} KB
                     </span>
                   </div>
@@ -1439,14 +1439,14 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={handleCopyResponse}
-                    className="p-1.5 text-slate-400 hover:text-white hover:bg-[#171e2e] rounded transition"
+                    className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded transition"
                     title="Copy Body"
                   >
                     {copiedResponse ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                   <button
                     onClick={handleSaveResponseFile}
-                    className="p-1.5 text-slate-400 hover:text-white hover:bg-[#171e2e] rounded transition"
+                    className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/[0.04] rounded transition"
                     title="Download Response"
                   >
                     <Download className="w-3.5 h-3.5" />
@@ -1456,7 +1456,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
             </div>
 
             {/* Response Tabs & Controls Bar */}
-            <div className="flex items-center justify-between border-b border-[#1a202e] bg-[#0c0f17] px-4 pt-1 flex-shrink-0 text-xs">
+            <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#08090d] px-4 pt-1 flex-shrink-0 text-xs">
               <div className="flex items-center gap-1">
                 {(['body', 'headers', 'cookies', 'tests', 'timeline'] as const).map((tab) => (
                   <button
@@ -1465,7 +1465,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                     className={`pb-2 px-3 uppercase text-xs font-semibold tracking-wide transition border-b-2 ${
                       activeResponseTab === tab
                         ? 'text-cyan-400 border-cyan-400'
-                        : 'text-slate-400 border-transparent hover:text-slate-200'
+                        : 'text-zinc-400 border-transparent hover:text-zinc-200'
                     }`}
                   >
                     {tab}
@@ -1481,25 +1481,25 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
 
               {activeResponseTab === 'body' && response && (
                 <div className="flex items-center gap-2 pb-1.5">
-                  <div className="flex items-center bg-[#131824] border border-[#1a202e] rounded px-2 py-0.5 text-xs">
-                    <Search className="w-3 h-3 text-slate-500 mr-1.5" />
+                  <div className="flex items-center bg-white/[0.03] border border-white/[0.08] rounded px-2 py-0.5 text-xs">
+                    <Search className="w-3 h-3 text-zinc-500 mr-1.5" />
                     <input
                       type="text"
                       placeholder="Find in body..."
                       value={responseSearchQuery}
                       onChange={(e) => setResponseSearchQuery(e.target.value)}
-                      className="bg-transparent text-xs text-slate-200 outline-none w-28"
+                      className="bg-transparent text-xs text-zinc-200 outline-none w-28"
                     />
                   </div>
-                  <div className="flex items-center p-0.5 bg-[#131824] border border-[#1a202e] rounded text-xs">
+                  <div className="flex items-center p-0.5 bg-white/[0.03] border border-white/[0.08] rounded text-xs">
                     {(['pretty', 'raw', 'preview'] as const).map((mode) => (
                       <button
                         key={mode}
                         onClick={() => setResponseViewMode(mode)}
                         className={`px-2 py-0.5 rounded font-medium capitalize transition ${
                           responseViewMode === mode
-                            ? 'bg-[#1c2840] text-cyan-300'
-                            : 'text-slate-400 hover:text-slate-200'
+                            ? 'bg-indigo-500/20 text-cyan-300'
+                            : 'text-zinc-400 hover:text-zinc-200'
                         }`}
                       >
                         {mode}
@@ -1515,23 +1515,23 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               {/* Empty / Ready to send Hero State */}
               {!response && !isLoading && (
                 <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-                  <div className="max-w-md bg-[#131824] border border-[#1a202e] rounded-2xl p-6 shadow-xl space-y-4">
-                    <div className="w-12 h-12 rounded-xl bg-blue-950/80 border border-blue-800/40 flex items-center justify-center text-cyan-400 mx-auto shadow-inner">
-                      <Send className="w-6 h-6" />
+                  <div className="max-w-md bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-7 shadow-2xl space-y-4">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400 mx-auto shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+                      <Send className="w-5 h-5 text-indigo-400" />
                     </div>
 
                     <div>
                       <h3 className="text-sm font-bold text-white">Endpoint Ready to Execute</h3>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-zinc-400 mt-1">
                         Send requests directly to your local microVM Linux services or external APIs.
                       </p>
                     </div>
 
-                    <div className="bg-[#090d16] border border-[#1a202e] rounded-lg p-3 text-left font-mono text-[11px] text-slate-300 space-y-1">
+                    <div className="bg-black/40 border border-white/[0.07] rounded-xl p-3 text-left font-mono text-[11px] text-zinc-300 space-y-1">
                       <div className="text-cyan-400 font-semibold">{method} {substituteEnv(url)}</div>
-                      <div className="text-slate-500 text-[10px]">Environment: {environments.find((e) => e.id === selectedEnvId)?.name}</div>
+                      <div className="text-zinc-500 text-[10px]">Environment: {environments.find((e) => e.id === selectedEnvId)?.name}</div>
                       {params.filter((p) => p.enabled).length > 0 && (
-                        <div className="text-slate-400 text-[10px]">
+                        <div className="text-zinc-400 text-[10px]">
                           Params: {params.filter((p) => p.enabled).map((p) => `${p.key}=${p.value}`).join('&')}
                         </div>
                       )}
@@ -1540,7 +1540,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                     <div className="flex items-center justify-center gap-2 pt-1">
                       <button
                         onClick={handleSend}
-                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-blue-500/20 transition flex items-center gap-2"
+                        className="px-5 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/25 transition active:scale-95 flex items-center gap-2"
                       >
                         <Send className="w-3.5 h-3.5" />
                         <span>Send Request</span>
@@ -1548,7 +1548,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
 
                       <button
                         onClick={() => setShowCodeModal(true)}
-                        className="px-3 py-2 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 border border-[#1a202e] rounded-lg text-xs font-medium transition"
+                        className="px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 border border-white/[0.08] rounded-xl text-xs font-medium transition active:scale-95"
                       >
                         Export cURL
                       </button>
@@ -1559,7 +1559,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
 
               {/* Loading Spinner */}
               {isLoading && (
-                <div className="h-full flex flex-col items-center justify-center gap-3 text-slate-400">
+                <div className="h-full flex flex-col items-center justify-center gap-3 text-zinc-400">
                   <div className="w-8 h-8 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin" />
                   <span className="text-xs">Dispatching HTTP request to {substituteEnv(url)}...</span>
                 </div>
@@ -1583,10 +1583,10 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                           srcDoc={response.data}
                           title="Preview"
                           sandbox="allow-same-origin"
-                          className="w-full h-full bg-white rounded-lg border border-[#1a202e]"
+                          className="w-full h-full bg-white rounded-lg border border-white/[0.08]"
                         />
                       ) : (
-                        <pre className="text-slate-200 leading-relaxed whitespace-pre-wrap">
+                        <pre className="text-zinc-200 leading-relaxed whitespace-pre-wrap">
                           {response.data || '(Empty response body)'}
                         </pre>
                       )}
@@ -1597,9 +1597,9 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                   {activeResponseTab === 'headers' && (
                     <div className="space-y-1">
                       {Object.entries(response.headers).map(([k, v]) => (
-                        <div key={k} className="flex py-1 border-b border-[#1a202e]/60">
+                        <div key={k} className="flex py-1 border-b border-white/[0.08]/60">
                           <span className="w-1/3 text-cyan-400 font-semibold">{k}:</span>
-                          <span className="flex-1 text-slate-300 break-all">{v}</span>
+                          <span className="flex-1 text-zinc-300 break-all">{v}</span>
                         </div>
                       ))}
                     </div>
@@ -1609,14 +1609,14 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                   {activeResponseTab === 'cookies' && (
                     <div className="space-y-1">
                       {(!response.cookies || response.cookies.length === 0) ? (
-                        <div className="text-slate-500 text-center py-6 font-sans">
+                        <div className="text-zinc-500 text-center py-6 font-sans">
                           No cookies received from server.
                         </div>
                       ) : (
                         response.cookies.map((c, i) => (
-                          <div key={i} className="flex justify-between py-1 border-b border-[#1a202e]/60">
+                          <div key={i} className="flex justify-between py-1 border-b border-white/[0.08]/60">
                             <span className="text-cyan-400 font-semibold">{c.name}:</span>
-                            <span className="text-slate-300 font-mono">{c.value}</span>
+                            <span className="text-zinc-300 font-mono">{c.value}</span>
                           </div>
                         ))
                       )}
@@ -1627,7 +1627,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                   {activeResponseTab === 'tests' && (
                     <div className="space-y-2">
                       {(!response.testResults || response.testResults.length === 0) ? (
-                        <div className="text-slate-500 text-center py-6 font-sans">
+                        <div className="text-zinc-500 text-center py-6 font-sans">
                           No test assertions evaluated. Write test scripts in the &quot;Tests&quot; tab.
                         </div>
                       ) : (
@@ -1658,24 +1658,24 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                   {/* Timeline Tab */}
                   {activeResponseTab === 'timeline' && (
                     <div className="space-y-2 font-sans text-xs">
-                      <div className="p-3 bg-[#131824] border border-[#1a202e] rounded-xl space-y-1.5">
-                        <div className="flex justify-between text-slate-400">
+                      <div className="p-3 bg-white/[0.03] border border-white/[0.08] rounded-xl space-y-1.5">
+                        <div className="flex justify-between text-zinc-400">
                           <span>DNS Lookup &amp; Socket Connect:</span>
                           <span className="text-cyan-400 font-mono">12 ms</span>
                         </div>
-                        <div className="flex justify-between text-slate-400">
+                        <div className="flex justify-between text-zinc-400">
                           <span>TLS Handshake:</span>
                           <span className="text-cyan-400 font-mono">18 ms</span>
                         </div>
-                        <div className="flex justify-between text-slate-400">
+                        <div className="flex justify-between text-zinc-400">
                           <span>Time to First Byte (TTFB):</span>
                           <span className="text-cyan-400 font-mono">8 ms</span>
                         </div>
-                        <div className="flex justify-between text-slate-400">
+                        <div className="flex justify-between text-zinc-400">
                           <span>Content Download:</span>
                           <span className="text-cyan-400 font-mono">4 ms</span>
                         </div>
-                        <div className="pt-1 border-t border-[#1a202e] flex justify-between font-bold text-white">
+                        <div className="pt-1 border-t border-white/[0.08] flex justify-between font-bold text-white">
                           <span>Total Round-Trip Time:</span>
                           <span className="text-emerald-400 font-mono">{response.timeMs} ms</span>
                         </div>
@@ -1692,13 +1692,13 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
       {/* CODE SNIPPET MODAL */}
       {showCodeModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#10141d] border border-[#1a202e] rounded-xl w-full max-w-xl p-5 shadow-2xl space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#1a202e]">
+          <div className="bg-[#0c0e17]/80 backdrop-blur-xl border border-white/[0.08] rounded-xl w-full max-w-xl p-5 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
               <span className="font-bold text-white text-sm flex items-center gap-2">
                 <Code className="w-4 h-4 text-cyan-400" />
                 Generate Client Code
               </span>
-              <button onClick={() => setShowCodeModal(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setShowCodeModal(false)} className="text-zinc-400 hover:text-white">
                 ✕
               </button>
             </div>
@@ -1711,7 +1711,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                   className={`px-3 py-1 rounded text-xs font-semibold uppercase transition border ${
                     selectedLanguage === lang
                       ? 'bg-cyan-950 border-cyan-700/60 text-cyan-300'
-                      : 'bg-[#131824] border-[#1a202e] text-slate-400 hover:text-slate-200'
+                      : 'bg-white/[0.03] border-white/[0.08] text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   {lang}
@@ -1719,7 +1719,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               ))}
             </div>
 
-            <pre className="bg-[#090d16] border border-[#1a202e] rounded-lg p-3 text-xs text-slate-200 font-mono overflow-x-auto max-h-80 leading-relaxed">
+            <pre className="bg-black/30 border border-white/[0.08] rounded-lg p-3 text-xs text-zinc-200 font-mono overflow-x-auto max-h-80 leading-relaxed">
               {generateCodeSnippet(
                 {
                   method,
@@ -1733,7 +1733,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               )}
             </pre>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#1a202e]">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08]">
               <button
                 onClick={() => {
                   const snippet = generateCodeSnippet(
@@ -1762,24 +1762,24 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
       {/* COLLECTION RUNNER MODAL */}
       {showRunnerModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#10141d] border border-[#1a202e] rounded-xl w-full max-w-2xl max-h-[85vh] p-5 shadow-2xl flex flex-col space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-[#1a202e]">
+          <div className="bg-[#0c0e17]/80 backdrop-blur-xl border border-white/[0.08] rounded-xl w-full max-w-2xl max-h-[85vh] p-5 shadow-2xl flex flex-col space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
               <span className="font-bold text-white text-sm flex items-center gap-2">
                 <Play className="w-4 h-4 text-emerald-400" />
                 Collection Runner
               </span>
-              <button onClick={() => setShowRunnerModal(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setShowRunnerModal(false)} className="text-zinc-400 hover:text-white">
                 ✕
               </button>
             </div>
 
             <div className="grid grid-cols-3 gap-3 text-xs">
               <div>
-                <label className="text-slate-400">Target Collection:</label>
+                <label className="text-zinc-400">Target Collection:</label>
                 <select
                   value={runnerCollectionId}
                   onChange={(e) => setRunnerCollectionId(e.target.value)}
-                  className="w-full mt-1 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-slate-200 outline-none"
+                  className="w-full mt-1 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-zinc-200 outline-none"
                 >
                   {collections.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -1790,32 +1790,32 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               </div>
 
               <div>
-                <label className="text-slate-400">Iterations:</label>
+                <label className="text-zinc-400">Iterations:</label>
                 <input
                   type="number"
                   value={runnerIterations}
                   min={1}
                   max={20}
                   onChange={(e) => setRunnerIterations(Number(e.target.value))}
-                  className="w-full mt-1 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-slate-200 outline-none"
+                  className="w-full mt-1 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-zinc-200 outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-slate-400">Delay (ms):</label>
+                <label className="text-zinc-400">Delay (ms):</label>
                 <input
                   type="number"
                   value={runnerDelayMs}
                   step={50}
                   onChange={(e) => setRunnerDelayMs(Number(e.target.value))}
-                  className="w-full mt-1 bg-[#131824] border border-[#1a202e] rounded-lg px-2.5 py-1.5 text-slate-200 outline-none"
+                  className="w-full mt-1 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-zinc-200 outline-none"
                 />
               </div>
             </div>
 
             {runnerReport && (
-              <div className="bg-[#090d16] border border-[#1a202e] rounded-lg p-3 text-xs space-y-2 max-h-60 overflow-y-auto">
-                <div className="flex items-center justify-between font-bold text-white border-b border-[#1a202e] pb-1.5">
+              <div className="bg-black/30 border border-white/[0.08] rounded-lg p-3 text-xs space-y-2 max-h-60 overflow-y-auto">
+                <div className="flex items-center justify-between font-bold text-white border-b border-white/[0.08] pb-1.5">
                   <span>Execution Summary:</span>
                   <span className="text-emerald-400">
                     Passed: {runnerReport.passedRequests} / {runnerReport.totalRequests}
@@ -1824,7 +1824,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                 <div className="space-y-1">
                   {runnerReport.results.map((r, i) => (
                     <div key={i} className="flex justify-between text-[11px] font-mono">
-                      <span className="text-slate-300">{r.method} {r.name}</span>
+                      <span className="text-zinc-300">{r.method} {r.name}</span>
                       <span className={r.status >= 200 && r.status < 400 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
                         {r.status} ({r.timeMs}ms)
                       </span>
@@ -1834,10 +1834,10 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#1a202e]">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08]">
               <button
                 onClick={() => setShowRunnerModal(false)}
-                className="px-3 py-1.5 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 rounded-lg text-xs"
+                className="px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 rounded-lg text-xs"
               >
                 Close
               </button>
@@ -1857,13 +1857,13 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
       {/* IMPORT COLLECTION / SPEC MODAL */}
       {showImportModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#10141d] border border-[#1a202e] rounded-xl w-full max-w-lg p-5 shadow-2xl space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#1a202e]">
+          <div className="bg-[#0c0e17]/80 backdrop-blur-xl border border-white/[0.08] rounded-xl w-full max-w-lg p-5 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
               <span className="font-bold text-white text-sm flex items-center gap-2">
                 <Upload className="w-4 h-4 text-cyan-400" />
                 Import Postman Collection or OpenAPI 3.0
               </span>
-              <button onClick={() => setShowImportModal(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setShowImportModal(false)} className="text-zinc-400 hover:text-white">
                 ✕
               </button>
             </div>
@@ -1874,7 +1874,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                 className={`px-3 py-1 rounded text-xs font-semibold border ${
                   importFormat === 'postman'
                     ? 'bg-cyan-950 border-cyan-700/60 text-cyan-300'
-                    : 'bg-[#131824] border-[#1a202e] text-slate-400'
+                    : 'bg-white/[0.03] border-white/[0.08] text-zinc-400'
                 }`}
               >
                 Postman Collection v2.1
@@ -1884,7 +1884,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                 className={`px-3 py-1 rounded text-xs font-semibold border ${
                   importFormat === 'openapi'
                     ? 'bg-cyan-950 border-cyan-700/60 text-cyan-300'
-                    : 'bg-[#131824] border-[#1a202e] text-slate-400'
+                    : 'bg-white/[0.03] border-white/[0.08] text-zinc-400'
                 }`}
               >
                 OpenAPI 3.0 (JSON)
@@ -1896,13 +1896,13 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               value={importText}
               onChange={(e) => setImportText(e.target.value)}
               placeholder="Paste raw collection or spec JSON string here..."
-              className="w-full bg-[#090d16] border border-[#1a202e] rounded-lg p-3 text-xs text-slate-200 font-mono outline-none focus:border-cyan-500"
+              className="w-full bg-black/30 border border-white/[0.08] rounded-lg p-3 text-xs text-zinc-200 font-mono outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30"
             />
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#1a202e]">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/[0.08]">
               <button
                 onClick={() => setShowImportModal(false)}
-                className="px-3 py-1.5 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 rounded-lg text-xs"
+                className="px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 rounded-lg text-xs"
               >
                 Cancel
               </button>
@@ -1920,22 +1920,22 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
       {/* ENVIRONMENT VARIABLES MODAL */}
       {showEnvModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#10141d] border border-[#1a202e] rounded-xl w-full max-w-lg p-5 shadow-2xl space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#1a202e]">
+          <div className="bg-[#0c0e17]/80 backdrop-blur-xl border border-white/[0.08] rounded-xl w-full max-w-lg p-5 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
               <span className="font-bold text-white text-sm flex items-center gap-2">
                 <Settings className="w-4 h-4 text-emerald-400" />
                 Manage Environments
               </span>
-              <button onClick={() => setShowEnvModal(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setShowEnvModal(false)} className="text-zinc-400 hover:text-white">
                 ✕
               </button>
             </div>
 
             <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
               {environments.map((env) => (
-                <div key={env.id} className="p-3 bg-[#131824] border border-[#1a202e] rounded-xl space-y-2 text-xs">
+                <div key={env.id} className="p-3 bg-white/[0.03] border border-white/[0.08] rounded-xl space-y-2 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-200">{env.name}</span>
+                    <span className="font-bold text-zinc-200">{env.name}</span>
                     <button
                       onClick={() => {
                         setSelectedEnvId(env.id);
@@ -1946,11 +1946,11 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                       Use Environment
                     </button>
                   </div>
-                  <div className="space-y-1 font-mono text-[11px] text-slate-400">
+                  <div className="space-y-1 font-mono text-[11px] text-zinc-400">
                     {Object.entries(env.variables).map(([k, v]) => (
                       <div key={k} className="flex justify-between">
                         <span className="text-cyan-400">{k}:</span>
-                        <span className="text-slate-300 truncate max-w-[200px]">{v}</span>
+                        <span className="text-zinc-300 truncate max-w-[200px]">{v}</span>
                       </div>
                     ))}
                   </div>
@@ -1958,7 +1958,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               ))}
             </div>
 
-            <div className="flex items-center justify-end pt-2 border-t border-[#1a202e]">
+            <div className="flex items-center justify-end pt-2 border-t border-white/[0.08]">
               <button
                 onClick={() => setShowEnvModal(false)}
                 className="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold"
