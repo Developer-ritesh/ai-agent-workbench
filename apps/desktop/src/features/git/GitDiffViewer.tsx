@@ -599,7 +599,7 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
               )}
 
               {/* Line-by-Line Code Diff View */}
-              <div className="flex-1 overflow-auto bg-[#08090d] font-mono text-[12px] leading-relaxed select-text p-4 space-y-4">
+              <div className="flex-1 overflow-auto bg-[#08090d] font-mono text-[13px] leading-relaxed select-text p-4 space-y-4">
                 {diffViewMode === 'unified' ? (
                   <div className="rounded-xl border border-white/[0.08] overflow-hidden bg-[#0a0d14] shadow-2xl divide-y divide-white/[0.04]">
                     {currentDiffLines.map((line, idx) => (
@@ -615,10 +615,10 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
                             : 'text-zinc-300 hover:bg-white/[0.02]'
                         }`}
                       >
-                        <span className="w-12 select-none text-zinc-600 text-right pr-2 shrink-0 py-1 border-r border-white/[0.06] text-[11px]">
+                        <span className="w-12 select-none text-zinc-600 text-right pr-2 shrink-0 py-1 border-r border-white/[0.06] text-xs">
                           {line.oldLine || ''}
                         </span>
-                        <span className="w-12 select-none text-zinc-600 text-right pr-3 shrink-0 py-1 border-r border-white/[0.08] text-[11px]">
+                        <span className="w-12 select-none text-zinc-600 text-right pr-3 shrink-0 py-1 border-r border-white/[0.08] text-xs">
                           {line.newLine || ''}
                         </span>
                         <span className="w-6 select-none text-center shrink-0 py-1 text-zinc-500 font-bold">
@@ -634,13 +634,13 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
                   /* Side-by-Side Split View */
                   <div className="grid grid-cols-2 gap-px bg-white/[0.08] rounded-xl border border-white/[0.08] overflow-hidden shadow-2xl">
                     <div className="bg-[#0a0d14] p-3 space-y-0.5">
-                      <div className="text-[10px] font-bold text-zinc-500 uppercase pb-1.5 border-b border-white/[0.06] tracking-wider">
+                      <div className="text-[11px] font-bold text-zinc-400 uppercase pb-2 border-b border-white/[0.06] tracking-wider">
                         Original (Before)
                       </div>
                       {currentDiffLines.filter((l) => l.type !== 'add').map((line, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-start text-[11px] py-0.5 ${
+                          className={`flex items-start text-xs py-1 ${
                             line.type === 'del' ? 'bg-rose-500/[0.12] text-rose-200 rounded px-1' : 'text-zinc-400'
                           }`}
                         >
@@ -652,13 +652,13 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
                       ))}
                     </div>
                     <div className="bg-[#0a0d14] p-3 space-y-0.5 border-l border-white/[0.06]">
-                      <div className="text-[10px] font-bold text-zinc-500 uppercase pb-1.5 border-b border-white/[0.06] tracking-wider">
+                      <div className="text-[11px] font-bold text-zinc-400 uppercase pb-2 border-b border-white/[0.06] tracking-wider">
                         Modified (After)
                       </div>
                       {currentDiffLines.filter((l) => l.type !== 'del').map((line, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-start text-[11px] py-0.5 ${
+                          className={`flex items-start text-xs py-1 ${
                             line.type === 'add' ? 'bg-emerald-500/[0.12] text-emerald-200 rounded px-1' : 'text-zinc-400'
                           }`}
                         >

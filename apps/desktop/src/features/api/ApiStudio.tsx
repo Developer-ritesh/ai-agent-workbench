@@ -42,7 +42,7 @@ interface ApiStudioProps {}
 export const ApiStudio: React.FC<ApiStudioProps> = () => {
   // Navigation Tabs in Sidebar: 'collections' | 'history' | 'environments' | 'specs'
   const [sidebarTab, setSidebarTab] = useState<'collections' | 'history' | 'environments' | 'specs'>('collections');
-  const [layoutMode, setLayoutMode] = useState<'stacked' | 'split'>('stacked');
+  const [layoutMode, setLayoutMode] = useState<'stacked' | 'split'>('split');
 
   // Request State
   const [requestId, setRequestId] = useState<string>('req-current');

@@ -403,6 +403,9 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
       { id: `h-${Date.now()}`, title: formatted.replace(/^https?:\/\//, ''), url: formatted, timestamp: new Date().toLocaleTimeString() },
       ...prev,
     ]);
+
+    // Automatically engage iframe for explicit URL navigations
+    setPreviewMode('iframe');
   };
 
   const handleAddTab = (url: string = 'http://127.0.0.1:5173') => {
@@ -621,8 +624,8 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
 
   return (
     <div className="flex flex-col h-full w-full bg-[#08090d] text-zinc-100 font-sans select-none overflow-hidden">
-      {/* 1. Arc/Chrome Style Frosted Tab Strip */}
-      <div className="flex items-center bg-[#0c0e17]/90 backdrop-blur-xl border-b border-white/[0.07] px-3 pt-2 gap-1.5 overflow-x-auto no-scrollbar">
+      {/* 1. Sleek Modern Tab Strip */}
+      <div className="flex items-center bg-[#0c0e17]/90 backdrop-blur-xl border-b border-white/[0.07] px-3 pt-2 gap-1.5 overflow-x-auto no-scrollbar shrink-0">
         {tabs.map((tab) => {
           const isActive = tab.id === activeTabId;
           return (
@@ -631,12 +634,12 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
               onClick={() => setActiveTabId(tab.id)}
               className={`group flex items-center gap-2.5 px-3.5 py-1.5 rounded-t-xl text-xs font-medium cursor-pointer transition-all max-w-64 border-t border-x ${
                 isActive
-                  ? 'bg-white/[0.07] text-cyan-300 border-white/[0.1] border-b-transparent shadow-lg shadow-black/40'
+                  ? 'bg-white/[0.08] text-cyan-300 border-white/[0.12] border-b-transparent shadow-lg shadow-black/40'
                   : 'bg-white/[0.02] text-zinc-400 hover:text-zinc-200 border-transparent hover:bg-white/[0.05]'
               }`}
             >
               <Globe className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-400' : 'text-zinc-500'}`} />
-              <span className="truncate flex-1 font-mono text-[11px]">{tab.title || 'New Tab'}</span>
+              <span className="truncate flex-1 font-mono text-[11px] font-medium">{tab.title || 'New Tab'}</span>
               {tabs.length > 1 && (
                 <button
                   onClick={(e) => handleCloseTab(tab.id, e)}
@@ -678,17 +681,10 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
         )}
 
         {/* Engine Status & Discovered Ports */}
-        <div className="ml-auto flex items-center gap-2 py-1 text-xs text-zinc-400 pr-2">
-          <div
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[10px] font-mono cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.15)]"
-            title={`CDP Target: ${engineStatus.cdpUrl} (PID: ${engineStatus.pid || 'Active'})\nProfile: ${engineStatus.profileDir}`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${engineStatus.isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-            <span className="text-emerald-300 font-bold">CDP :{engineStatus.cdpPort}</span>
-          </div>
-
-          <div className="flex items-center gap-1 text-[11px] font-mono">
-            <span className="text-zinc-500">Ports:</span>
+        <div className="ml-auto flex items-center gap-2.5 py-1 text-xs text-zinc-400 pr-2">
+          {/* Discovered Ports Quick Jump */}
+          <div className="flex items-center gap-1 font-mono text-[11px]">
+            <span className="text-zinc-500 text-[10px] uppercase font-bold tracking-wider mr-1">Ports:</span>
             {detectedPorts.map((port) => (
               <button
                 key={port}
@@ -704,23 +700,52 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
               </button>
             ))}
           </div>
+
+          {/* CDP Status Indicator */}
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[10px] font-mono shadow-[0_0_12px_rgba(16,185,129,0.15)]"
+            title={`CDP Target: ${engineStatus.cdpUrl} (PID: ${engineStatus.pid || 'Active'})`}
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${engineStatus.isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+            <span className="text-emerald-300 font-bold">CDP :{engineStatus.cdpPort}</span>
+          </div>
+
+          {/* Canvas Theme Toggle */}
+          <div className="flex items-center bg-black/40 border border-white/[0.08] rounded-lg p-0.5 text-[10px]">
+            <button
+              onClick={() => setCanvasTheme('dark')}
+              className={`px-2 py-0.5 rounded-md transition ${
+                canvasTheme === 'dark' ? 'bg-white/[0.12] text-zinc-100 font-bold' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              Dark
+            </button>
+            <button
+              onClick={() => setCanvasTheme('light')}
+              className={`px-2 py-0.5 rounded-md transition ${
+                canvasTheme === 'light' ? 'bg-zinc-200 text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              Light
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 2. Navigation & Controls Toolbar */}
-      <div className="flex items-center gap-2 px-4 py-2 bg-[#0a0c13]/90 backdrop-blur-xl border-b border-white/[0.07] text-xs">
+      {/* 2. Unified Master Navigation & Omnibox Toolbar */}
+      <div className="flex items-center gap-2.5 px-4 py-2 bg-[#090b12]/95 backdrop-blur-xl border-b border-white/[0.07] text-xs shrink-0">
         {/* Navigation Buttons */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => {}}
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition shadow-sm"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition active:scale-95 shadow-sm"
             title="Back"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => {}}
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition shadow-sm"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition active:scale-95 shadow-sm"
             title="Forward"
           >
             <ArrowRight className="w-3.5 h-3.5" />
@@ -735,31 +760,31 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
                 }, 50);
               }
             }}
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition shadow-sm"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition active:scale-95 shadow-sm"
             title="Reload (Cmd+R)"
           >
             <RotateCw className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => handleNavigate('http://127.0.0.1:5173')}
-            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition shadow-sm"
+            className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition active:scale-95 shadow-sm"
             title="Home"
           >
             <Home className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Address & Omnibox */}
+        {/* Omnibox Address Input */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleNavigate(inputUrl);
           }}
-          className="flex-1 flex items-center bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.14] focus-within:border-cyan-500/50 focus-within:ring-2 focus-within:ring-cyan-500/20 rounded-xl px-3 py-1.5 transition shadow-inner"
+          className="flex-1 min-w-0 flex items-center bg-white/[0.035] border border-white/[0.09] hover:border-white/[0.15] focus-within:border-cyan-500/50 focus-within:ring-2 focus-within:ring-cyan-500/20 rounded-xl px-3 py-1.5 transition shadow-inner"
         >
           <div
             onClick={() => setShowPermissionsModal(true)}
-            className="flex items-center gap-1.5 mr-2 text-emerald-400 cursor-pointer"
+            className="flex items-center gap-1.5 mr-2 text-emerald-400 cursor-pointer shrink-0"
             title="Site Security & Permissions"
           >
             <Shield className="w-3.5 h-3.5 text-emerald-400" />
@@ -772,11 +797,11 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
             type="text"
             value={inputUrl}
             onChange={(e) => setInputUrl(e.target.value)}
-            className="flex-1 bg-transparent text-xs text-zinc-100 outline-none font-mono placeholder-zinc-500"
+            className="flex-1 min-w-0 bg-transparent text-xs text-zinc-100 outline-none font-mono placeholder-zinc-500"
             placeholder="Search or enter URL (e.g. http://127.0.0.1:5173)..."
           />
 
-          <div className="flex items-center gap-2 ml-2">
+          <div className="flex items-center gap-2 ml-2 shrink-0">
             <button
               type="button"
               onClick={handleAddBookmark}
@@ -813,167 +838,181 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
           </div>
         </form>
 
-        {/* Viewport Presets: Desktop, Mobile */}
-        <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-xl p-0.5">
-          <button
-            onClick={() =>
-              setTabs((prev) =>
-                prev.map((t) => (t.id === activeTabId ? { ...t, viewport: 'desktop' } : t))
-              )
-            }
-            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
-              activeTab?.viewport === 'desktop' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25' : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-            title="Desktop Fullscreen"
-          >
-            <Monitor className="w-3.5 h-3.5 inline mr-1" />
-            <span>Desktop</span>
-          </button>
-          <button
-            onClick={() =>
-              setTabs((prev) =>
-                prev.map((t) => (t.id === activeTabId ? { ...t, viewport: 'mobile' } : t))
-              )
-            }
-            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
-              activeTab?.viewport === 'mobile' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25' : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-            title="Mobile (375x667)"
-          >
-            <Smartphone className="w-3.5 h-3.5 inline mr-1" />
-            <span>Mobile</span>
-          </button>
-        </div>
+        {/* Viewport Presets & Render Mode Controls */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Dual Render Mode: Simulator vs Iframe */}
+          <div className="flex items-center bg-black/60 border border-white/[0.09] rounded-xl p-0.5 gap-0.5">
+            <button
+              onClick={() => setPreviewMode('simulator')}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                previewMode === 'simulator'
+                  ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-md shadow-indigo-500/25'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Live interactive simulated web application"
+            >
+              ⚡ Interactive App
+            </button>
+            <button
+              onClick={() => setPreviewMode('iframe')}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                previewMode === 'iframe'
+                  ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-md shadow-indigo-500/25'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Raw sandboxed browser iframe"
+            >
+              🌐 Raw Iframe
+            </button>
+          </div>
 
-        {/* Settings / Emulation Dropdown Toggle */}
-        <div className="relative">
-          <button
-            onClick={() => setShowToolsMenu(!showToolsMenu)}
-            className={`p-1.5 rounded-xl border transition ${
-              showToolsMenu
-                ? 'bg-white/[0.1] text-cyan-400 border-white/[0.2]'
-                : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:text-zinc-200 hover:bg-white/[0.07]'
-            }`}
-            title="Emulation & Browser Tools"
-          >
-            <Sliders className="w-3.5 h-3.5" />
-          </button>
+          {/* Viewport Presets: Desktop, Mobile */}
+          <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-xl p-0.5">
+            <button
+              onClick={() =>
+                setTabs((prev) =>
+                  prev.map((t) => (t.id === activeTabId ? { ...t, viewport: 'desktop' } : t))
+                )
+              }
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
+                activeTab?.viewport === 'desktop' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25' : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Desktop Fullscreen"
+            >
+              <Monitor className="w-3.5 h-3.5 inline mr-1" />
+              <span>Desktop</span>
+            </button>
+            <button
+              onClick={() =>
+                setTabs((prev) =>
+                  prev.map((t) => (t.id === activeTabId ? { ...t, viewport: 'mobile' } : t))
+                )
+              }
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
+                activeTab?.viewport === 'mobile' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25' : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Mobile (375x667)"
+            >
+              <Smartphone className="w-3.5 h-3.5 inline mr-1" />
+              <span>Mobile</span>
+            </button>
+          </div>
 
-          {showToolsMenu && (
-            <div className="absolute right-0 top-full mt-2 w-68 bg-[#0e111d]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl rounded-2xl p-4 z-50 text-xs space-y-3.5 font-sans animate-in fade-in">
-              <div className="flex items-center justify-between pb-1.5 border-b border-white/[0.08] text-[11px] font-bold text-zinc-200">
-                <span>Browser Tools &amp; Emulation</span>
-                <button onClick={() => setShowToolsMenu(false)} className="text-zinc-500 hover:text-zinc-300">✕</button>
-              </div>
+          {/* Settings / Emulation Dropdown Toggle */}
+          <div className="relative">
+            <button
+              onClick={() => setShowToolsMenu(!showToolsMenu)}
+              className={`p-1.5 rounded-xl border transition ${
+                showToolsMenu
+                  ? 'bg-white/[0.1] text-cyan-400 border-white/[0.2]'
+                  : 'bg-white/[0.04] text-zinc-400 border-white/[0.08] hover:text-zinc-200 hover:bg-white/[0.07]'
+              }`}
+              title="Emulation & Browser Tools"
+            >
+              <Sliders className="w-3.5 h-3.5" />
+            </button>
 
-              {/* Zoom */}
-              <div className="flex items-center justify-between">
-                <span className="text-zinc-400">Zoom: {zoomPercent}%</span>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => handleZoom(-10)} className="p-1 bg-white/[0.04] hover:bg-white/[0.08] rounded-lg text-zinc-300">
-                    <ZoomOut className="w-3 h-3" />
+            {showToolsMenu && (
+              <div className="absolute right-0 top-full mt-2 w-68 bg-[#0e111d]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl rounded-2xl p-4 z-50 text-xs space-y-3.5 font-sans animate-in fade-in">
+                <div className="flex items-center justify-between pb-1.5 border-b border-white/[0.08] text-[11px] font-bold text-zinc-200">
+                  <span>Browser Tools &amp; Emulation</span>
+                  <button onClick={() => setShowToolsMenu(false)} className="text-zinc-500 hover:text-zinc-300">✕</button>
+                </div>
+
+                {/* Zoom */}
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-400">Zoom: {zoomPercent}%</span>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => handleZoom(-10)} className="p-1 bg-white/[0.04] hover:bg-white/[0.08] rounded-lg text-zinc-300">
+                      <ZoomOut className="w-3 h-3" />
+                    </button>
+                    <button onClick={() => setZoomPercent(100)} className="px-2 py-0.5 bg-white/[0.04] hover:bg-white/[0.08] rounded-lg text-[10px] text-zinc-300 font-mono">
+                      100%
+                    </button>
+                    <button onClick={() => handleZoom(10)} className="p-1 bg-white/[0.04] hover:bg-white/[0.08] rounded-lg text-zinc-300">
+                      <ZoomIn className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Network Throttling */}
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-400">Network:</span>
+                  <select
+                    value={throttling}
+                    onChange={(e) => setThrottling(e.target.value as any)}
+                    className="bg-black/60 border border-white/[0.1] text-zinc-200 rounded-lg px-2.5 py-1 text-[11px] outline-none"
+                  >
+                    <option value="none">Full Speed</option>
+                    <option value="fast3g">Fast 3G</option>
+                    <option value="slow3g">Slow 3G</option>
+                    <option value="offline">Offline</option>
+                  </select>
+                </div>
+
+                {/* CPU Throttling */}
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-400">CPU Speed:</span>
+                  <select
+                    value={cpuThrottling}
+                    onChange={(e) => setCpuThrottling(Number(e.target.value))}
+                    className="bg-black/60 border border-white/[0.1] text-zinc-200 rounded-lg px-2.5 py-1 text-[11px] outline-none"
+                  >
+                    <option value={1}>1x (Normal)</option>
+                    <option value={4}>4x Slowdown</option>
+                    <option value={6}>6x Slowdown</option>
+                  </select>
+                </div>
+
+                {/* Modals Links */}
+                <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-white/[0.08]">
+                  <button
+                    onClick={() => { setShowBookmarksModal(true); setShowToolsMenu(false); }}
+                    className="p-2 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.07] rounded-xl text-center text-[10px] text-zinc-300 transition"
+                  >
+                    Bookmarks
                   </button>
-                  <button onClick={() => setZoomPercent(100)} className="px-2 py-0.5 bg-white/[0.04] hover:bg-white/[0.08] rounded-lg text-[10px] text-zinc-300 font-mono">
-                    100%
+                  <button
+                    onClick={() => { setShowHistoryModal(true); setShowToolsMenu(false); }}
+                    className="p-2 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.07] rounded-xl text-center text-[10px] text-zinc-300 transition"
+                  >
+                    History
                   </button>
-                  <button onClick={() => handleZoom(10)} className="p-1 bg-white/[0.04] hover:bg-white/[0.08] rounded-lg text-zinc-300">
-                    <ZoomIn className="w-3 h-3" />
+                  <button
+                    onClick={() => { setShowDownloadsModal(true); setShowToolsMenu(false); }}
+                    className="p-2 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.07] rounded-xl text-center text-[10px] text-zinc-300 transition"
+                  >
+                    Downloads
                   </button>
                 </div>
               </div>
+            )}
+          </div>
 
-              {/* Network Throttling */}
-              <div className="flex items-center justify-between">
-                <span className="text-zinc-400">Network:</span>
-                <select
-                  value={throttling}
-                  onChange={(e) => setThrottling(e.target.value as any)}
-                  className="bg-black/60 border border-white/[0.1] text-zinc-200 rounded-lg px-2.5 py-1 text-[11px] outline-none"
-                >
-                  <option value="none">Full Speed</option>
-                  <option value="fast3g">Fast 3G</option>
-                  <option value="slow3g">Slow 3G</option>
-                  <option value="offline">Offline</option>
-                </select>
-              </div>
-
-              {/* CPU Throttling */}
-              <div className="flex items-center justify-between">
-                <span className="text-zinc-400">CPU Speed:</span>
-                <select
-                  value={cpuThrottling}
-                  onChange={(e) => setCpuThrottling(Number(e.target.value))}
-                  className="bg-black/60 border border-white/[0.1] text-zinc-200 rounded-lg px-2.5 py-1 text-[11px] outline-none"
-                >
-                  <option value={1}>1x (Normal)</option>
-                  <option value={4}>4x Slowdown</option>
-                  <option value={6}>6x Slowdown</option>
-                </select>
-              </div>
-
-              {/* Modals Links */}
-              <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-white/[0.08]">
-                <button
-                  onClick={() => { setShowBookmarksModal(true); setShowToolsMenu(false); }}
-                  className="p-2 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.07] rounded-xl text-center text-[10px] text-zinc-300 transition"
-                >
-                  Bookmarks
-                </button>
-                <button
-                  onClick={() => { setShowHistoryModal(true); setShowToolsMenu(false); }}
-                  className="p-2 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.07] rounded-xl text-center text-[10px] text-zinc-300 transition"
-                >
-                  History
-                </button>
-                <button
-                  onClick={() => { setShowDownloadsModal(true); setShowToolsMenu(false); }}
-                  className="p-2 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.07] rounded-xl text-center text-[10px] text-zinc-300 transition"
-                >
-                  Downloads
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Snapshot Action */}
-        <button
-          onClick={handleCaptureScreenshot}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 border border-white/[0.08] rounded-xl text-xs font-medium transition active:scale-95 shadow-sm"
-          title="Capture Viewport Screenshot"
-        >
-          {screenshotSuccess ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Camera className="w-3.5 h-3.5 text-emerald-400" />}
-          <span>Snapshot</span>
-        </button>
-
-        {/* Toggle DevTools Dock */}
-        <button
-          onClick={() => setDevToolsOpen(!devToolsOpen)}
-          className={`px-3.5 py-1.5 rounded-xl border text-xs font-semibold transition active:scale-95 flex items-center gap-1.5 ${
-            devToolsOpen
-              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-              : 'bg-white/[0.04] text-zinc-300 border-white/[0.08] hover:bg-white/[0.08]'
-          }`}
-          title="Toggle Developer Tools (F12 / Cmd+Option+I)"
-        >
-          <Code className="w-3.5 h-3.5" />
-          <span>{devToolsOpen ? 'Close DevTools' : 'Inspect DevTools'}</span>
-        </button>
-      </div>
-
-      {/* Bookmarks Bar */}
-      <div className="flex items-center px-4 py-1.5 bg-[#08090d] border-b border-white/[0.06] gap-3 text-xs overflow-x-auto no-scrollbar">
-        <span className="text-zinc-500 font-bold uppercase text-[10px] tracking-wider">Bookmarks:</span>
-        {bookmarks.map((bm) => (
+          {/* Snapshot Action */}
           <button
-            key={bm.id}
-            onClick={() => handleNavigate(bm.url)}
-            className="flex items-center gap-1.5 text-zinc-400 hover:text-cyan-300 transition truncate max-w-48 bg-white/[0.02] px-2 py-0.5 rounded-md hover:bg-white/[0.06]"
+            onClick={handleCaptureScreenshot}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 border border-white/[0.08] rounded-xl text-xs font-medium transition active:scale-95 shadow-sm"
+            title="Capture Viewport Screenshot"
           >
-            <Globe className="w-3 h-3 text-zinc-500" />
-            <span className="truncate text-[11px] font-mono">{bm.title}</span>
+            {screenshotSuccess ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Camera className="w-3.5 h-3.5 text-emerald-400" />}
+            <span>Snapshot</span>
           </button>
-        ))}
+
+          {/* Toggle DevTools Dock */}
+          <button
+            onClick={() => setDevToolsOpen(!devToolsOpen)}
+            className={`px-3.5 py-1.5 rounded-xl border text-xs font-semibold transition active:scale-95 flex items-center gap-1.5 ${
+              devToolsOpen
+                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                : 'bg-white/[0.04] text-zinc-300 border-white/[0.08] hover:bg-white/[0.08]'
+            }`}
+            title="Toggle Developer Tools (F12 / Cmd+Option+I)"
+          >
+            <Code className="w-3.5 h-3.5" />
+            <span>{devToolsOpen ? 'DevTools Active' : 'DevTools'}</span>
+          </button>
+        </div>
       </div>
 
       {/* 3. Main Center Viewport Area */}
@@ -1012,68 +1051,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
             }}
             className="relative flex-1 bg-[#0d101b] border border-white/[0.09] rounded-2xl shadow-2xl transition-all duration-150 flex flex-col overflow-hidden"
           >
-            {/* Frame Status Bar with Mode Switcher */}
-            <div className="bg-[#0e111d]/90 backdrop-blur-xl text-zinc-400 text-xs py-2 px-4 flex items-center justify-between border-b border-white/[0.07] shrink-0">
-              <div className="flex items-center gap-2.5">
-                <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="font-mono text-zinc-200 font-semibold truncate max-w-xs">{activeTab?.url}</span>
-                <span className="text-zinc-600">•</span>
-                <span className="text-zinc-500 text-[10px]">Isolated Guest Sandbox</span>
-              </div>
 
-              <div className="flex items-center gap-3">
-                {/* Viewport Render Mode (Simulator vs Raw Iframe) */}
-                <div className="flex items-center bg-black/50 border border-white/[0.09] rounded-lg p-0.5 gap-1 text-[10px]">
-                  <button
-                    onClick={() => setPreviewMode('simulator')}
-                    className={`px-2.5 py-0.5 rounded-md font-semibold transition ${
-                      previewMode === 'simulator'
-                        ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-sm'
-                        : 'text-zinc-400 hover:text-zinc-200'
-                    }`}
-                    title="Live interactive simulated web application"
-                  >
-                    ⚡ Interactive App
-                  </button>
-                  <button
-                    onClick={() => setPreviewMode('iframe')}
-                    className={`px-2.5 py-0.5 rounded-md font-semibold transition ${
-                      previewMode === 'iframe'
-                        ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-sm'
-                        : 'text-zinc-400 hover:text-zinc-200'
-                    }`}
-                    title="Raw sandboxed browser iframe"
-                  >
-                    🌐 Raw Iframe
-                  </button>
-                </div>
-
-                {/* Canvas Theme Switcher */}
-                <div className="flex items-center bg-black/40 border border-white/[0.08] rounded-lg p-0.5 gap-1 text-[10px]">
-                  <span className="text-zinc-500 font-medium pl-1.5">Canvas:</span>
-                  <button
-                    onClick={() => setCanvasTheme('dark')}
-                    className={`px-2 py-0.5 rounded-md transition ${
-                      canvasTheme === 'dark' ? 'bg-white/[0.1] text-zinc-100 font-bold' : 'text-zinc-500 hover:text-zinc-300'
-                    }`}
-                  >
-                    Dark
-                  </button>
-                  <button
-                    onClick={() => setCanvasTheme('light')}
-                    className={`px-2 py-0.5 rounded-md transition ${
-                      canvasTheme === 'light' ? 'bg-zinc-200 text-zinc-900 font-bold' : 'text-zinc-500 hover:text-zinc-300'
-                    }`}
-                  >
-                    Light
-                  </button>
-                </div>
-
-                <span className="font-mono text-zinc-500 text-[10px]">
-                  {(activeTab?.viewport || 'desktop').toUpperCase()} ({zoomPercent}%)
-                </span>
-              </div>
-            </div>
 
             {/* Embedded Content Viewport */}
             <div className={`flex-1 relative flex flex-col overflow-hidden ${canvasTheme === 'dark' ? 'bg-[#0d101b]' : 'bg-white'}`}>
