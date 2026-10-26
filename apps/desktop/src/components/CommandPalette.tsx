@@ -6,7 +6,6 @@ import {
   Square,
   Bot,
   Terminal,
-  KeyRound,
   GitBranch,
   Settings,
   Sun,
@@ -199,16 +198,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       action: () => {
         onClose();
         onNavigate('diagnostics');
-      },
-    },
-    {
-      id: 'nav-providers',
-      title: 'Open Provider & Keychain Profiles',
-      category: 'Navigation',
-      icon: <KeyRound size={15} />,
-      action: () => {
-        onClose();
-        onNavigate('providers');
       },
     },
     {

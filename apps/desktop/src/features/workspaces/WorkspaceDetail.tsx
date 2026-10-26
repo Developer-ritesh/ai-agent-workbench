@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Workspace, ProviderProfile } from '../../types';
+import { Workspace } from '../../types';
 import { ActivityTab } from '../../components/Navigation';
 import { WorkspaceSidebar } from './WorkspaceSidebar';
 import { CodeEditorPanel } from '../editor/CodeEditorPanel';
@@ -15,7 +15,6 @@ interface WorkspaceDetailProps {
   workspace: Workspace;
   activityTab: ActivityTab;
   onSelectTab?: (tab: ActivityTab) => void;
-  providers?: ProviderProfile[];
   onStartVm: (workspaceId: string) => void;
   onStopVm: (workspaceId: string) => void;
   onRotateVm: (workspaceId: string) => void;
@@ -29,7 +28,6 @@ export const WorkspaceDetail: React.FC<WorkspaceDetailProps> = ({
   workspace,
   activityTab,
   onSelectTab,
-  providers: _providers = [],
   onStartVm,
   onStopVm,
   onRotateVm,

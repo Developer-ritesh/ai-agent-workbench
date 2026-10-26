@@ -409,7 +409,6 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
           {activityTab === 'git' && 'Source Control'}
           {activityTab === 'vm' && 'VM Sandbox'}
           {activityTab === 'terminal' && 'Terminal'}
-          {activityTab === 'providers' && 'Settings'}
           {activityTab === 'settings' && 'Settings'}
         </span>
 

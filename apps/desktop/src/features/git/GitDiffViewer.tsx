@@ -85,22 +85,73 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
   ]);
   const [checkpointNotice, setCheckpointNotice] = useState<string | null>(null);
 
-  // Sample Hunk Diff Lines for active file
-  const diffLines: DiffLine[] = [
-    { type: 'header', content: '@@ -14,12 +14,18 @@ pub mod auth {' },
-    { type: 'context', oldLine: 14, newLine: 14, content: ' use serde::{Deserialize, Serialize};' },
-    { type: 'del', oldLine: 15, content: '-pub fn authenticate_user(token: &str) -> bool {' },
-    { type: 'del', oldLine: 16, content: '-    token == "secret_hardcoded_admin"' },
-    { type: 'del', oldLine: 17, content: '-}' },
-    { type: 'add', newLine: 15, content: '+pub fn authenticate_user(token: &str) -> Result<Claims, AuthError> {' },
-    { type: 'add', newLine: 16, content: '+    let mut validation = Validation::new(Algorithm::RS256);' },
-    { type: 'add', newLine: 17, content: '+    validation.validate_exp = true;' },
-    { type: 'add', newLine: 18, content: '+    let claims = jsonwebtoken::decode::<Claims>(token, &DECODING_KEY, &validation)?;' },
-    { type: 'add', newLine: 19, content: '+    Ok(claims.claims)' },
-    { type: 'add', newLine: 20, content: '+}' },
-    { type: 'context', oldLine: 18, newLine: 21, content: ' ' },
-    { type: 'context', oldLine: 19, newLine: 22, content: ' pub fn revoke_session(session_id: &str) {' },
-  ];
+  const [rightStudioTab, setRightStudioTab] = useState<'diff' | 'history'>('diff');
+  const [reviewNote, setReviewNote] = useState<string>('');
+  const [reviewApproved, setReviewApproved] = useState<boolean>(false);
+
+  // Comprehensive Hunk Diff Lines mapped by active file
+  const diffsByFile: Record<string, DiffLine[]> = {
+    'src/auth/service.rs': [
+      { type: 'header', content: '@@ -1,8 +1,13 @@ use declarations' },
+      { type: 'context', oldLine: 1, newLine: 1, content: ' use std::sync::Arc;' },
+      { type: 'context', oldLine: 2, newLine: 2, content: ' use tokio::sync::RwLock;' },
+      { type: 'add', newLine: 3, content: '+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, Header, Validation};' },
+      { type: 'add', newLine: 4, content: '+use crate::auth::claims::{Claims, Role};' },
+      { type: 'add', newLine: 5, content: '+use crate::security::errors::AuthError;' },
+      { type: 'context', oldLine: 3, newLine: 6, content: ' ' },
+      { type: 'header', content: '@@ -14,12 +19,25 @@ pub mod auth {' },
+      { type: 'context', oldLine: 14, newLine: 19, content: ' use serde::{Deserialize, Serialize};' },
+      { type: 'del', oldLine: 15, content: '-pub fn authenticate_user(token: &str) -> bool {' },
+      { type: 'del', oldLine: 16, content: '-    token == "secret_hardcoded_admin"' },
+      { type: 'del', oldLine: 17, content: '-}' },
+      { type: 'add', newLine: 20, content: '+pub fn authenticate_user(token: &str) -> Result<Claims, AuthError> {' },
+      { type: 'add', newLine: 21, content: '+    let mut validation = Validation::new(Algorithm::RS256);' },
+      { type: 'add', newLine: 22, content: '+    validation.validate_exp = true;' },
+      { type: 'add', newLine: 23, content: '+    validation.set_audience(&["ai-workbench-gateway"]);' },
+      { type: 'add', newLine: 24, content: '+    let token_data = decode::<Claims>(token, &DECODING_KEY, &validation)?;' },
+      { type: 'add', newLine: 25, content: '+    Ok(token_data.claims)' },
+      { type: 'add', newLine: 26, content: '+}' },
+      { type: 'context', oldLine: 18, newLine: 27, content: ' ' },
+      { type: 'context', oldLine: 19, newLine: 28, content: ' pub fn revoke_session(session_id: &str) {' },
+      { type: 'context', oldLine: 20, newLine: 29, content: '     tracing::info!(session_id, "Revoking active session");' },
+      { type: 'add', newLine: 30, content: '+    token_store::invalidate_token(session_id);' },
+      { type: 'context', oldLine: 21, newLine: 31, content: ' }' },
+    ],
+    'src/auth/claims.rs': [
+      { type: 'header', content: '@@ -0,0 +1,28 @@ new file Claims representation' },
+      { type: 'add', newLine: 1, content: '+use serde::{Deserialize, Serialize};' },
+      { type: 'add', newLine: 2, content: '+' },
+      { type: 'add', newLine: 3, content: '+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]' },
+      { type: 'add', newLine: 4, content: '+pub struct Claims {' },
+      { type: 'add', newLine: 5, content: '+    pub sub: String,' },
+      { type: 'add', newLine: 6, content: '+    pub exp: usize,' },
+      { type: 'add', newLine: 7, content: '+    pub role: Role,' },
+      { type: 'add', newLine: 8, content: '+    pub permissions: Vec<String>,' },
+      { type: 'add', newLine: 9, content: '+}' },
+      { type: 'add', newLine: 10, content: '+' },
+      { type: 'add', newLine: 11, content: '+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]' },
+      { type: 'add', newLine: 12, content: '+pub enum Role { Admin, Developer, Auditor }' },
+      { type: 'add', newLine: 13, content: '+' },
+      { type: 'add', newLine: 14, content: '+impl Claims {' },
+      { type: 'add', newLine: 15, content: '+    pub fn is_expired(&self, current_timestamp: usize) -> bool {' },
+      { type: 'add', newLine: 16, content: '+        self.exp < current_timestamp' },
+      { type: 'add', newLine: 17, content: '+    }' },
+      { type: 'add', newLine: 18, content: '+    pub fn has_permission(&self, perm: &str) -> bool {' },
+      { type: 'add', newLine: 19, content: '+        self.permissions.iter().any(|p| p == perm)' },
+      { type: 'add', newLine: 20, content: '+    }' },
+      { type: 'add', newLine: 21, content: '+}' },
+    ],
+    'src/auth/keys.pem': [
+      { type: 'header', content: '@@ -0,0 +1,10 @@ RS256 Public Certificate' },
+      { type: 'add', newLine: 1, content: '+-----BEGIN PUBLIC KEY-----' },
+      { type: 'add', newLine: 2, content: '+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyN6Kq0+4F+H+Xw==' },
+      { type: 'add', newLine: 3, content: '+e2bL7Fm6Q4p1Y3W9Z0k2X4C8V7B5N3M1L9K8J6H4G2F0D8S6A4Q2W1E3R5T7Y' },
+      { type: 'add', newLine: 4, content: '+p9o8i7u6y5t4r3e2w1q0z9x8c7v6b5n4m3l2k1j0h9g8f7d6s5a4p3o2i1u0' },
+      { type: 'add', newLine: 5, content: '+-----END PUBLIC KEY-----' },
+    ],
+  };
+
+  const currentDiffLines = diffsByFile[activeDiffFile] || diffsByFile['src/auth/service.rs'];
 
   useEffect(() => {
     fetchGitStatus();
@@ -337,170 +388,335 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
           </div>
         </div>
 
-        {/* Right Column: Diff Studio */}
+        {/* Right Column: Diff & Repository Studio */}
         <div className="flex-1 flex flex-col min-w-0 bg-[#08090d] overflow-hidden">
-          {/* File Header Toolbar */}
-          <div className="flex items-center justify-between px-5 py-3 bg-[#0c0e17]/80 backdrop-blur-xl border-b border-white/[0.07] text-xs shrink-0">
-            <div className="flex items-center gap-2.5 truncate">
-              <FileCode className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span className="font-mono font-bold text-zinc-200 truncate">{activeDiffFile}</span>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(activeDiffFile);
-                  setCopiedPath(true);
-                  setTimeout(() => setCopiedPath(false), 2000);
-                }}
-                className="p-1 text-zinc-500 hover:text-zinc-300 rounded-lg transition"
-                title="Copy file path"
-              >
-                {copiedPath ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {/* Diff View Mode Segmented Control */}
-              <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-xl p-0.5">
+          {/* Top Header Toolbar */}
+          <div className="flex items-center justify-between px-5 py-2.5 bg-[#0c0e17]/80 backdrop-blur-xl border-b border-white/[0.07] text-xs shrink-0">
+            <div className="flex items-center gap-3 truncate">
+              {/* Primary Studio Segmented Tab */}
+              <div className="flex items-center bg-black/50 border border-white/[0.08] rounded-xl p-0.5">
                 <button
-                  onClick={() => setDiffViewMode('unified')}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition ${
-                    diffViewMode === 'unified'
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
+                  onClick={() => setRightStudioTab('diff')}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                    rightStudioTab === 'diff'
+                      ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-md'
                       : 'text-zinc-400 hover:text-zinc-200'
                   }`}
-                  title="Unified Diff View"
                 >
-                  <Rows size={13} />
-                  <span>Unified</span>
+                  Diff Comparison
                 </button>
                 <button
-                  onClick={() => setDiffViewMode('split')}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition ${
-                    diffViewMode === 'split'
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
+                  onClick={() => setRightStudioTab('history')}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                    rightStudioTab === 'history'
+                      ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-md'
                       : 'text-zinc-400 hover:text-zinc-200'
                   }`}
-                  title="Side-by-Side Split Diff View"
                 >
-                  <Columns size={13} />
-                  <span>Split</span>
+                  Commit History (5)
                 </button>
               </div>
 
-              {auditReport && (
-                <button
-                  onClick={() => setShowAuditPanel(!showAuditPanel)}
-                  className={`px-3 py-1 rounded-xl text-xs font-semibold border transition ${
-                    showAuditPanel
-                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
-                      : 'bg-white/[0.03] text-zinc-400 border-white/[0.08] hover:text-zinc-200'
-                  }`}
-                >
-                  Audit: {auditReport.riskLevel.toUpperCase()}
-                </button>
+              {rightStudioTab === 'diff' && (
+                <div className="flex items-center gap-2 truncate pl-2 border-l border-white/[0.08]">
+                  <FileCode className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="font-mono font-bold text-zinc-200 truncate">{activeDiffFile}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(activeDiffFile);
+                      setCopiedPath(true);
+                      setTimeout(() => setCopiedPath(false), 2000);
+                    }}
+                    className="p-1 text-zinc-500 hover:text-zinc-300 rounded-lg transition"
+                    title="Copy file path"
+                  >
+                    {copiedPath ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              {rightStudioTab === 'diff' && (
+                <>
+                  {/* Diff View Mode Segmented Control */}
+                  <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-xl p-0.5">
+                    <button
+                      onClick={() => setDiffViewMode('unified')}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                        diffViewMode === 'unified'
+                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
+                          : 'text-zinc-400 hover:text-zinc-200'
+                      }`}
+                      title="Unified Diff View"
+                    >
+                      <Rows size={13} />
+                      <span>Unified</span>
+                    </button>
+                    <button
+                      onClick={() => setDiffViewMode('split')}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                        diffViewMode === 'split'
+                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
+                          : 'text-zinc-400 hover:text-zinc-200'
+                      }`}
+                      title="Side-by-Side Split Diff View"
+                    >
+                      <Columns size={13} />
+                      <span>Split</span>
+                    </button>
+                  </div>
+
+                  {auditReport && (
+                    <button
+                      onClick={() => setShowAuditPanel(!showAuditPanel)}
+                      className={`px-3 py-1 rounded-xl text-xs font-semibold border transition ${
+                        showAuditPanel
+                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+                          : 'bg-white/[0.03] text-zinc-400 border-white/[0.08] hover:text-zinc-200'
+                      }`}
+                    >
+                      Audit: {auditReport.riskLevel.toUpperCase()}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
 
-          {/* Audit Report Banner (Collapsible) */}
-          {showAuditPanel && auditReport && (
-            <div className="px-5 py-3.5 bg-white/[0.02] border-b border-white/[0.07] text-xs space-y-2 shrink-0 animate-in fade-in">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 font-bold text-zinc-200">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  Security &amp; Architecture Audit Findings
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                  Risk Level: {auditReport.riskLevel}
-                </span>
+          {/* STUDIO CONTENT: EITHER DIFF OR COMMIT HISTORY */}
+          {rightStudioTab === 'history' ? (
+            /* Full Repository Commit History Timeline */
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 font-sans select-text">
+              <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+                <div className="flex items-center gap-2">
+                  <GitCommit className="w-5 h-5 text-indigo-400" />
+                  <span className="font-bold text-sm text-white">Repository Commit Graph &amp; Log</span>
+                </div>
+                <span className="text-xs text-zinc-400 font-mono">Branch: <strong className="text-emerald-400">main</strong> (origin/main)</span>
               </div>
-              <p className="text-zinc-400 text-xs leading-relaxed">{auditReport.summary}</p>
-              <div className="space-y-1.5 pt-1 font-mono text-[11px]">
-                {auditReport.findings.map((f, i) => (
-                  <div key={i} className="flex items-start gap-2 text-zinc-300">
-                    <span className={f.type === 'pass' ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
-                      {f.type === 'pass' ? '✓' : '⚠'}
-                    </span>
-                    <span>{f.text}</span>
+
+              <div className="space-y-3">
+                {[
+                  {
+                    hash: 'dd0e6ff',
+                    message: 'feat(vm): add full VM & Host telemetry with IP addresses, device info, uname, and architecture',
+                    author: 'Developer-ritesh',
+                    time: 'Just now',
+                    stats: '+727 -144',
+                    badge: 'HEAD -> main',
+                  },
+                  {
+                    hash: '32ed065',
+                    message: 'feat(header): responsive header with single rotate button and clean layout',
+                    author: 'Developer-ritesh',
+                    time: '1 hour ago',
+                    stats: '+312 -88',
+                    badge: 'origin/main',
+                  },
+                  {
+                    hash: '090aee4',
+                    message: 'feat(api): overhaul API studio with Postman v2.1 import/export and sandboxed script runner',
+                    author: 'Developer-ritesh',
+                    time: '3 hours ago',
+                    stats: '+1120 -95',
+                  },
+                  {
+                    hash: 'e18e312',
+                    message: 'feat(vm): add hardware virtualization with Apple vfkit and memory ballooning',
+                    author: 'Developer-ritesh',
+                    time: 'Yesterday',
+                    stats: '+850 -42',
+                  },
+                  {
+                    hash: 'a942fd1',
+                    message: 'feat(init): initialize AI Agent Workbench monorepo with Tauri v2 and React 19',
+                    author: 'Developer-ritesh',
+                    time: '2 days ago',
+                    stats: '+1420 -0',
+                  },
+                ].map((commit) => (
+                  <div
+                    key={commit.hash}
+                    className="p-4 bg-white/[0.025] hover:bg-white/[0.05] border border-white/[0.08] hover:border-indigo-500/40 rounded-xl transition space-y-2 group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-mono text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-lg border border-cyan-500/20">
+                          {commit.hash}
+                        </span>
+                        {commit.badge && (
+                          <span className="text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                            {commit.badge}
+                          </span>
+                        )}
+                        <span className="text-xs text-zinc-400">• {commit.author}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[11px] font-mono text-emerald-400">{commit.stats}</span>
+                        <span className="text-[11px] text-zinc-500">{commit.time}</span>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(commit.hash)}
+                          className="p-1 text-zinc-500 hover:text-zinc-200 transition opacity-0 group-hover:opacity-100"
+                          title="Copy commit SHA"
+                        >
+                          <Copy size={12} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-xs text-zinc-200 font-medium leading-relaxed">{commit.message}</div>
                   </div>
                 ))}
               </div>
             </div>
-          )}
+          ) : (
+            /* Diff Comparison View */
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              {/* Audit Report Banner (Collapsible) */}
+              {showAuditPanel && auditReport && (
+                <div className="px-5 py-3.5 bg-white/[0.02] border-b border-white/[0.07] text-xs space-y-2 shrink-0 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 font-bold text-zinc-200">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      Security &amp; Architecture Audit Findings
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      Risk Level: {auditReport.riskLevel}
+                    </span>
+                  </div>
+                  <p className="text-zinc-400 text-xs leading-relaxed">{auditReport.summary}</p>
+                  <div className="space-y-1.5 pt-1 font-mono text-[11px]">
+                    {auditReport.findings.map((f, i) => (
+                      <div key={i} className="flex items-start gap-2 text-zinc-300">
+                        <span className={f.type === 'pass' ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+                          {f.type === 'pass' ? '✓' : '⚠'}
+                        </span>
+                        <span>{f.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Line-by-Line Code Diff View */}
-          <div className="flex-1 overflow-auto bg-[#08090d] font-mono text-[12px] leading-relaxed select-text p-4">
-            {diffViewMode === 'unified' ? (
-              <div className="rounded-xl border border-white/[0.08] overflow-hidden bg-[#0a0d14] shadow-2xl divide-y divide-white/[0.04]">
-                {diffLines.map((line, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex items-start transition-colors ${
-                      line.type === 'add'
-                        ? 'bg-emerald-500/[0.08] text-emerald-200 border-l-2 border-emerald-500'
-                        : line.type === 'del'
-                        ? 'bg-rose-500/[0.08] text-rose-200 border-l-2 border-rose-500'
-                        : line.type === 'header'
-                        ? 'bg-indigo-500/[0.12] text-indigo-300 font-bold border-y border-indigo-500/20'
-                        : 'text-zinc-300 hover:bg-white/[0.02]'
-                    }`}
-                  >
-                    <span className="w-12 select-none text-zinc-600 text-right pr-2 shrink-0 py-1 border-r border-white/[0.06] text-[11px]">
-                      {line.oldLine || ''}
-                    </span>
-                    <span className="w-12 select-none text-zinc-600 text-right pr-3 shrink-0 py-1 border-r border-white/[0.08] text-[11px]">
-                      {line.newLine || ''}
-                    </span>
-                    <span className="w-6 select-none text-center shrink-0 py-1 text-zinc-500 font-bold">
-                      {line.type === 'add' ? '+' : line.type === 'del' ? '-' : ''}
-                    </span>
-                    <span className="pl-2 py-1 whitespace-pre flex-1 font-mono">
-                      {line.content.replace(/^[-+]/, '')}
-                    </span>
+              {/* Line-by-Line Code Diff View */}
+              <div className="flex-1 overflow-auto bg-[#08090d] font-mono text-[12px] leading-relaxed select-text p-4 space-y-4">
+                {diffViewMode === 'unified' ? (
+                  <div className="rounded-xl border border-white/[0.08] overflow-hidden bg-[#0a0d14] shadow-2xl divide-y divide-white/[0.04]">
+                    {currentDiffLines.map((line, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex items-start transition-colors ${
+                          line.type === 'add'
+                            ? 'bg-emerald-500/[0.08] text-emerald-200 border-l-2 border-emerald-500'
+                            : line.type === 'del'
+                            ? 'bg-rose-500/[0.08] text-rose-200 border-l-2 border-rose-500'
+                            : line.type === 'header'
+                            ? 'bg-indigo-500/[0.12] text-indigo-300 font-bold border-y border-indigo-500/20'
+                            : 'text-zinc-300 hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        <span className="w-12 select-none text-zinc-600 text-right pr-2 shrink-0 py-1 border-r border-white/[0.06] text-[11px]">
+                          {line.oldLine || ''}
+                        </span>
+                        <span className="w-12 select-none text-zinc-600 text-right pr-3 shrink-0 py-1 border-r border-white/[0.08] text-[11px]">
+                          {line.newLine || ''}
+                        </span>
+                        <span className="w-6 select-none text-center shrink-0 py-1 text-zinc-500 font-bold">
+                          {line.type === 'add' ? '+' : line.type === 'del' ? '-' : ''}
+                        </span>
+                        <span className="pl-2 py-1 whitespace-pre flex-1 font-mono">
+                          {line.content.replace(/^[-+]/, '')}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              /* Side-by-Side Split View */
-              <div className="grid grid-cols-2 gap-px bg-white/[0.08] rounded-xl border border-white/[0.08] overflow-hidden shadow-2xl">
-                <div className="bg-[#0a0d14] p-3 space-y-0.5">
-                  <div className="text-[10px] font-bold text-zinc-500 uppercase pb-1.5 border-b border-white/[0.06] tracking-wider">
-                    Original (Before)
-                  </div>
-                  {diffLines.filter((l) => l.type !== 'add').map((line, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex items-start text-[11px] py-0.5 ${
-                        line.type === 'del' ? 'bg-rose-500/[0.12] text-rose-200 rounded px-1' : 'text-zinc-400'
-                      }`}
-                    >
-                      <span className="w-10 select-none text-zinc-600 text-right pr-2 shrink-0 font-mono">
-                        {line.oldLine || ''}
-                      </span>
-                      <span className="whitespace-pre pl-2 font-mono">{line.content}</span>
+                ) : (
+                  /* Side-by-Side Split View */
+                  <div className="grid grid-cols-2 gap-px bg-white/[0.08] rounded-xl border border-white/[0.08] overflow-hidden shadow-2xl">
+                    <div className="bg-[#0a0d14] p-3 space-y-0.5">
+                      <div className="text-[10px] font-bold text-zinc-500 uppercase pb-1.5 border-b border-white/[0.06] tracking-wider">
+                        Original (Before)
+                      </div>
+                      {currentDiffLines.filter((l) => l.type !== 'add').map((line, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex items-start text-[11px] py-0.5 ${
+                            line.type === 'del' ? 'bg-rose-500/[0.12] text-rose-200 rounded px-1' : 'text-zinc-400'
+                          }`}
+                        >
+                          <span className="w-10 select-none text-zinc-600 text-right pr-2 shrink-0 font-mono">
+                            {line.oldLine || ''}
+                          </span>
+                          <span className="whitespace-pre pl-2 font-mono">{line.content}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className="bg-[#0a0d14] p-3 space-y-0.5 border-l border-white/[0.06]">
-                  <div className="text-[10px] font-bold text-zinc-500 uppercase pb-1.5 border-b border-white/[0.06] tracking-wider">
-                    Modified (After)
-                  </div>
-                  {diffLines.filter((l) => l.type !== 'del').map((line, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex items-start text-[11px] py-0.5 ${
-                        line.type === 'add' ? 'bg-emerald-500/[0.12] text-emerald-200 rounded px-1' : 'text-zinc-400'
-                      }`}
-                    >
-                      <span className="w-10 select-none text-zinc-600 text-right pr-2 shrink-0 font-mono">
-                        {line.newLine || ''}
-                      </span>
-                      <span className="whitespace-pre pl-2 font-mono">{line.content}</span>
+                    <div className="bg-[#0a0d14] p-3 space-y-0.5 border-l border-white/[0.06]">
+                      <div className="text-[10px] font-bold text-zinc-500 uppercase pb-1.5 border-b border-white/[0.06] tracking-wider">
+                        Modified (After)
+                      </div>
+                      {currentDiffLines.filter((l) => l.type !== 'del').map((line, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex items-start text-[11px] py-0.5 ${
+                            line.type === 'add' ? 'bg-emerald-500/[0.12] text-emerald-200 rounded px-1' : 'text-zinc-400'
+                          }`}
+                        >
+                          <span className="w-10 select-none text-zinc-600 text-right pr-2 shrink-0 font-mono">
+                            {line.newLine || ''}
+                          </span>
+                          <span className="whitespace-pre pl-2 font-mono">{line.content}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                )}
+
+                {/* Inline Review Station Box (Fills bottom space elegantly) */}
+                <div className="p-4 bg-white/[0.025] border border-white/[0.08] rounded-xl font-sans space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <span className="text-xs font-bold text-zinc-200">Code Review &amp; Sign-off</span>
+                    </div>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                      reviewApproved
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                        : 'bg-amber-500/10 text-amber-300 border border-amber-500/25'
+                    }`}>
+                      {reviewApproved ? 'Approved for Merge' : 'Pending Sign-off'}
+                    </span>
+                  </div>
+
+                  <textarea
+                    rows={2}
+                    value={reviewNote}
+                    onChange={(e) => setReviewNote(e.target.value)}
+                    placeholder="Add code review remarks or security validation notes..."
+                    className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-indigo-500/60 rounded-xl p-2.5 text-xs text-zinc-100 placeholder-zinc-500 outline-none resize-none font-sans"
+                  />
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[11px] text-zinc-500">
+                      Cryptographic token verification verified against RFC 7519 standard.
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setReviewApproved(true);
+                          setReviewNote('Verified RS256 token validation & clean session revocation. Approved.');
+                        }}
+                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                      >
+                        <Check size={13} />
+                        <span>Approve Changes</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

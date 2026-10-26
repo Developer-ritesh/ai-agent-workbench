@@ -9,7 +9,6 @@ import {
   Network,
   Activity,
   Cpu,
-  Cloud,
   Settings,
 } from 'lucide-react';
 
@@ -24,7 +23,6 @@ export type ActivityTab =
   | 'terminal'
   | 'diagnostics'
   | 'vm'
-  | 'providers'
   | 'settings';
 
 interface NavigationProps {
@@ -202,20 +200,10 @@ export const Navigation: React.FC<NavigationProps> = ({
           <Cpu size={18} />
           <span>VM</span>
         </button>
-
-        {/* 11. AI Providers & Keychain */}
-        <button
-          className={`activity-bar-item ${currentTab === 'providers' ? 'active' : ''}`}
-          onClick={() => onSelectTab('providers')}
-          title="Providers & Keychain Secrets"
-        >
-          <Cloud size={18} />
-          <span>Providers</span>
-        </button>
       </div>
 
       <div className="activity-bar-group">
-        {/* 12. Settings & OpenCode Cleanup */}
+        {/* 11. Settings & OpenCode Cleanup */}
         <button
           className={`activity-bar-item ${currentTab === 'settings' ? 'active' : ''}`}
           onClick={() => onSelectTab('settings')}

@@ -2027,8 +2027,7 @@ html, body, #root {
 .api-studio-container,
 .testing-engine-container,
 .ports-panel-container,
-.diagnostics-panel-container,
-.provider-settings-container {
+.diagnostics-panel-container {
   display: flex;
   flex: 1;
   width: 100%;
@@ -2046,8 +2045,7 @@ html, body, #root {
 .api-studio-container *,
 .testing-engine-container *,
 .ports-panel-container *,
-.diagnostics-panel-container *,
-.provider-settings-container * {
+.diagnostics-panel-container * {
   box-sizing: border-box;
 }
 
@@ -2103,9 +2101,7 @@ input[type="radio"] {
 .ports-panel-container input:not([type="checkbox"]):not([type="radio"]),
 .ports-panel-container select,
 .diagnostics-panel-container input:not([type="checkbox"]):not([type="radio"]),
-.diagnostics-panel-container select,
-.provider-settings-container input:not([type="checkbox"]):not([type="radio"]),
-.provider-settings-container select {
+.diagnostics-panel-container select {
   font-family: inherit;
   font-size: 12px;
   background: var(--bg-input);
@@ -2125,9 +2121,7 @@ input[type="radio"] {
 .ports-panel-container input:focus,
 .ports-panel-container select:focus,
 .diagnostics-panel-container input:focus,
-.diagnostics-panel-container select:focus,
-.provider-settings-container input:focus,
-.provider-settings-container select:focus {
+.diagnostics-panel-container select:focus {
   border-color: var(--accent-cyan);
   box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
@@ -2464,16 +2458,5 @@ input[type="radio"] {
   max-height: 60vh;
   overflow-y: auto;
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
-}
-
-/* -------------------------------------------------------------
-   PROVIDER PROFILES & KEYCHAIN SPECIFIC STYLES
-   ------------------------------------------------------------- */
-.provider-settings-container {
-  flex-direction: column;
-  padding: 28px;
-  overflow-y: auto;
-  max-width: 1000px;
-  margin: 0 auto;
 }
 

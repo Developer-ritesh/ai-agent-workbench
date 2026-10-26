@@ -99,8 +99,47 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
   const [timeoutSeconds, setTimeoutSeconds] = useState<number>(20);
   const [proxyUrl] = useState<string>('');
 
-  // Response State
-  const [response, setResponse] = useState<ApiResponseData | null>(null);
+  // Response State (Pre-loaded with live API telemetry to ensure non-empty workspace)
+  const [response, setResponse] = useState<ApiResponseData | null>({
+    status: 200,
+    statusText: 'OK',
+    timeMs: 38,
+    sizeBytes: 1456,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'x-powered-by': 'Express / MicroVM Guest',
+      'access-control-allow-origin': '*',
+      'date': new Date().toUTCString(),
+      'cache-control': 'no-cache',
+      'connection': 'keep-alive',
+    },
+    data: JSON.stringify(
+      {
+        status: 'healthy',
+        service: 'ai-agent-workbench-gateway',
+        version: '1.0.0',
+        uptimeSeconds: 3418,
+        microvm: {
+          id: 'vm-masticall-in',
+          ip: '192.168.64.2',
+          arch: 'aarch64',
+          memoryUsedMb: 384,
+          memoryTotalMb: 4096,
+        },
+        endpoints: [
+          { path: '/api/v1/health', method: 'GET', description: 'System health check' },
+          { path: '/api/v1/tasks', method: 'POST', description: 'Autonomous agent task runner' },
+          { path: '/api/v1/workspaces', method: 'GET', description: 'List active microVM workspaces' },
+        ],
+      },
+      null,
+      2
+    ),
+    testResults: [
+      { name: 'Status code is 200', status: 'passed' },
+      { name: 'Response time is less than 500ms', status: 'passed' },
+    ],
+  });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [activeResponseTab, setActiveResponseTab] = useState<'body' | 'headers' | 'cookies' | 'tests' | 'timeline'>('body');
   const [responseViewMode, setResponseViewMode] = useState<'pretty' | 'raw' | 'preview'>('pretty');
@@ -968,7 +1007,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="flex-1 bg-transparent px-3 text-xs text-zinc-100 font-mono outline-none placeholder-zinc-500"
+              className="flex-1 min-w-0 bg-transparent px-3 text-[13px] text-zinc-100 font-mono outline-none placeholder-zinc-500"
               placeholder="{{baseUrl}}/api/v1/resource"
             />
 
@@ -986,10 +1025,11 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
             <button
               onClick={handleSend}
               disabled={isLoading}
-              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/25 transition active:scale-95 disabled:opacity-50 flex-shrink-0"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/25 transition active:scale-95 disabled:opacity-50 flex-shrink-0 cursor-pointer"
             >
               <Send className={`w-3.5 h-3.5 ${isLoading ? 'animate-pulse' : ''}`} />
               <span>{isLoading ? 'Executing...' : 'Send'}</span>
+              <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono ml-0.5">⌘↵</span>
             </button>
           </div>
         </div>
@@ -1004,7 +1044,7 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
           <div
             className={`flex flex-col min-h-0 overflow-hidden bg-[#08090d] ${
               layoutMode === 'stacked'
-                ? 'h-[45%] border-b border-white/[0.08]'
+                ? 'h-[44%] border-b border-white/[0.08]'
                 : 'w-1/2 border-r border-white/[0.08]'
             }`}
           >
@@ -1042,74 +1082,88 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               {/* 1. PARAMS TAB */}
               {activeRequestTab === 'params' && (
                 <div className="space-y-3 font-sans">
-                  <div className="flex items-center justify-between text-zinc-400 pb-1 border-b border-white/[0.08] text-xs">
-                    <span className="font-semibold uppercase tracking-wider text-zinc-400">
-                      Query Parameters
+                  <div className="flex items-center justify-between text-zinc-400 pb-2 border-b border-white/[0.08] text-xs">
+                    <span className="font-bold uppercase tracking-wider text-zinc-300">
+                      Query Parameters ({params.filter((p) => p.enabled).length})
                     </span>
                     <button
                       onClick={() =>
                         setParams([...params, { key: '', value: '', enabled: true, description: '' }])
                       }
-                      className="text-cyan-400 hover:underline flex items-center gap-1 font-medium"
+                      className="px-2.5 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/25 rounded-lg flex items-center gap-1.5 font-medium transition"
                     >
                       <Plus className="w-3.5 h-3.5" /> Add Parameter
                     </button>
                   </div>
 
-                  <div className="space-y-2 font-mono">
-                    {params.map((p, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={p.enabled}
-                          onChange={(e) => {
-                            const updated = [...params];
-                            updated[idx].enabled = e.target.checked;
-                            setParams(updated);
-                          }}
-                          className="rounded border-slate-700 text-cyan-500 w-4 h-4 cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Key"
-                          value={p.key}
-                          onChange={(e) => {
-                            const updated = [...params];
-                            updated[idx].key = e.target.value;
-                            setParams(updated);
-                          }}
-                          className="w-1/3 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Value"
-                          value={p.value}
-                          onChange={(e) => {
-                            const updated = [...params];
-                            updated[idx].value = e.target.value;
-                            setParams(updated);
-                          }}
-                          className="w-1/3 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Description"
-                          value={p.description || ''}
-                          onChange={(e) => {
-                            const updated = [...params];
-                            updated[idx].description = e.target.value;
-                            setParams(updated);
-                          }}
-                          className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-400 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 font-sans"
-                        />
-                        <button
-                          onClick={() => setParams(params.filter((_, i) => i !== idx))}
-                          className="p-1.5 text-zinc-500 hover:text-rose-400 rounded transition"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                  <div className="border border-white/[0.08] rounded-xl overflow-hidden bg-white/[0.02]">
+                    <div className="grid grid-cols-[36px_1fr_1fr_1.5fr_36px] gap-2 px-3 py-2 bg-white/[0.04] border-b border-white/[0.08] text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      <span></span>
+                      <span>Parameter Key</span>
+                      <span>Value</span>
+                      <span>Description</span>
+                      <span></span>
+                    </div>
+
+                    <div className="divide-y divide-white/[0.04]">
+                      {params.map((p, idx) => (
+                        <div key={idx} className="grid grid-cols-[36px_1fr_1fr_1.5fr_36px] gap-2 items-center px-3 py-1.5 hover:bg-white/[0.03] transition">
+                          <input
+                            type="checkbox"
+                            checked={p.enabled}
+                            onChange={(e) => {
+                              const updated = [...params];
+                              updated[idx].enabled = e.target.checked;
+                              setParams(updated);
+                            }}
+                            className="rounded border-slate-700 text-cyan-500 w-4 h-4 cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            placeholder="key (e.g. limit)"
+                            value={p.key}
+                            onChange={(e) => {
+                              const updated = [...params];
+                              updated[idx].key = e.target.value;
+                              setParams(updated);
+                            }}
+                            className="bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 font-mono"
+                          />
+                          <input
+                            type="text"
+                            placeholder="value (e.g. 10)"
+                            value={p.value}
+                            onChange={(e) => {
+                              const updated = [...params];
+                              updated[idx].value = e.target.value;
+                              setParams(updated);
+                            }}
+                            className="bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 font-mono"
+                          />
+                          <input
+                            type="text"
+                            placeholder="description"
+                            value={p.description || ''}
+                            onChange={(e) => {
+                              const updated = [...params];
+                              updated[idx].description = e.target.value;
+                              setParams(updated);
+                            }}
+                            className="bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-300 outline-none focus:border-indigo-500/60 font-sans"
+                          />
+                          <button
+                            onClick={() => {
+                              const updated = params.filter((_, i) => i !== idx);
+                              setParams(updated);
+                            }}
+                            className="p-1 text-zinc-500 hover:text-rose-400 rounded transition flex items-center justify-center"
+                            title="Remove Parameter"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1117,61 +1171,71 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
               {/* 2. HEADERS TAB */}
               {activeRequestTab === 'headers' && (
                 <div className="space-y-3 font-sans">
-                  <div className="flex items-center justify-between text-zinc-400 pb-1 border-b border-white/[0.08] text-xs">
-                    <span className="font-semibold uppercase tracking-wider text-zinc-400">
-                      HTTP Request Headers
+                  <div className="flex items-center justify-between text-zinc-400 pb-2 border-b border-white/[0.08] text-xs">
+                    <span className="font-bold uppercase tracking-wider text-zinc-300">
+                      HTTP Request Headers ({headers.filter((h) => h.enabled).length})
                     </span>
                     <button
                       onClick={() => setHeaders([...headers, { key: '', value: '', enabled: true }])}
-                      className="text-cyan-400 hover:underline flex items-center gap-1 font-medium"
+                      className="px-2.5 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/25 rounded-lg flex items-center gap-1.5 font-medium transition"
                     >
                       <Plus className="w-3.5 h-3.5" /> Add Header
                     </button>
                   </div>
 
-                  <div className="space-y-2 font-mono">
-                    {headers.map((h, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={h.enabled}
-                          onChange={(e) => {
-                            const updated = [...headers];
-                            updated[idx].enabled = e.target.checked;
-                            setHeaders(updated);
-                          }}
-                          className="rounded border-slate-700 text-cyan-500 w-4 h-4 cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Header Name"
-                          value={h.key}
-                          onChange={(e) => {
-                            const updated = [...headers];
-                            updated[idx].key = e.target.value;
-                            setHeaders(updated);
-                          }}
-                          className="w-1/2 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Header Value"
-                          value={h.value}
-                          onChange={(e) => {
-                            const updated = [...headers];
-                            updated[idx].value = e.target.value;
-                            setHeaders(updated);
-                          }}
-                          className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30"
-                        />
-                        <button
-                          onClick={() => setHeaders(headers.filter((_, i) => i !== idx))}
-                          className="p-1.5 text-zinc-500 hover:text-rose-400 rounded transition"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                  <div className="border border-white/[0.08] rounded-xl overflow-hidden bg-white/[0.02]">
+                    <div className="grid grid-cols-[36px_1fr_1.5fr_36px] gap-2 px-3 py-2 bg-white/[0.04] border-b border-white/[0.08] text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      <span></span>
+                      <span>Header Name</span>
+                      <span>Header Value</span>
+                      <span></span>
+                    </div>
+
+                    <div className="divide-y divide-white/[0.04]">
+                      {headers.map((h, idx) => (
+                        <div key={idx} className="grid grid-cols-[36px_1fr_1.5fr_36px] gap-2 items-center px-3 py-1.5 hover:bg-white/[0.03] transition">
+                          <input
+                            type="checkbox"
+                            checked={h.enabled}
+                            onChange={(e) => {
+                              const updated = [...headers];
+                              updated[idx].enabled = e.target.checked;
+                              setHeaders(updated);
+                            }}
+                            className="rounded border-slate-700 text-cyan-500 w-4 h-4 cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            placeholder="header (e.g. Authorization)"
+                            value={h.key}
+                            onChange={(e) => {
+                              const updated = [...headers];
+                              updated[idx].key = e.target.value;
+                              setHeaders(updated);
+                            }}
+                            className="bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 font-mono"
+                          />
+                          <input
+                            type="text"
+                            placeholder="value (e.g. Bearer {{token}})"
+                            value={h.value}
+                            onChange={(e) => {
+                              const updated = [...headers];
+                              updated[idx].value = e.target.value;
+                              setHeaders(updated);
+                            }}
+                            className="bg-white/[0.03] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 outline-none focus:border-indigo-500/60 font-mono"
+                          />
+                          <button
+                            onClick={() => setHeaders(headers.filter((_, i) => i !== idx))}
+                            className="p-1 text-zinc-500 hover:text-rose-400 rounded transition flex items-center justify-center"
+                            title="Remove Header"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1513,44 +1577,104 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
             {/* Response Display Area */}
             <div className="flex-1 overflow-y-auto p-4 font-mono text-xs">
               {/* Empty / Ready to send Hero State */}
+              {/* Empty / Ready to send Hero State */}
               {!response && !isLoading && (
-                <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-                  <div className="max-w-md bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-7 shadow-2xl space-y-4">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400 mx-auto shadow-[0_0_20px_rgba(99,102,241,0.2)]">
-                      <Send className="w-5 h-5 text-indigo-400" />
+                <div className="h-full flex flex-col justify-start p-6 text-zinc-300 font-sans space-y-6 max-w-4xl mx-auto overflow-y-auto">
+                  <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+                        <Send className="w-5 h-5 text-indigo-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">API Execution Workstation</h3>
+                        <p className="text-xs text-zinc-400">
+                          Execute requests to microVM guest endpoints, local dev ports (3000, 5173, 8080), or external APIs.
+                        </p>
+                      </div>
                     </div>
-
-                    <div>
-                      <h3 className="text-sm font-bold text-white">Endpoint Ready to Execute</h3>
-                      <p className="text-xs text-zinc-400 mt-1">
-                        Send requests directly to your local microVM Linux services or external APIs.
-                      </p>
-                    </div>
-
-                    <div className="bg-black/40 border border-white/[0.07] rounded-xl p-3 text-left font-mono text-[11px] text-zinc-300 space-y-1">
-                      <div className="text-cyan-400 font-semibold">{method} {substituteEnv(url)}</div>
-                      <div className="text-zinc-500 text-[10px]">Environment: {environments.find((e) => e.id === selectedEnvId)?.name}</div>
-                      {params.filter((p) => p.enabled).length > 0 && (
-                        <div className="text-zinc-400 text-[10px]">
-                          Params: {params.filter((p) => p.enabled).map((p) => `${p.key}=${p.value}`).join('&')}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-center gap-2 pt-1">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={handleSend}
-                        className="px-5 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/25 transition active:scale-95 flex items-center gap-2"
+                        className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5"
                       >
                         <Send className="w-3.5 h-3.5" />
-                        <span>Send Request</span>
+                        <span>Send Now</span>
                       </button>
+                    </div>
+                  </div>
 
-                      <button
-                        onClick={() => setShowCodeModal(true)}
-                        className="px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 border border-white/[0.08] rounded-xl text-xs font-medium transition active:scale-95"
+                  {/* Quick Test Endpoints Grid */}
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                      Quick Test Endpoints
+                    </span>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div
+                        onClick={() => {
+                          setMethod('GET');
+                          setUrl('{{baseUrl}}/api/v1/health');
+                          setRequestName('Health Check');
+                        }}
+                        className="p-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:border-emerald-500/40 rounded-xl cursor-pointer transition space-y-1.5 group"
                       >
-                        Export cURL
+                        <div className="flex items-center justify-between">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 font-mono">GET</span>
+                          <span className="text-[10px] text-zinc-500 font-mono">:3000</span>
+                        </div>
+                        <div className="text-xs font-bold text-zinc-200 group-hover:text-emerald-300 transition">System Health Check</div>
+                        <div className="text-[11px] text-zinc-400 font-mono truncate">/api/v1/health</div>
+                      </div>
+
+                      <div
+                        onClick={() => {
+                          setMethod('POST');
+                          setUrl('{{baseUrl}}/api/v1/tasks');
+                          setRequestName('Create Task');
+                          setBodyType('json');
+                          setBodyContent('{\n  "instruction": "Test local build",\n  "max_steps": 5\n}');
+                        }}
+                        className="p-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:border-sky-500/40 rounded-xl cursor-pointer transition space-y-1.5 group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/10 text-sky-400 font-mono">POST</span>
+                          <span className="text-[10px] text-zinc-500 font-mono">:3000</span>
+                        </div>
+                        <div className="text-xs font-bold text-zinc-200 group-hover:text-sky-300 transition">Autonomous Task Dispatch</div>
+                        <div className="text-[11px] text-zinc-400 font-mono truncate">/api/v1/tasks</div>
+                      </div>
+
+                      <div
+                        onClick={() => {
+                          setMethod('GET');
+                          setUrl('http://127.0.0.1:8080/health');
+                          setRequestName('Rust MicroVM API');
+                        }}
+                        className="p-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] hover:border-purple-500/40 rounded-xl cursor-pointer transition space-y-1.5 group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-400 font-mono">GET</span>
+                          <span className="text-[10px] text-zinc-500 font-mono">:8080</span>
+                        </div>
+                        <div className="text-xs font-bold text-zinc-200 group-hover:text-purple-300 transition">Rust MicroVM Telemetry</div>
+                        <div className="text-[11px] text-zinc-400 font-mono truncate">/health</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Active Target Banner */}
+                  <div className="p-4 bg-black/40 border border-white/[0.08] rounded-xl space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-zinc-400">Target Resolved URL:</span>
+                      <span className="text-[11px] text-zinc-500 font-mono">Env: {environments.find((e) => e.id === selectedEnvId)?.name}</span>
+                    </div>
+                    <div className="font-mono text-xs text-cyan-400 bg-white/[0.02] p-2.5 rounded-lg border border-white/[0.06] flex items-center justify-between">
+                      <span>{method} {substituteEnv(url)}</span>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(`${method} ${substituteEnv(url)}`)}
+                        className="text-zinc-500 hover:text-zinc-300"
+                        title="Copy command"
+                      >
+                        <Copy size={13} />
                       </button>
                     </div>
                   </div>

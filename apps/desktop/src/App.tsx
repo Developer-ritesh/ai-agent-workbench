@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Workspace, ProviderProfile, CreateWorkspacePayload, ThemeMode } from './types';
+import { Workspace, CreateWorkspacePayload, ThemeMode } from './types';
 import { TauriApi } from './services/tauriIpc';
 import { Header } from './components/Header';
 import { Navigation, ActivityTab } from './components/Navigation';
 import { WorkspaceList } from './features/workspaces/WorkspaceList';
 import { WorkspaceDetail } from './features/workspaces/WorkspaceDetail';
-import { ProviderManager } from './features/providers/ProviderManager';
 import { SettingsView } from './features/settings/SettingsView';
 import { CreateWorkspaceModal } from './components/CreateWorkspaceModal';
 import { CommandPalette } from './components/CommandPalette';
@@ -30,7 +29,6 @@ const DEFAULT_WORKSPACE: Workspace = {
 export const App: React.FC = () => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([DEFAULT_WORKSPACE]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(DEFAULT_WORKSPACE.id);
-  const [providers, setProviders] = useState<ProviderProfile[]>([]);
   const [theme, setTheme] = useState<ThemeMode>('dark');
   const [activityTab, setActivityTab] = useState<ActivityTab>('explorer');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -100,10 +98,7 @@ export const App: React.FC = () => {
   const loadInitialData = async () => {
     try {
       setIsLoading(true);
-      const [wsList, provList] = await Promise.all([
-        TauriApi.listWorkspaces().catch(() => []),
-        TauriApi.listProviders().catch(() => []),
-      ]);
+      const wsList = await TauriApi.listWorkspaces().catch(() => []);
 
       if (wsList && wsList.length > 0) {
         setWorkspaces(wsList);
@@ -111,10 +106,6 @@ export const App: React.FC = () => {
       } else {
         setWorkspaces([DEFAULT_WORKSPACE]);
         setActiveWorkspaceId(DEFAULT_WORKSPACE.id);
-      }
-
-      if (provList && provList.length > 0) {
-        setProviders(provList);
       }
     } catch (e) {
       console.error('Initialization error', e);
@@ -289,23 +280,12 @@ export const App: React.FC = () => {
               activeWorkspacePath={activeWorkspace?.hostProjectPath}
             />
           </div>
-        ) : activityTab === 'providers' ? (
-          <div className="view-container">
-            <ProviderManager
-              providers={providers}
-              onRefreshProviders={async () => {
-                const list = await TauriApi.listProviders();
-                setProviders(list);
-              }}
-            />
-          </div>
         ) : activeWorkspace ? (
           /* IDE layout with full real disk read/write & resizable panels */
           <WorkspaceDetail
             workspace={activeWorkspace}
             activityTab={activityTab}
             onSelectTab={setActivityTab}
-            providers={providers}
             onStartVm={handleStartVm}
             onStopVm={handleStopVm}
             onRotateVm={handleRotateVm}
