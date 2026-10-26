@@ -147,11 +147,65 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
     },
     {
+      id: 'nav-browser',
+      title: 'Open Integrated Browser Workspace',
+      category: 'Navigation',
+      icon: <FolderKanban size={15} />,
+      shortcut: 'Cmd+5',
+      action: () => {
+        onClose();
+        onNavigate('browser');
+      },
+    },
+    {
+      id: 'nav-api',
+      title: 'Open API Testing Studio',
+      category: 'Navigation',
+      icon: <Bot size={15} />,
+      shortcut: 'Cmd+6',
+      action: () => {
+        onClose();
+        onNavigate('api');
+      },
+    },
+    {
+      id: 'nav-tests',
+      title: 'Open Automatic Testing Engine',
+      category: 'Navigation',
+      icon: <Terminal size={15} />,
+      shortcut: 'Cmd+7',
+      action: () => {
+        onClose();
+        onNavigate('tests');
+      },
+    },
+    {
+      id: 'nav-ports',
+      title: 'Open Port Forwarding Manager',
+      category: 'Navigation',
+      icon: <Settings size={15} />,
+      shortcut: 'Cmd+8',
+      action: () => {
+        onClose();
+        onNavigate('ports');
+      },
+    },
+    {
+      id: 'nav-diagnostics',
+      title: 'Open Unified Diagnostics & Logs',
+      category: 'Navigation',
+      icon: <Settings size={15} />,
+      shortcut: 'Cmd+9',
+      action: () => {
+        onClose();
+        onNavigate('diagnostics');
+      },
+    },
+    {
       id: 'nav-providers',
       title: 'Open Provider & Keychain Profiles',
       category: 'Navigation',
       icon: <KeyRound size={15} />,
-      shortcut: 'Cmd+5',
       action: () => {
         onClose();
         onNavigate('providers');
@@ -159,7 +213,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'nav-settings',
-      title: 'Open Settings & Diagnostics',
+      title: 'Open Settings & OpenCode Cleanup',
       category: 'Navigation',
       icon: <Settings size={15} />,
       shortcut: 'Cmd+,',

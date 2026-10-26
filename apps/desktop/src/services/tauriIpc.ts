@@ -10,6 +10,9 @@ import {
   SearchResult,
   GitStatusResult,
   NetworkStats,
+  PortForwardMapping,
+  ApiRequestConfig,
+  ApiResponseData,
 } from '../types';
 
 let isTauriEnv = false;
@@ -598,4 +601,74 @@ export const TauriApi = {
       { name: 'README.md', path: `${workspacePath}/README.md`, isDir: false, size: 1540, gitStatus: 'clean' },
     ];
   },
+
+  // Port Forwarding Manager
+  portsList: async (): Promise<PortForwardMapping[]> => {
+    try {
+      const ports = await callTauri<PortForwardMapping[]>('ports_list');
+      if (ports) return ports;
+    } catch (e) {
+      console.warn('ports_list fallback:', e);
+    }
+    return [
+      {
+        id: 'port-3000',
+        guestPort: 3000,
+        localPort: 3000,
+        protocol: 'http',
+        status: 'active',
+        processName: 'node (dev server)',
+        targetUrl: 'http://127.0.0.1:3000',
+        isListening: true,
+      },
+      {
+        id: 'port-5173',
+        guestPort: 5173,
+        localPort: 5173,
+        protocol: 'http',
+        status: 'active',
+        processName: 'vite',
+        targetUrl: 'http://127.0.0.1:5173',
+        isListening: true,
+      },
+      {
+        id: 'port-8080',
+        guestPort: 8080,
+        localPort: 8080,
+        protocol: 'http',
+        status: 'active',
+        processName: 'api-gateway',
+        targetUrl: 'http://127.0.0.1:8080',
+        isListening: true,
+      },
+    ];
+  },
+  portsForwardCreate: async (guestPort: number, localPort: number, protocol?: string): Promise<PortForwardMapping> => {
+    return callTauri<PortForwardMapping>('ports_forward_create', { guestPort, localPort, protocol });
+  },
+  portsForwardRemove: async (id: string): Promise<void> => {
+    return callTauri<void>('ports_forward_remove', { id });
+  },
+  portsCheckAvailability: async (port: number): Promise<boolean> => {
+    return callTauri<boolean>('ports_check_availability', { port });
+  },
+
+  // API Testing Studio
+  apiExecuteRequest: async (payload: ApiRequestConfig): Promise<ApiResponseData> => {
+    try {
+      return await callTauri<ApiResponseData>('api_execute_request', { payload });
+    } catch (err: any) {
+      return {
+        status: 0,
+        statusText: 'Execution Error',
+        timeMs: 0,
+        sizeBytes: 0,
+        headers: {},
+        data: '',
+        error: String(err?.message || err || 'Network or execution failure'),
+      };
+    }
+  },
 };
+
+export const tauriIpc = TauriApi;

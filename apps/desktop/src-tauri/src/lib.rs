@@ -20,12 +20,14 @@ pub fn run() {
     };
     let pty_manager = commands::PtyManager::new();
     let network_tracker = commands::NetworkTracker::new();
+    let port_manager = commands::PortManager::new();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(workspace_manager)
         .manage(pty_manager)
         .manage(network_tracker)
+        .manage(port_manager)
         .invoke_handler(tauri::generate_handler![
             commands::workspace_create,
             commands::workspace_list,
@@ -66,7 +68,12 @@ pub fn run() {
             commands::pty_kill,
             commands::network_get_stats,
             commands::network_retry_connection,
-            commands::network_run_speed_test
+            commands::network_run_speed_test,
+            commands::ports_list,
+            commands::ports_forward_create,
+            commands::ports_forward_remove,
+            commands::ports_check_availability,
+            commands::api_execute_request
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

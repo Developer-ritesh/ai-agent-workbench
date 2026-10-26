@@ -304,6 +304,8 @@ export const App: React.FC = () => {
           <WorkspaceDetail
             workspace={activeWorkspace}
             activityTab={activityTab}
+            onSelectTab={setActivityTab}
+            providers={providers}
             onStartVm={handleStartVm}
             onStopVm={handleStopVm}
             onRotateVm={handleRotateVm}

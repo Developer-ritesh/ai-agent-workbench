@@ -5,6 +5,8 @@ pub mod provider;
 pub mod fs;
 pub mod pty;
 pub mod network;
+pub mod ports;
+pub mod api_client;
 
 pub use workspace::*;
 pub use vm::*;
@@ -13,3 +15,5 @@ pub use provider::*;
 pub use fs::*;
 pub use pty::*;
 pub use network::*;
+pub use ports::*;
+pub use api_client::*;
