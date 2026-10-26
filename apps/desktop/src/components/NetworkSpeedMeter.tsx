@@ -190,8 +190,14 @@ export const NetworkSpeedMeter: React.FC = () => {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 7,
-          padding: '4px 9px',
+          gap: 6,
+          padding: '4px 8px',
+          width: 220,
+          minWidth: 220,
+          maxWidth: 220,
+          height: 30,
+          boxSizing: 'border-box',
+          flexShrink: 0,
           background: isOnline ? 'var(--bg-surface)' : 'rgba(239, 68, 68, 0.12)',
           border: isOnline
             ? '1px solid var(--border-panel)'
@@ -201,7 +207,8 @@ export const NetworkSpeedMeter: React.FC = () => {
           color: 'var(--text-primary)',
           fontSize: 11,
           fontFamily: 'var(--font-mono)',
-          transition: 'all 0.15s ease',
+          transition: 'border-color 0.15s ease, background-color 0.15s ease',
+          overflow: 'hidden',
         }}
       >
         {/* Connection Indicator Dot */}
@@ -219,49 +226,93 @@ export const NetworkSpeedMeter: React.FC = () => {
           }}
         />
 
-        {/* Download Speed */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <ArrowDown size={11} color="var(--accent-cyan)" strokeWidth={2.5} />
-          <span style={{ color: 'var(--accent-cyan)', fontWeight: 600, minWidth: 46 }}>
+        {/* Download Speed with locked width */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2, width: 62, minWidth: 62, maxWidth: 62, flexShrink: 0, overflow: 'hidden' }}>
+          <ArrowDown size={11} color="var(--accent-cyan)" strokeWidth={2.5} style={{ flexShrink: 0 }} />
+          <span
+            style={{
+              color: 'var(--accent-cyan)',
+              fontWeight: 600,
+              fontVariantNumeric: 'tabular-nums',
+              fontFamily: 'monospace',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              display: 'inline-block',
+              width: 48,
+              textAlign: 'left',
+            }}
+          >
             {stats.download_speed_formatted}
           </span>
         </div>
 
-        {/* Upload Speed */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <ArrowUp size={11} color="#c084fc" strokeWidth={2.5} />
-          <span style={{ color: '#c084fc', fontWeight: 600, minWidth: 46 }}>
+        {/* Upload Speed with locked width */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2, width: 62, minWidth: 62, maxWidth: 62, flexShrink: 0, overflow: 'hidden' }}>
+          <ArrowUp size={11} color="#c084fc" strokeWidth={2.5} style={{ flexShrink: 0 }} />
+          <span
+            style={{
+              color: '#c084fc',
+              fontWeight: 600,
+              fontVariantNumeric: 'tabular-nums',
+              fontFamily: 'monospace',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              display: 'inline-block',
+              width: 48,
+              textAlign: 'left',
+            }}
+          >
             {stats.upload_speed_formatted}
           </span>
         </div>
 
-        {/* Ping Latency (when online) or Offline Warning */}
-        {isOnline ? (
-          <span
-            style={{
-              fontSize: 10,
-              color: 'var(--text-muted)',
-              paddingLeft: 2,
-              borderLeft: '1px solid var(--border-subtle)',
-            }}
-          >
-            {stats.latency_ms}ms
-          </span>
-        ) : (
-          <span
-            style={{
-              fontSize: 10,
-              color: '#f87171',
-              fontWeight: 600,
-              paddingLeft: 2,
-              borderLeft: '1px solid rgba(239, 68, 68, 0.3)',
-            }}
-          >
-            {retryCountdown !== null ? `Retry ${retryCountdown}s` : 'Offline'}
-          </span>
-        )}
+        {/* Ping Latency (when online) or Offline Warning with locked width */}
+        <div
+          style={{
+            width: 42,
+            minWidth: 42,
+            maxWidth: 42,
+            flexShrink: 0,
+            paddingLeft: 3,
+            borderLeft: isOnline ? '1px solid var(--border-subtle)' : '1px solid rgba(239, 68, 68, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            overflow: 'hidden',
+          }}
+        >
+          {isOnline ? (
+            <span
+              style={{
+                fontSize: 10,
+                color: 'var(--text-muted)',
+                fontVariantNumeric: 'tabular-nums',
+                fontFamily: 'monospace',
+                whiteSpace: 'nowrap',
+                width: '100%',
+                textAlign: 'right',
+              }}
+            >
+              {stats.latency_ms}ms
+            </span>
+          ) : (
+            <span
+              style={{
+                fontSize: 10,
+                color: '#f87171',
+                fontWeight: 600,
+                fontVariantNumeric: 'tabular-nums',
+                fontFamily: 'monospace',
+                whiteSpace: 'nowrap',
+                width: '100%',
+                textAlign: 'right',
+              }}
+            >
+              {retryCountdown !== null ? `${retryCountdown}s` : 'Off'}
+            </span>
+          )}
+        </div>
 
-        <ChevronDown size={10} color="var(--text-muted)" style={{ marginLeft: 1 }} />
+        <ChevronDown size={10} color="var(--text-muted)" style={{ flexShrink: 0, marginLeft: 'auto' }} />
       </button>
 
       {/* Dropdown Popover */}

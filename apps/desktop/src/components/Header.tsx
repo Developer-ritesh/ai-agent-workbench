@@ -5,8 +5,6 @@ import {
   ChevronDown,
   RotateCw,
   Settings,
-  Sun,
-  Moon,
   Plus,
   Clock,
   Key,
@@ -46,8 +44,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   activeWorkspace,
   workspaces,
-  theme,
-  onSetTheme,
+  theme: _theme,
+  onSetTheme: _onSetTheme,
   onOpenCreateModal,
   onSelectWorkspace,
   onOpenFolder,
@@ -143,29 +141,30 @@ export const Header: React.FC<HeaderProps> = ({
         onDoubleClick={handleDoubleClick}
       >
         {/* Left side: Traffic lights spacer + Brand + Workspace / Folder Picker */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, minWidth: 0 }}>
           {/* Spacer for native macOS traffic lights (red/yellow/green) */}
           <div className="native-traffic-spacer" data-tauri-drag-region />
 
           {/* Brand Icon & Title */}
-          <div style={{ display: 'flex', alignItems: 'center' }} data-tauri-drag-region>
+          <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }} data-tauri-drag-region>
             <div className="app-brand-badge">A</div>
-            <span style={{ fontWeight: 600, fontSize: 13, letterSpacing: -0.2 }}>
+            <span className="app-brand-title">
               AI Agent Workbench
             </span>
           </div>
 
           {/* Workspace Dropdown Pill */}
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
             <button
               className="topbar-pill"
               onClick={() => setIsWorkspaceMenuOpen(!isWorkspaceMenuOpen)}
+              title={activeWorkspace ? `${activeWorkspace.name} (${activeWorkspace.hostProjectPath})` : 'Select Workspace'}
             >
-              <Folder size={14} color="var(--text-secondary)" />
-              <span style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <Folder size={13} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
+              <span className="header-workspace-name" style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {activeWorkspace ? activeWorkspace.name : 'masticall-in'}
               </span>
-              <ChevronDown size={13} color="var(--text-muted)" />
+              <ChevronDown size={12} color="var(--text-muted)" style={{ flexShrink: 0 }} />
             </button>
 
             {isWorkspaceMenuOpen && (
@@ -230,67 +229,121 @@ export const Header: React.FC<HeaderProps> = ({
             className="btn-icon"
             title="Open project folder from your Mac (like VS Code)"
             onClick={onOpenFolder}
+            style={{ flexShrink: 0 }}
           >
             <FolderSearch size={14} color="var(--accent-cyan)" />
           </button>
         </div>
 
-        {/* Center: VM Status Pill + Auto-Rotate Countdown Pill + Rotate VM Button */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* VM Status Pill */}
-          <div
-            className="vm-status-pill"
-            onClick={() => {
-              if (activeWorkspace) {
-                if (isVmRunning) onStopVm(activeWorkspace.id);
-                else onStartVm(activeWorkspace.id);
-              }
-            }}
-            title={isVmRunning ? 'Click to Stop Linux VM' : 'Click to Start Linux VM'}
-          >
-            <div
-              className="vm-status-dot"
-              style={{ backgroundColor: isVmRunning ? '#10b981' : '#64748b' }}
-            />
-            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-              <span style={{ fontWeight: 600, color: isVmRunning ? '#10b981' : '#94a3b8' }}>
-                {isVmRunning ? 'VM Running' : 'VM Stopped'}
-              </span>
-              <span style={{ fontSize: 9.5, color: 'var(--text-muted)' }}>
-                {activeWorkspace?.imageId || 'Ubuntu 24.04'}
-              </span>
-            </div>
-          </div>
-
-          {/* Rotate VM Action Button */}
-          <button
-            className="btn-rotate-vm"
-            onClick={handleManualRotate}
-            disabled={isRotating}
-            title="Rotate VM immediately: purge ephemeral guest caches & refresh credentials"
-          >
-            <RotateCw size={13} className={isRotating ? 'spin-animation' : ''} />
-            <span>Rotate VM</span>
-          </button>
-
-          {/* Auto-Rotate Countdown Pill & Config Menu */}
+        {/* Center: Unified VM Status & Rotate Action Pill (Zero Shift) */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <div style={{ position: 'relative' }}>
-            <div
-              className="auto-rotate-pill"
-              onClick={() => setIsRotateMenuOpen(!isRotateMenuOpen)}
-              title="Click to configure VM Auto-Rotation schedule"
-            >
-              <Clock size={12} color="var(--accent-cyan)" />
-              <span>
-                {autoRotateMinutes > 0
-                  ? `Rotate: ${formatCountdown(secondsUntilRotate)}`
-                  : 'Auto-Rotate Off'}
-              </span>
-              <ChevronDown size={11} color="var(--text-muted)" />
+            <div className={`vm-unified-pill ${!isVmRunning ? 'vm-stopped' : ''}`}>
+              {/* Left: VM Status with click to toggle Start/Stop */}
+              <div
+                onClick={() => {
+                  if (activeWorkspace) {
+                    if (isVmRunning) onStopVm(activeWorkspace.id);
+                    else onStartVm(activeWorkspace.id);
+                  }
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                }}
+                title={isVmRunning ? 'VM Running (Click to Stop)' : 'VM Stopped (Click to Start)'}
+              >
+                <div
+                  className="vm-status-dot"
+                  style={{
+                    backgroundColor: isVmRunning ? 'var(--status-emerald)' : '#64748b',
+                    boxShadow: isVmRunning ? '0 0 8px var(--status-emerald)' : 'none',
+                    animation: isVmRunning ? 'pulse-dot 2s infinite ease-in-out' : 'none',
+                  }}
+                />
+                <span
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 11.5,
+                    color: isVmRunning ? '#34d399' : '#94a3b8',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {isVmRunning ? 'VM Active' : 'VM Stopped'}
+                </span>
+              </div>
+
+              {/* Subtle Vertical Divider */}
+              <div
+                style={{
+                  width: 1,
+                  height: 14,
+                  background: isVmRunning ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                  flexShrink: 0,
+                }}
+              />
+
+              {/* Middle: Auto-Rotate Countdown Timer (Click opens schedule dropdown) */}
+              <div
+                onClick={() => setIsRotateMenuOpen(!isRotateMenuOpen)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  cursor: 'pointer',
+                  fontSize: 11,
+                  fontFamily: 'var(--font-mono)',
+                  color: autoRotateMinutes > 0 ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                  userSelect: 'none',
+                }}
+                title="Click to configure VM Auto-Rotation schedule"
+              >
+                <Clock size={11} color={autoRotateMinutes > 0 ? 'var(--accent-cyan)' : 'var(--text-muted)'} style={{ flexShrink: 0 }} />
+                <span
+                  style={{
+                    width: 54,
+                    minWidth: 54,
+                    maxWidth: 54,
+                    display: 'inline-block',
+                    fontVariantNumeric: 'tabular-nums',
+                    fontFamily: 'monospace',
+                    whiteSpace: 'nowrap',
+                    textAlign: 'left',
+                  }}
+                >
+                  {autoRotateMinutes > 0 ? formatCountdown(secondsUntilRotate) : 'Off'}
+                </span>
+                <ChevronDown size={10} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+              </div>
+
+              {/* Subtle Vertical Divider */}
+              <div
+                style={{
+                  width: 1,
+                  height: 14,
+                  background: isVmRunning ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.1)',
+                  flexShrink: 0,
+                }}
+              />
+
+              {/* Right: Integrated Rotate VM Action Button */}
+              <button
+                className="vm-rotate-action-btn"
+                onClick={handleManualRotate}
+                disabled={isRotating || !activeWorkspace}
+                title="Rotate VM immediately: purge ephemeral guest caches & refresh credentials"
+              >
+                <RotateCw size={11} className={isRotating ? 'spin-animation' : ''} style={{ flexShrink: 0 }} />
+                <span>{isRotating ? 'Rotating...' : 'Rotate'}</span>
+              </button>
             </div>
 
+            {/* Dropdown Menu for Auto-Rotate Schedule */}
             {isRotateMenuOpen && (
-              <div className="dropdown-menu" style={{ width: 230, right: 0 }}>
+              <div className="dropdown-menu" style={{ width: 230, left: '50%', transform: 'translateX(-50%)' }}>
                 <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', padding: '4px 8px' }}>
                   AUTO-ROTATE SCHEDULE
                 </div>
@@ -328,13 +381,13 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Right side: Network Speed Meter + Panel Layout Toggles + Settings + Theme + Avatar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {/* Internet Speed Meter (Upload / Download / Latency & Retry) */}
+        {/* Right side: Network Speed Meter + Panel Layout Toggles + Settings + Avatar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {/* Internet Speed Meter (Upload / Download / Latency & Retry - Fixed Zero Shift Width) */}
           <NetworkSpeedMeter />
 
           {/* VS Code Style Panel Layout Icons Group (Exact user screenshot match) */}
-          <div className="header-panel-toggles">
+          <div className="header-panel-toggles" style={{ flexShrink: 0 }}>
             {/* 1. Layout / Focus mode toggle */}
             <button
               className={`header-layout-btn ${isFocusMode ? 'active' : ''}`}
@@ -389,21 +442,12 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Settings Button */}
-          <button className="btn-icon" onClick={onOpenSettings} title="Settings">
+          <button className="btn-icon" onClick={onOpenSettings} title="Settings" style={{ flexShrink: 0 }}>
             <Settings size={15} color="var(--text-secondary)" />
           </button>
 
-          {/* Theme Toggle (Sun/Moon) */}
-          <button
-            className="btn-icon"
-            onClick={() => onSetTheme(theme === 'dark' ? 'light' : 'dark')}
-            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
-          >
-            {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-          </button>
-
           {/* User Profile Avatar Pill */}
-          <div className="user-avatar-pill" title="Developer Ritesh">
+          <div className="user-avatar-pill" title="Developer Ritesh" style={{ flexShrink: 0 }}>
             DR
           </div>
         </div>
