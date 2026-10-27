@@ -109,6 +109,20 @@ impl PtyManager {
         if let Some(ref dir) = cwd {
             let p = PathBuf::from(dir);
             if p.exists() {
+                // Ensure devai executable shim exists in workspace node_modules/.bin so guest VM path can always invoke it
+                let bin_dir = p.join("node_modules").join(".bin");
+                let _ = std::fs::create_dir_all(&bin_dir);
+                let devai_shim = bin_dir.join("devai");
+                if !devai_shim.exists() {
+                    let script = "#!/bin/sh\nif [ -x /usr/bin/opencode ]; then\n  exec /usr/bin/opencode \"$@\"\nelif [ -x /bin/opencode ]; then\n  exec /bin/opencode \"$@\"\nelse\n  exec opencode \"$@\"\nfi\n";
+                    let _ = std::fs::write(&devai_shim, script);
+                    #[cfg(unix)]
+                    {
+                        use std::os::unix::fs::PermissionsExt;
+                        let _ = std::fs::set_permissions(&devai_shim, std::fs::Permissions::from_mode(0o755));
+                    }
+                }
+
                 let mount_link = std::env::temp_dir().join(format!("ai-agent-ws-{}", terminal_id));
                 let _ = std::fs::remove_file(&mount_link);
                 let _ = std::os::unix::fs::symlink(&p, &mount_link);

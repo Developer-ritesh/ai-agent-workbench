@@ -94,6 +94,20 @@ impl VmBackend for VfkitBackend {
                     cmd.arg("-i").arg(&initrd_file);
                     cmd.arg("-C").arg("console=hvc0 quiet rdinit=/init random.trust_cpu=on");
 
+                    // Ensure devai executable shim exists in workspace node_modules/.bin so guest VM path can always invoke it
+                    let bin_dir = validated_path.join("node_modules").join(".bin");
+                    let _ = fs::create_dir_all(&bin_dir);
+                    let devai_shim = bin_dir.join("devai");
+                    if !devai_shim.exists() {
+                        let script = "#!/bin/sh\nif [ -x /usr/bin/opencode ]; then\n  exec /usr/bin/opencode \"$@\"\nelif [ -x /bin/opencode ]; then\n  exec /bin/opencode \"$@\"\nelse\n  exec opencode \"$@\"\nfi\n";
+                        let _ = fs::write(&devai_shim, script);
+                        #[cfg(unix)]
+                        {
+                            use std::os::unix::fs::PermissionsExt;
+                            let _ = fs::set_permissions(&devai_shim, fs::Permissions::from_mode(0o755));
+                        }
+                    }
+
                     let mount_link = std::env::temp_dir().join(format!("ai-agent-ws-{}", vm.vm_id));
                     let _ = fs::remove_file(&mount_link);
                     let _ = std::os::unix::fs::symlink(&validated_path, &mount_link);
