@@ -76,7 +76,13 @@ pub fn ports_list(state: State<'_, PortManager>) -> Result<Vec<PortInfo>, String
     // Add scanned listening ports
     for (port, process) in listening {
         let id = format!("port-{}", port);
-        let protocol = if port == 80 || port == 443 || port == 3000 || port == 5173 || port == 8080 || port == 8000 {
+        let process_name = if process.to_lowercase().contains("opencode") || process.to_lowercase().contains("devai") {
+            "Dev AI (opencode)".to_string()
+        } else {
+            process
+        };
+        let is_http = port == 80 || port == 443 || port == 3000 || port == 5173 || port == 8080 || port == 8000 || port == 4096 || process_name.contains("Dev AI");
+        let protocol = if is_http {
             "http".to_string()
         } else {
             "tcp".to_string()
@@ -88,7 +94,7 @@ pub fn ports_list(state: State<'_, PortManager>) -> Result<Vec<PortInfo>, String
             local_port: port,
             protocol,
             status: "active".to_string(),
-            process_name: process,
+            process_name,
             target_url: format!("http://127.0.0.1:{}", port),
             is_listening: true,
         });

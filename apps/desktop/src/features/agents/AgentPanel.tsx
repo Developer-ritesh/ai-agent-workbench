@@ -207,7 +207,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({
           tokensUsed: { input: 1820, output: 940 },
           steps: [
             { id: 'step-a', title: 'Parsed instruction in isolated microVM', status: 'completed' },
-            { id: 'step-b', title: 'OpenCode executed task', status: 'completed' },
+            { id: 'step-b', title: 'Dev AI executed task', status: 'completed' },
             { id: 'step-c', title: 'Verified working tree diff and permissions', status: 'completed' },
           ],
           text: `Executed task in isolated Linux microVM: "${userText}". Agent process session PID ${res.guestProcessId || '5120'}.`,

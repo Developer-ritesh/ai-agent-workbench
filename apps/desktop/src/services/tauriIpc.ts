@@ -160,7 +160,7 @@ const mockAuditLogs: AuditEventRecord[] = [
     id: 'audit-03',
     workspaceId: 'ws-demo-01',
     eventType: 'agent.task.started',
-    payloadJson: 'OpenCode session sess-01 started with model claude-3-7-sonnet',
+    payloadJson: 'Dev AI session sess-01 started with model claude-3-7-sonnet',
     createdAt: new Date(Date.now() - 300000).toISOString(),
   },
 ];
@@ -456,15 +456,15 @@ function mockCall<T>(cmd: string, args: Record<string, unknown>): Promise<T> {
             break;
           }
           case 'opencode_clear_sessions': {
-            resolve('OpenCode session history and checkpoints cleared successfully' as unknown as T);
+            resolve('Dev AI session history and checkpoints cleared successfully' as unknown as T);
             break;
           }
           case 'opencode_clear_global_history': {
-            resolve('Global OpenCode session history and conversation database cleared successfully.' as unknown as T);
+            resolve('Global Dev AI session history and conversation database cleared successfully.' as unknown as T);
             break;
           }
           case 'opencode_clear_cache': {
-            resolve('OpenCode model cache and temporary packages cleared successfully.' as unknown as T);
+            resolve('Dev AI model cache and temporary packages cleared successfully.' as unknown as T);
             break;
           }
           case 'network_get_stats':
@@ -560,7 +560,7 @@ function mockCall<T>(cmd: string, args: Record<string, unknown>): Promise<T> {
               success: true,
               skills_count: 413,
               mcps_count: 17,
-              message: 'Successfully installed 413 skills and 17 MCP servers into OpenCode',
+              message: 'Successfully installed 413 skills and 17 MCP servers into Dev AI',
               target_path: '~/.config/opencode',
             } as unknown as T);
             break;
@@ -619,12 +619,15 @@ export const TauriApi = {
   gitLog: (path: string, limit: number = 50) => callTauri<GitLogEntry[]>('git_log', { path, limit }),
   gitInit: (path: string) => callTauri<string>('git_init', { path }),
 
-  // OpenCode Session Management
+  // Dev AI (OpenCode engine) Session Management
   clearOpencodeSessions: (path: string) => callTauri<string>('opencode_clear_sessions', { path }),
   clearOpencodeGlobalHistory: () => callTauri<string>('opencode_clear_global_history'),
   clearOpencodeCache: () => callTauri<string>('opencode_clear_cache'),
+  clearDevAiSessions: (path: string) => callTauri<string>('opencode_clear_sessions', { path }),
+  clearDevAiGlobalHistory: () => callTauri<string>('opencode_clear_global_history'),
+  clearDevAiCache: () => callTauri<string>('opencode_clear_cache'),
 
-  // OpenCode MCP & Skills Management
+  // Dev AI MCP & Skills Management
   getOpencodeMcpConfig: () => callTauri<OpencodeMcpServer[]>('opencode_get_mcp_config'),
   toggleOpencodeMcpServer: (serverId: string, enabled: boolean) =>
     callTauri<boolean>('opencode_toggle_mcp_server', { serverId, enabled }),
@@ -636,6 +639,10 @@ export const TauriApi = {
   getOpencodeSkillContent: (skillName: string) =>
     callTauri<string>('opencode_get_skill_content', { skillName }),
   syncOpencodeFromPath: (sourcePath?: string) =>
+    callTauri<OpencodeSyncResult>('opencode_sync_from_path', { sourcePath }),
+  getDevAiMcpConfig: () => callTauri<OpencodeMcpServer[]>('opencode_get_mcp_config'),
+  listDevAiSkills: () => callTauri<OpencodeSkillInfo[]>('opencode_list_skills'),
+  syncDevAiFromPath: (sourcePath?: string) =>
     callTauri<OpencodeSyncResult>('opencode_sync_from_path', { sourcePath }),
 
   // Terminal & Execution

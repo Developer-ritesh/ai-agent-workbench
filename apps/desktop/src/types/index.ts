@@ -618,4 +618,9 @@ export interface OpencodeSyncResult {
   target_path: string;
 }
 
+// Dev AI Aliases
+export type DevAiMcpServer = OpencodeMcpServer;
+export type DevAiSkillInfo = OpencodeSkillInfo;
+export type DevAiSyncResult = OpencodeSyncResult;
+
 

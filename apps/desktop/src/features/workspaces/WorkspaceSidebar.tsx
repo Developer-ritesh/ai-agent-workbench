@@ -1484,7 +1484,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
 
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--text-muted)' }}>Agent Runtime</span>
-              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>opencode TUI ready</span>
+              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>Dev AI TUI ready</span>
             </div>
           </div>
 

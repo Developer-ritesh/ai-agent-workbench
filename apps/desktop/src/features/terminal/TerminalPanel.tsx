@@ -270,11 +270,11 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
 
         {/* Quick CLI Shortcuts (Isolated Linux Environment) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap', overflowX: 'auto', flex: 1 }}>
-          {/* Main Launch OpenCode Button */}
+          {/* Main Launch Dev AI Button */}
           <button
             className="btn-quick-cmd"
-            onClick={() => sendCommand('opencode')}
-            title="Launch interactive OpenCode TUI interface in isolated Linux VM"
+            onClick={() => sendCommand('devai')}
+            title="Launch interactive Dev AI TUI interface in isolated Linux VM"
             style={{
               background: 'rgba(56, 189, 248, 0.15)',
               borderColor: 'rgba(56, 189, 248, 0.4)',
@@ -285,14 +285,14 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
             }}
           >
             <Sparkles size={11} color="var(--accent-cyan)" />
-            <span>opencode</span>
+            <span>Dev AI</span>
           </button>
 
           {/* Interrupt / Ctrl+C Button */}
           <button
             className="btn-quick-cmd"
             onClick={() => TauriApi.ptyWrite(terminalIdRef.current, '\x03')}
-            title="Send SIGINT (Ctrl+C) to cancel or stop running command/OpenCode"
+            title="Send SIGINT (Ctrl+C) to cancel or stop running command/Dev AI"
             style={{
               background: 'rgba(239, 68, 68, 0.15)',
               borderColor: 'rgba(239, 68, 68, 0.4)',

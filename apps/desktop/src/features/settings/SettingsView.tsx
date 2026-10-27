@@ -67,13 +67,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const handleClearOpencodeSessions = async () => {
     if (!activeWorkspacePath) {
-      alert('Please open a workspace first to clear its project-level OpenCode sessions.');
+      alert('Please open a workspace first to clear its project-level Dev AI sessions.');
       return;
     }
-    if (confirm('Are you sure you want to clear all OpenCode session history, conversations, and checkpoints for this project?')) {
+    if (confirm('Are you sure you want to clear all Dev AI session history, conversations, and checkpoints for this project?')) {
       try {
         await TauriApi.clearOpencodeSessions(activeWorkspacePath);
-        showToast('✓ Project OpenCode session history cleared successfully!');
+        showToast('✓ Project Dev AI session history cleared successfully!');
       } catch (err: any) {
         alert(`Failed to clear session history: ${err?.message || String(err)}`);
       }
@@ -81,10 +81,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   const handleClearGlobalHistory = async () => {
-    if (confirm('Are you sure you want to clear global OpenCode chat history, SQLite database (~150MB+), and snapshots? MCP server configurations will remain safe.')) {
+    if (confirm('Are you sure you want to clear global Dev AI chat history, SQLite database (~150MB+), and snapshots? MCP server configurations will remain safe.')) {
       try {
         await TauriApi.clearOpencodeGlobalHistory();
-        showToast('✓ Global OpenCode chat history & database purged!');
+        showToast('✓ Global Dev AI chat history & database purged!');
       } catch (err: any) {
         alert(`Failed to clear global history: ${err?.message || String(err)}`);
       }
@@ -92,10 +92,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   const handleClearOpencodeCache = async () => {
-    if (confirm('Are you sure you want to purge OpenCode model cache, temporary packages, and token caches?')) {
+    if (confirm('Are you sure you want to purge Dev AI model cache, temporary packages, and token caches?')) {
       try {
         await TauriApi.clearOpencodeCache();
-        showToast('✓ OpenCode cache and temporary data cleared!');
+        showToast('✓ Dev AI cache and temporary data cleared!');
       } catch (err: any) {
         alert(`Failed to clear cache: ${err?.message || String(err)}`);
       }
@@ -110,7 +110,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         }
         await TauriApi.clearOpencodeGlobalHistory();
         await TauriApi.clearOpencodeCache();
-        showToast('✓ All OpenCode sessions, databases, and cache purged completely!');
+        showToast('✓ All Dev AI sessions, databases, and cache purged completely!');
       } catch (err: any) {
         alert(`Failed to purge agent data: ${err?.message || String(err)}`);
       }
@@ -361,7 +361,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             onClick={() => setActiveCategory('agent')}
           >
             <Bot size={15} />
-            <span>AI Agent & OpenCode</span>
+            <span>AI Agent & Dev AI</span>
           </button>
 
           <button
@@ -793,7 +793,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           )}
 
           {/* =========================================================================
-              CATEGORY 4: AI AGENT & OPENCODE
+              CATEGORY 4: AI AGENT & DEV AI
              ========================================================================= */}
           {activeCategory === 'agent' && (
             <>
@@ -808,7 +808,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <div className="settings-control-row">
                   <div className="settings-control-label">
                     <span>Default Model</span>
-                    <span>Primary AI model initialized for OpenCode agent tasks</span>
+                    <span>Primary AI model initialized for Dev AI agent tasks</span>
                   </div>
 
                   <select
@@ -892,7 +892,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
                 <div className="settings-control-row">
                   <div className="settings-control-label">
-                    <span>OpenCode Terminal Output Verbosity</span>
+                    <span>Dev AI Terminal Output Verbosity</span>
                     <span>TUI logging detail rendered inside the guest sandbox console</span>
                   </div>
 
@@ -908,7 +908,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         className={`segmented-pill-btn ${opencodeVerbosity === mode.id ? 'active' : ''}`}
                         onClick={() => {
                           setOpencodeVerbosity(mode.id);
-                          showToast(`✓ OpenCode verbosity set to ${mode.label}`);
+                          showToast(`✓ Dev AI verbosity set to ${mode.label}`);
                         }}
                       >
                         {mode.label}
@@ -918,12 +918,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
               </div>
 
-              {/* OpenCode Persistent Session & Cache Management */}
+              {/* Dev AI Persistent Session & Cache Management */}
               <div className="settings-section-card">
                 <div className="settings-card-header">
                   <h3>
                     <Database size={16} color="var(--accent-cyan)" />
-                    <span>OpenCode Persistent Sessions & Memory Storage</span>
+                    <span>Dev AI Persistent Sessions & Memory Storage</span>
                   </h3>
                   <span
                     style={{
@@ -940,7 +940,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
 
                 <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                  OpenCode chat conversations, task checkpoints, agent memory, and token contexts are preserved across VM restarts and rotations in your workspace's <code>.opencode</code> directory. Use the tools below to selectively clean or purge cached agent state.
+                  Dev AI chat conversations, task checkpoints, agent memory, and token contexts are preserved across VM restarts and rotations in your workspace's <code>.opencode</code> directory. Use the tools below to selectively clean or purge cached agent state.
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
@@ -976,7 +976,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     </button>
                   </div>
 
-                  {/* Option 2: Global OpenCode Database */}
+                  {/* Option 2: Global Dev AI Database */}
                   <div
                     style={{
                       display: 'flex',
@@ -990,7 +990,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-                        Purge Global OpenCode Database (~150MB+)
+                        Purge Global Dev AI Database (~150MB+)
                       </span>
                       <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
                         Deletes global SQLite chat database, command snapshots, and tool execution logs. MCP server keys are preserved.
@@ -1001,7 +1001,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       className="btn btn-secondary btn-sm"
                       style={{ color: '#fb7185', borderColor: 'rgba(244, 63, 94, 0.3)', flexShrink: 0 }}
                       onClick={handleClearGlobalHistory}
-                      title="Purge global opencode.db and logs"
+                      title="Purge global Dev AI database and logs"
                     >
                       <Database size={13} />
                       <span>Purge Global DB</span>
@@ -1376,7 +1376,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)' }}>AI Agent Runtime</span>
-                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>OpenCode v2.1.4</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-cyan)' }}>Dev AI v2.1.4</span>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>

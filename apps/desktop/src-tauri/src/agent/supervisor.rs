@@ -21,6 +21,10 @@ impl AgentSupervisor {
 
     fn find_opencode() -> PathBuf {
         if let Some(home) = dirs::home_dir() {
+            let devai_bin = home.join(".opencode").join("bin").join("devai");
+            if devai_bin.exists() {
+                return devai_bin;
+            }
             let user_bin = home.join(".opencode").join("bin").join("opencode");
             if user_bin.exists() {
                 return user_bin;
@@ -29,6 +33,10 @@ impl AgentSupervisor {
 
         if let Ok(path) = std::env::var("PATH") {
             for p in path.split(':') {
+                let devai_candidate = PathBuf::from(p).join("devai");
+                if devai_candidate.is_file() {
+                    return devai_candidate;
+                }
                 let candidate = PathBuf::from(p).join("opencode");
                 if candidate.is_file() {
                     return candidate;
@@ -43,13 +51,13 @@ impl AgentSupervisor {
         let output = Command::new(&self.opencode_path)
             .arg("--version")
             .output()
-            .map_err(|e| WorkbenchError::Agent(format!("Failed to execute opencode: {}", e)))?;
+            .map_err(|e| WorkbenchError::Agent(format!("Failed to execute Dev AI: {}", e)))?;
 
         if output.status.success() {
             Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            Err(WorkbenchError::Agent(format!("opencode --version error: {}", stderr)))
+            Err(WorkbenchError::Agent(format!("Dev AI --version error: {}", stderr)))
         }
     }
 
@@ -69,7 +77,7 @@ impl AgentSupervisor {
 
         // Spawn supervised agent process
         let child = cmd.spawn().map_err(|e| {
-            WorkbenchError::Agent(format!("Failed to spawn OpenCode task: {}", e))
+            WorkbenchError::Agent(format!("Failed to spawn Dev AI task: {}", e))
         })?;
 
         let pid = child.id();

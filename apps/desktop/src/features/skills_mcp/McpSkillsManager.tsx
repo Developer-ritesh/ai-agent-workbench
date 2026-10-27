@@ -286,7 +286,7 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
           <div>
             <div className="flex items-center gap-2.5">
               <h1 className="text-base font-bold text-white tracking-wide">
-                OpenCode Skills &amp; MCP Server Management
+                Dev AI Skills &amp; MCP Server Management
               </h1>
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-400 border border-cyan-800/40 font-mono font-medium">
                 v2.1.4 Config
@@ -887,7 +887,7 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              This will install/reinstall all 400+ developer skills and all 17 MCP server configurations from the target path into OpenCode’s global directory (<code className="text-cyan-300 bg-black/40 px-1 py-0.5 rounded">~/.config/opencode</code>) so every workspace and microVM inherits them immediately.
+              This will install/reinstall all 400+ developer skills and all 17 MCP server configurations from the target path into Dev AI’s global directory (<code className="text-cyan-300 bg-black/40 px-1 py-0.5 rounded">~/.config/opencode</code>) so every workspace and microVM inherits them immediately.
             </p>
 
             <div className="space-y-1.5">
@@ -902,7 +902,7 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
                 className="w-full bg-[#090d16] border border-[#1a202e] rounded-lg px-3 py-2 text-xs text-cyan-300 font-mono outline-none focus:border-cyan-500"
               />
               <p className="text-[10px] text-slate-500">
-                Default: <code className="text-slate-400">/Users/developerritesh/Programming/opencode-config</code> (Pre-installed software bundle).
+                Default: <code className="text-slate-400">/Users/developerritesh/Programming/opencode-config</code> (Dev AI pre-installed bundle).
               </p>
             </div>
 

@@ -202,7 +202,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'nav-settings',
-      title: 'Open Settings & OpenCode Cleanup',
+      title: 'Open Settings & Dev AI Cleanup',
       category: 'Navigation',
       icon: <Settings size={15} />,
       shortcut: 'Cmd+,',

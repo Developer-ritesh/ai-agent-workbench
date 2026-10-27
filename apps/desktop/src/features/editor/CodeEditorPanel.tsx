@@ -502,8 +502,8 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
                 <span className="shortcut-keys"><kbd>⌘</kbd> <kbd>`</kbd></span>
               </div>
               <div className="shortcut-row">
-                <span className="shortcut-label">OpenCode CLI Agent</span>
-                <span className="shortcut-keys"><kbd>opencode</kbd></span>
+                <span className="shortcut-label">Dev AI CLI Agent</span>
+                <span className="shortcut-keys"><kbd>devai</kbd></span>
               </div>
               <div className="shortcut-row">
                 <span className="shortcut-label">Hardware Sandbox</span>

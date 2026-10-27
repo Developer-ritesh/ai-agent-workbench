@@ -203,11 +203,11 @@ export const Navigation: React.FC<NavigationProps> = ({
       </div>
 
       <div className="activity-bar-group">
-        {/* 11. Settings & OpenCode Cleanup */}
+        {/* 11. Settings & Dev AI Cleanup */}
         <button
           className={`activity-bar-item ${currentTab === 'settings' ? 'active' : ''}`}
           onClick={() => onSelectTab('settings')}
-          title="Settings & OpenCode Sessions (Cmd+,)"
+          title="Settings & Dev AI Sessions (Cmd+,)"
         >
           <Settings size={18} />
           <span>Settings</span>

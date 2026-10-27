@@ -572,7 +572,7 @@ pub fn opencode_clear_sessions(path: String) -> Result<String, String> {
         let _ = fs::create_dir_all(opencode_dir.join("sessions"));
         let _ = fs::create_dir_all(opencode_dir.join("state"));
     }
-    Ok("Project OpenCode sessions, conversation checkpoints, and cache wiped successfully.".to_string())
+    Ok("Project Dev AI sessions, conversation checkpoints, and cache wiped successfully.".to_string())
 }
 
 #[tauri::command]
@@ -590,7 +590,7 @@ pub fn opencode_clear_global_history() -> Result<String, String> {
                 let _ = fs::create_dir_all(&d);
             }
         }
-        Ok("Global OpenCode session history and conversation database cleared successfully.".to_string())
+        Ok("Global Dev AI session history and conversation database cleared successfully.".to_string())
     } else {
         Err("Could not determine home directory".to_string())
     }
@@ -604,7 +604,7 @@ pub fn opencode_clear_cache() -> Result<String, String> {
             let _ = fs::remove_dir_all(&cache_dir);
             let _ = fs::create_dir_all(&cache_dir);
         }
-        Ok("OpenCode model cache and temporary packages cleared successfully.".to_string())
+        Ok("Dev AI model cache and temporary packages cleared successfully.".to_string())
     } else {
         Err("Could not determine home directory".to_string())
     }

@@ -57,7 +57,7 @@ interface IntegratedBrowserProps {
 export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
   initialUrl = 'http://127.0.0.1:5173',
   onSendToAgent,
-  detectedPorts = [3000, 5173, 8080],
+  detectedPorts = [3000, 4096, 5173, 8080],
 }) => {
   // Tabs State
   const [tabs, setTabs] = useState<BrowserTab[]>([

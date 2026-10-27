@@ -12,6 +12,7 @@ import {
   Radio,
   Globe,
   SlidersHorizontal,
+  Sparkles,
 } from 'lucide-react';
 import { PortForwardMapping } from '../../types';
 import { tauriIpc } from '../../services/tauriIpc';
@@ -199,6 +200,86 @@ export const PortForwardingPanel: React.FC<PortForwardingPanelProps> = ({ onOpen
         <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Zero WAN Exposure • Automatic Cleanup</span>
       </div>
 
+      {/* Dev AI (OpenCode) Quick Port Mapping Bar */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 16px',
+          background: 'rgba(56, 189, 248, 0.08)',
+          border: '1px solid rgba(56, 189, 248, 0.25)',
+          borderRadius: 'var(--radius-md)',
+          marginTop: 14,
+          fontSize: 12,
+          flexShrink: 0,
+          gap: 12,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Sparkles size={16} color="var(--accent-cyan)" />
+          <div>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+              Dev AI Agent Port Mapping (OpenCode Engine):
+            </span>{' '}
+            <span style={{ color: 'var(--text-secondary)' }}>
+              Bridge Dev AI service, web UI, and agent MCP endpoints between guest VM and macOS localhost.
+            </span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <button
+            onClick={() => {
+              setGuestPortInput('4096');
+              setLocalPortInput('4096');
+              setProtocolInput('http');
+              handleCheckPort('4096');
+              setShowAddModal(true);
+            }}
+            className="btn btn-secondary btn-sm"
+            style={{
+              fontSize: 11,
+              borderColor: 'rgba(56, 189, 248, 0.4)',
+              color: 'var(--accent-cyan)',
+              background: 'rgba(56, 189, 248, 0.12)',
+              whiteSpace: 'nowrap',
+            }}
+            title="Map Dev AI / OpenCode web server on port 4096"
+          >
+            ⚡ Map Dev AI (4096)
+          </button>
+          <button
+            onClick={() => {
+              setGuestPortInput('3000');
+              setLocalPortInput('3000');
+              setProtocolInput('http');
+              handleCheckPort('3000');
+              setShowAddModal(true);
+            }}
+            className="btn btn-secondary btn-sm"
+            style={{ fontSize: 11, whiteSpace: 'nowrap' }}
+            title="Map Dev Server on port 3000"
+          >
+            ⚡ Dev Server (3000)
+          </button>
+          <button
+            onClick={() => {
+              setGuestPortInput('5173');
+              setLocalPortInput('5173');
+              setProtocolInput('http');
+              handleCheckPort('5173');
+              setShowAddModal(true);
+            }}
+            className="btn btn-secondary btn-sm"
+            style={{ fontSize: 11, whiteSpace: 'nowrap' }}
+            title="Map Vite / Frontend on port 5173"
+          >
+            ⚡ Vite (5173)
+          </button>
+        </div>
+      </div>
+
       {/* Ports Table Card */}
       <div
         style={{
@@ -338,12 +419,29 @@ export const PortForwardingPanel: React.FC<PortForwardingPanelProps> = ({ onOpen
                     <td
                       style={{
                         padding: '12px 16px',
-                        color: 'var(--text-muted)',
                         fontFamily: 'var(--font-mono)',
                         fontSize: 11.5,
                       }}
                     >
-                      {port.processName || 'dev server'}
+                      {port.processName && (port.processName.toLowerCase().includes('opencode') || port.processName.toLowerCase().includes('dev ai')) ? (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '2px 8px',
+                            borderRadius: 4,
+                            background: 'rgba(56, 189, 248, 0.15)',
+                            color: 'var(--accent-cyan)',
+                            border: '1px solid rgba(56, 189, 248, 0.3)',
+                            fontWeight: 600,
+                          }}
+                        >
+                          ⚡ Dev AI (opencode)
+                        </span>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)' }}>{port.processName || 'dev server'}</span>
+                      )}
                     </td>
                     <td
                       style={{
@@ -495,6 +593,36 @@ export const PortForwardingPanel: React.FC<PortForwardingPanelProps> = ({ onOpen
             )}
 
             <form onSubmit={handleCreateForward} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Quick Presets inside modal */}
+              <div>
+                <label style={{ display: 'block', fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>
+                  Quick Presets
+                </label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {[
+                    { label: 'Dev AI (4096)', port: '4096', proto: 'http' as const },
+                    { label: 'Web (3000)', port: '3000', proto: 'http' as const },
+                    { label: 'Vite (5173)', port: '5173', proto: 'http' as const },
+                    { label: 'API (8080)', port: '8080', proto: 'http' as const },
+                  ].map((preset) => (
+                    <button
+                      key={preset.port}
+                      type="button"
+                      onClick={() => {
+                        setGuestPortInput(preset.port);
+                        setLocalPortInput(preset.port);
+                        setProtocolInput(preset.proto);
+                        handleCheckPort(preset.port);
+                      }}
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: 10.5, padding: '3px 8px' }}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
                   Guest Port (Inside VM)

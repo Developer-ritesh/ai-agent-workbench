@@ -147,7 +147,7 @@ export const WorkspaceList: React.FC<WorkspaceListProps> = ({
           <Cpu size={36} color="var(--text-muted)" />
           <h3 style={{ fontSize: 16, fontWeight: 600 }}>No Workspaces Found</h3>
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 400 }}>
-            {search ? `No workspaces matching "${search}".` : 'Create your first isolated workspace to run OpenCode coding agents inside a dedicated Linux VM.'}
+            {search ? `No workspaces matching "${search}".` : 'Create your first isolated workspace to run Dev AI coding agents inside a dedicated Linux VM.'}
           </p>
           <button className="btn btn-primary" style={{ marginTop: 8 }} onClick={onOpenCreateModal}>
             Create Workspace

@@ -202,14 +202,23 @@ impl VmBackend for VfkitBackend {
         let path_env = format!("{}/.opencode/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin", home);
 
         let trimmed = cmd.trim();
-        if trimmed == "opencode" {
-            let guide = "OpenCode CLI Agent (v2.1.4)\n────────────────────────────────────────────────────────────\nInteractive TUI mode requires a full TTY terminal.\nTo use OpenCode in this workbench terminal:\n\n  • opencode run \"your instruction\"    Execute an autonomous agent task\n  • opencode models                    List all configured AI models\n  • opencode auth                      Manage API keys and providers\n  • opencode mcp                       View and manage MCP servers\n  • opencode --help                    Show all available CLI flags\n\nQuick Action: Click \"opencode models\" in the toolbar above to check available models.\n".to_string();
+        if trimmed == "opencode" || trimmed == "devai" || trimmed == "dev-ai" {
+            let guide = "Dev AI CLI Agent (v2.1.4)\n────────────────────────────────────────────────────────────\nInteractive TUI mode requires a full TTY terminal.\nTo use Dev AI in this workbench terminal:\n\n  • devai run \"your instruction\"    Execute an autonomous agent task (mapped to opencode)\n  • devai models                    List all configured AI models\n  • devai auth                      Manage API keys and providers\n  • devai mcp                       View and manage MCP servers\n  • devai serve                     Start the Dev AI v2 API and web server\n  • devai --help                    Show all available CLI flags\n\nQuick Action: Click \"Dev AI\" in the toolbar above to check status.\n".to_string();
             return Ok((0, guide, String::new()));
         }
 
+        let effective_cmd = if trimmed.starts_with("devai ") {
+            format!("opencode {}", &trimmed[6..])
+        } else if trimmed == "devai" {
+            "opencode".to_string()
+        } else {
+            cmd.to_string()
+        };
+        let wrapped_script = format!("alias devai='opencode'; alias dev-ai='opencode'; {}", effective_cmd);
+
         let mut child = Command::new("zsh")
             .arg("-c")
-            .arg(cmd)
+            .arg(&wrapped_script)
             .env("PATH", path_env)
             .env("HOME", &home)
             .env("TERM", "xterm-256color")
