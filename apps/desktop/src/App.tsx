@@ -259,6 +259,7 @@ export const App: React.FC = () => {
         autoRotateMinutes={autoRotateMinutes}
         onSetAutoRotateMinutes={handleSetAutoRotateMinutes}
         secondsUntilRotate={secondsUntilRotate}
+        vmRotateNonce={vmRotateNonce}
       />
 
       {/* 2. Main IDE Workspace */}

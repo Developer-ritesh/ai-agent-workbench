@@ -40,6 +40,7 @@ interface HeaderProps {
   autoRotateMinutes: number;
   onSetAutoRotateMinutes: (mins: number) => void;
   secondsUntilRotate: number;
+  vmRotateNonce?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -65,6 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
   autoRotateMinutes,
   onSetAutoRotateMinutes,
   secondsUntilRotate,
+  vmRotateNonce,
 }) => {
   const [isWorkspaceMenuOpen, setIsWorkspaceMenuOpen] = useState(false);
   const [isRotateMenuOpen, setIsRotateMenuOpen] = useState(false);
@@ -72,31 +74,43 @@ export const Header: React.FC<HeaderProps> = ({
   const [isRotating, setIsRotating] = useState(false);
   const [proxyStatus, setProxyStatus] = useState<ProxyStatus | null>(null);
   const [isProxyMenuOpen, setIsProxyMenuOpen] = useState(false);
+  const [proxyMode, setProxyMode] = useState<'auto' | 'custom'>('auto');
   const [proxyInputUrl, setProxyInputUrl] = useState('');
   const [isProxyLoading, setIsProxyLoading] = useState(false);
 
   React.useEffect(() => {
+    TauriApi.getProxyConfig().then((cfg) => {
+      if (cfg.mode === 'custom') {
+        setProxyMode('custom');
+        if (cfg.proxy_url) setProxyInputUrl(cfg.proxy_url);
+      } else {
+        setProxyMode('auto');
+      }
+    }).catch(() => {});
+
     TauriApi.testProxy().then((st) => {
       setProxyStatus(st);
-      if (st.proxy_url) setProxyInputUrl(st.proxy_url);
+      if (st.proxy_url && st.proxy_url !== 'socks5://127.0.0.1:9050') setProxyInputUrl(st.proxy_url);
     }).catch(() => {});
-  }, [activeWorkspace?.id]);
+  }, [activeWorkspace?.id, vmRotateNonce]);
 
-  const handleQuickSaveProxy = async (enabled: boolean, url?: string) => {
+  const handleQuickSaveProxy = async (enabled: boolean, url?: string, modeParam?: 'auto' | 'custom') => {
     setIsProxyLoading(true);
     try {
-      const targetUrl = url !== undefined ? url : proxyInputUrl;
+      const selectedMode = modeParam || proxyMode;
+      const targetUrl = selectedMode === 'auto' ? 'socks5://127.0.0.1:9050' : (url !== undefined ? url : proxyInputUrl);
       const st = await TauriApi.setProxyConfig(
         {
           enabled,
-          proxy_type: 'http',
+          mode: selectedMode,
+          proxy_type: selectedMode === 'auto' ? 'socks5' : 'http',
           proxy_url: targetUrl,
           auto_rotate: true,
         },
         activeWorkspace?.hostProjectPath
       );
       setProxyStatus(st);
-      if (st.proxy_url) setProxyInputUrl(st.proxy_url);
+      if (st.proxy_url && selectedMode === 'custom') setProxyInputUrl(st.proxy_url);
     } finally {
       setIsProxyLoading(false);
     }
@@ -460,16 +474,16 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Quick Proxy Dropdown */}
             {isProxyMenuOpen && (
-              <div className="dropdown-menu" style={{ width: 280, left: '50%', transform: 'translateX(-50%)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px' }}>
-                  <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)' }}>
-                    NETWORK PROXY & IP MASKING
+              <div className="dropdown-menu" style={{ width: 310, left: '50%', transform: 'translateX(-50%)', padding: '10px 12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
+                    PHYSICAL IP MASKING
                   </div>
                   <div
                     style={{
                       fontSize: 10,
-                      fontWeight: 600,
-                      padding: '2px 6px',
+                      fontWeight: 700,
+                      padding: '2px 7px',
                       borderRadius: 4,
                       background: proxyStatus?.is_masked ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                       color: proxyStatus?.is_masked ? '#34d399' : '#f87171',
@@ -479,75 +493,173 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
 
-                <div style={{ padding: '6px 8px', fontSize: 11, color: 'var(--text-secondary)' }}>
-                  Current Public IP:{' '}
-                  <strong style={{ color: proxyStatus?.is_masked ? '#34d399' : '#f87171' }}>
-                    {proxyStatus?.public_ip || 'Checking...'}
-                  </strong>
-                  {proxyStatus?.country ? ` (${proxyStatus.country})` : ''}
-                </div>
-
-                <div style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="http://127.0.0.1:7890 or socks5://..."
-                    value={proxyInputUrl}
-                    onChange={(e) => setProxyInputUrl(e.target.value)}
-                    style={{ fontSize: 11, padding: '4px 8px' }}
-                  />
-
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {['http://127.0.0.1:7890', 'socks5://127.0.0.1:1080'].map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        className="btn btn-ghost btn-sm"
-                        style={{ fontSize: 10, padding: '2px 6px', flex: 1 }}
-                        onClick={() => {
-                          setProxyInputUrl(p);
-                          handleQuickSaveProxy(true, p);
-                        }}
-                      >
-                        {p.includes('7890') ? 'Clash 7890' : 'SOCKS 1080'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div style={{ height: 1, background: 'var(--border-subtle)', margin: '4px 0' }} />
-
-                <div style={{ display: 'flex', gap: 6, padding: '4px 8px' }}>
-                  {proxyStatus?.enabled ? (
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      style={{ flex: 1, justifyContent: 'center' }}
-                      disabled={isProxyLoading}
-                      onClick={() => handleQuickSaveProxy(false)}
-                    >
-                      <span>Disable Proxy</span>
-                    </button>
-                  ) : (
-                    <button
-                      className="btn btn-primary btn-sm"
-                      style={{ flex: 1, justifyContent: 'center' }}
-                      disabled={isProxyLoading || !proxyInputUrl.trim()}
-                      onClick={() => handleQuickSaveProxy(true)}
-                    >
-                      <span>Enable Proxy</span>
-                    </button>
-                  )}
-
+                {/* Mode Selector Tabs */}
+                <div style={{ display: 'flex', gap: 4, background: 'var(--bg-app)', padding: 3, borderRadius: 6, marginBottom: 10 }}>
                   <button
-                    className="btn btn-secondary btn-sm"
-                    disabled={isProxyLoading || !proxyStatus?.enabled}
-                    onClick={handleQuickRotateProxy}
-                    title="Rotate proxy circuit / IP"
+                    type="button"
+                    style={{
+                      flex: 1,
+                      padding: '4px 6px',
+                      fontSize: 10.5,
+                      fontWeight: proxyMode === 'auto' ? 600 : 400,
+                      background: proxyMode === 'auto' ? 'var(--bg-surface)' : 'transparent',
+                      color: proxyMode === 'auto' ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                      border: 'none',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => {
+                      setProxyMode('auto');
+                      if (proxyStatus?.enabled) {
+                        handleQuickSaveProxy(true, undefined, 'auto');
+                      }
+                    }}
                   >
-                    <RotateCw size={11} className={isProxyLoading ? 'spin-animation' : ''} />
-                    <span>Rotate</span>
+                    ✨ Auto (Built-in)
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      flex: 1,
+                      padding: '4px 6px',
+                      fontSize: 10.5,
+                      fontWeight: proxyMode === 'custom' ? 600 : 400,
+                      background: proxyMode === 'custom' ? 'var(--bg-surface)' : 'transparent',
+                      color: proxyMode === 'custom' ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                      border: 'none',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setProxyMode('custom')}
+                  >
+                    Custom URL
                   </button>
                 </div>
+
+                {/* Auto Mode Panel */}
+                {proxyMode === 'auto' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ background: 'var(--bg-app)', padding: '8px 10px', borderRadius: 6, fontSize: 11, border: '1px solid var(--border-subtle)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Public IP:</span>
+                        <strong style={{ color: proxyStatus?.is_masked ? '#34d399' : '#f87171' }}>
+                          {proxyStatus?.public_ip || 'Checking...'}
+                        </strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Location:</span>
+                        <span style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>
+                          {proxyStatus?.country || (proxyStatus?.is_masked ? 'International' : 'Physical ISP')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: 10.5, color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                      {proxyStatus?.is_masked
+                        ? '✓ All microVM traffic routes through internal privacy circuits. OpenCode sees this masked IP.'
+                        : '⚠️ Your real Wi-Fi IP is exposed, causing OpenCode cloud rate limits.'}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                      {proxyStatus?.enabled && proxyStatus?.is_masked ? (
+                        <>
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm"
+                            style={{ flex: 1, justifyContent: 'center', fontSize: 11 }}
+                            disabled={isProxyLoading}
+                            onClick={handleQuickRotateProxy}
+                            title="Instantly switch to a brand new international IP"
+                          >
+                            <RotateCw size={12} className={isProxyLoading ? 'spin-animation' : ''} />
+                            <span>{isProxyLoading ? 'Rotating...' : 'Rotate IP Now'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm"
+                            style={{ fontSize: 11 }}
+                            disabled={isProxyLoading}
+                            onClick={() => handleQuickSaveProxy(false, undefined, 'auto')}
+                          >
+                            Disable
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          style={{ flex: 1, justifyContent: 'center', fontSize: 11, padding: '6px 12px' }}
+                          disabled={isProxyLoading}
+                          onClick={() => handleQuickSaveProxy(true, undefined, 'auto')}
+                        >
+                          <Globe size={12} className={isProxyLoading ? 'spin-animation' : ''} />
+                          <span>{isProxyLoading ? 'Masking IP...' : '✨ Activate Auto-Masking'}</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  /* Custom URL Panel */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                      Current IP: <strong style={{ color: proxyStatus?.is_masked ? '#34d399' : '#f87171' }}>{proxyStatus?.public_ip || '...'}</strong>
+                    </div>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="http://127.0.0.1:7890 or socks5://..."
+                      value={proxyInputUrl}
+                      onChange={(e) => setProxyInputUrl(e.target.value)}
+                      style={{ fontSize: 11, padding: '4px 8px' }}
+                    />
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {['http://127.0.0.1:7890', 'socks5://127.0.0.1:1080'].map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          style={{ fontSize: 10, padding: '2px 6px', flex: 1 }}
+                          onClick={() => {
+                            setProxyInputUrl(p);
+                            handleQuickSaveProxy(true, p, 'custom');
+                          }}
+                        >
+                          {p.includes('7890') ? 'Clash 7890' : 'SOCKS 1080'}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                      {proxyStatus?.enabled ? (
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          style={{ flex: 1, justifyContent: 'center' }}
+                          disabled={isProxyLoading}
+                          onClick={() => handleQuickSaveProxy(false, undefined, 'custom')}
+                        >
+                          <span>Disable</span>
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-primary btn-sm"
+                          style={{ flex: 1, justifyContent: 'center' }}
+                          disabled={isProxyLoading || !proxyInputUrl.trim()}
+                          onClick={() => handleQuickSaveProxy(true, proxyInputUrl, 'custom')}
+                        >
+                          <span>Save & Apply</span>
+                        </button>
+                      )}
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        disabled={isProxyLoading || !proxyStatus?.enabled}
+                        onClick={handleQuickRotateProxy}
+                        title="Rotate proxy circuit / IP"
+                      >
+                        <RotateCw size={11} className={isProxyLoading ? 'spin-animation' : ''} />
+                        <span>Rotate</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

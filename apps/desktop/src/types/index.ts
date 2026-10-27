@@ -626,6 +626,7 @@ export type DevAiSyncResult = OpencodeSyncResult;
 // Network Proxy System
 export interface ProxyConfig {
   enabled: boolean;
+  mode?: 'auto' | 'custom';
   proxy_type: string;
   proxy_url: string;
   auto_rotate: boolean;

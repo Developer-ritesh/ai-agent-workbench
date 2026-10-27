@@ -144,6 +144,10 @@ impl WorkspaceManager {
             }
         };
 
+        // Ensure proxy config is synced to workspace .proxy before VM starts
+        let proxy_cfg = crate::commands::proxy::load_proxy_config();
+        crate::commands::proxy::write_workspace_proxy_files(&ws.host_project_path, &proxy_cfg);
+
         self.vm_backend.start_vm(vm)?;
         self.db.update_workspace_status(actual_id, "running")?;
         self.db.record_audit_event(
@@ -264,6 +268,12 @@ impl WorkspaceManager {
             "vm.rotated",
             &format!("VM rotated on-demand. Instance ID updated to {}. Ephemeral cache and OpenCode session memory purged. Session token: {}.", new_vm_id, &new_token[..8]),
         )?;
+
+        // 5b. Automatically rotate public IP via Tor / Proxy whenever VM rotates
+        let proxy_cfg = crate::commands::proxy::load_proxy_config();
+        if proxy_cfg.enabled {
+            let _ = crate::commands::proxy::proxy_rotate_ip(Some(host_project_path.clone()));
+        }
 
         // 6. Start fresh VM instance with the new VM ID
         self.start_vm(actual_id)
