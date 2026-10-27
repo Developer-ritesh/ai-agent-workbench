@@ -458,76 +458,95 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
             </div>
 
             {/* MCP Servers Grid */}
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+            <div className="flex-1 overflow-y-auto pr-1">
               {filteredMcps.length === 0 ? (
                 <div className="text-center py-12 text-zinc-500 text-xs font-sans">
                   No MCP servers match &quot;{mcpSearch}&quot; in category &quot;{mcpFilter}&quot;
                 </div>
               ) : (
-                filteredMcps.map((server) => (
-                  <div
-                    key={server.id}
-                    onClick={() => setSelectedServerDetails(server)}
-                    className={`bg-white/[0.025] hover:bg-white/[0.04] border rounded-2xl p-3.5 transition flex items-center justify-between cursor-pointer ${
-                      server.enabled
-                        ? 'border-white/[0.08] hover:border-cyan-500/40 shadow-sm'
-                        : 'border-white/[0.05] opacity-60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-4">
-                      {/* Icon */}
-                      <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${
-                          server.type === 'remote'
-                            ? 'bg-purple-950/60 border border-purple-800/40 text-purple-400'
-                            : 'bg-cyan-950/60 border border-cyan-800/40 text-cyan-400'
-                        }`}
-                      >
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-3.5 pb-4">
+                  {filteredMcps.map((server) => (
+                    <div
+                      key={server.id}
+                      onClick={() => setSelectedServerDetails(server)}
+                      className={`bg-[#0a0d14] hover:bg-[#0d121c] border rounded-2xl p-4 transition flex flex-col justify-between gap-3 cursor-pointer shadow-lg group ${
+                        server.enabled
+                          ? 'border-white/[0.08] hover:border-cyan-500/40 hover:shadow-cyan-500/5'
+                          : 'border-white/[0.04] opacity-60'
+                      }`}
+                    >
+                      {/* Card Header: Icon, Name, Status, Toggle */}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
+                              server.type === 'remote'
+                                ? 'bg-purple-950/60 border border-purple-800/40 text-purple-400'
+                                : 'bg-cyan-950/60 border border-cyan-800/40 text-cyan-400'
+                            }`}
+                          >
+                            {server.type === 'remote' ? (
+                              <Globe className="w-4 h-4" />
+                            ) : (
+                              <Terminal className="w-4 h-4" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-white text-xs font-mono tracking-wide truncate group-hover:text-cyan-300 transition">
+                                {server.id}
+                              </span>
+                              <span
+                                className={`text-[10px] px-2 py-0.2 rounded-full font-mono uppercase font-bold shrink-0 ${
+                                  server.type === 'remote'
+                                    ? 'bg-purple-900/30 text-purple-300 border border-purple-700/40'
+                                    : 'bg-cyan-900/30 text-cyan-300 border border-cyan-700/40'
+                                }`}
+                              >
+                                {server.type}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {server.enabled ? (
+                                <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                  Active & Ready
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-zinc-500">Disabled</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Enable / Disable Pill Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleMcp(server.id, server.enabled);
+                          }}
+                          className={`px-3 py-1 rounded-xl text-xs font-semibold transition border cursor-pointer shrink-0 ${
+                            server.enabled
+                              ? 'bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border-emerald-700/60'
+                              : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 border-white/[0.08]'
+                          }`}
+                        >
+                          {server.enabled ? 'Enabled' : 'Disabled'}
+                        </button>
+                      </div>
+
+                      {/* Card Body: Command or Endpoint Pill */}
+                      <div className="bg-black/50 border border-white/[0.06] rounded-xl px-3 py-2 text-xs font-mono text-zinc-300 truncate select-all">
                         {server.type === 'remote' ? (
-                          <Globe className="w-4 h-4" />
+                          <span className="text-purple-300/90">{server.url}</span>
                         ) : (
-                          <Terminal className="w-4 h-4" />
+                          <span>{server.command ? server.command.join(' ') : 'Local executable'}</span>
                         )}
                       </div>
 
-                      {/* Details */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-white text-xs tracking-wide">
-                            {server.id}
-                          </span>
-                          <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full font-mono uppercase font-bold ${
-                              server.type === 'remote'
-                                ? 'bg-purple-900/30 text-purple-300 border border-purple-700/40'
-                                : 'bg-cyan-900/30 text-cyan-300 border border-cyan-700/40'
-                            }`}
-                          >
-                            {server.type}
-                          </span>
-                          {server.enabled ? (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 flex items-center gap-1 font-bold">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                              Active
-                            </span>
-                          ) : (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800/60 text-zinc-400 border border-zinc-700/40 font-bold">
-                              Disabled
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Command or URL */}
-                        <div className="text-[11px] font-mono text-zinc-400 truncate mt-1">
-                          {server.type === 'remote' ? (
-                            <span className="text-purple-300/90">{server.url}</span>
-                          ) : (
-                            <span>{server.command ? server.command.join(' ') : 'Local executable'}</span>
-                          )}
-                        </div>
-
-                        {/* Badges for Headers / Env */}
-                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      {/* Card Footer: Metadata badges on left, Action buttons on right */}
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-white/[0.04]">
+                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                           {server.headers && Object.keys(server.headers).length > 0 && (
                             <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.04] text-zinc-400 border border-white/[0.06]">
                               Headers: {Object.keys(server.headers).join(', ')}
@@ -535,59 +554,41 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
                           )}
                           {server.environment && Object.keys(server.environment).length > 0 && (
                             <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.04] text-zinc-400 border border-white/[0.06]">
-                              Env: {Object.keys(server.environment).join(', ')}
+                              Env: {Object.keys(server.environment).length} keys
                             </span>
                           )}
                         </div>
+
+                        <div
+                          className="flex items-center gap-1.5 shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={() => setSelectedServerDetails(server)}
+                            className="p-1.5 bg-white/[0.03] hover:bg-white/[0.08] text-zinc-400 hover:text-white border border-white/[0.06] rounded-lg text-xs transition cursor-pointer"
+                            title="View Configuration Details"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => openEditModal(server)}
+                            className="p-1.5 bg-white/[0.03] hover:bg-white/[0.08] text-zinc-400 hover:text-white border border-white/[0.06] rounded-lg text-xs transition cursor-pointer"
+                            title="Edit Server"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMcp(server.id)}
+                            className="p-1.5 bg-white/[0.03] hover:bg-rose-950/60 text-zinc-500 hover:text-rose-300 border border-white/[0.06] rounded-lg text-xs transition cursor-pointer"
+                            title="Delete Server"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Controls */}
-                    <div
-                      className="flex items-center gap-2 flex-shrink-0"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* Enable/Disable Toggle */}
-                      <button
-                        onClick={() => handleToggleMcp(server.id, server.enabled)}
-                        className={`px-3 py-1 rounded-xl text-xs font-semibold transition border cursor-pointer ${
-                          server.enabled
-                            ? 'bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border-emerald-700/60'
-                            : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border-white/[0.08]'
-                        }`}
-                      >
-                        {server.enabled ? 'Enabled' : 'Disabled'}
-                      </button>
-
-                      {/* Detail Drawer Button */}
-                      <button
-                        onClick={() => setSelectedServerDetails(server)}
-                        className="p-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.08] rounded-xl transition cursor-pointer"
-                        title="View Server Configuration Details"
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* Edit */}
-                      <button
-                        onClick={() => openEditModal(server)}
-                        className="p-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.08] rounded-xl transition cursor-pointer"
-                        title="Edit MCP Server"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* Delete */}
-                      <button
-                        onClick={() => handleDeleteMcp(server.id)}
-                        className="p-1.5 bg-white/[0.04] hover:bg-rose-950/60 text-zinc-400 hover:text-rose-300 border border-white/[0.08] rounded-xl transition cursor-pointer"
-                        title="Delete MCP Server"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
           </div>

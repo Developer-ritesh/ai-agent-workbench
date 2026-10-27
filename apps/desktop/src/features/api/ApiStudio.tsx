@@ -1022,114 +1022,113 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
 
       {/* 2. Main Request & Response Workbench */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#08090d]">
-        {/* Request Top Header: Name, Breadcrumb, Actions */}
-        <div className="px-5 py-3 bg-[#0c0e17]/80 backdrop-blur-xl border-b border-white/[0.08] flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <input
-              type="text"
-              value={requestName}
-              onChange={(e) => setRequestName(e.target.value)}
-              className="bg-transparent font-bold text-sm text-white outline-none border-b border-transparent hover:border-slate-700 focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 w-64 transition"
-              placeholder="Request Name"
-            />
-            <span className="text-zinc-600">/</span>
-            <span className="text-xs text-zinc-400 font-mono">
-              Env: <strong className="text-emerald-400">{environments.find((e) => e.id === selectedEnvId)?.name}</strong>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setLayoutMode(layoutMode === 'stacked' ? 'split' : 'stacked')}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border border-white/[0.08] rounded-lg text-xs font-medium transition"
-              title={`Toggle layout (Currently: ${layoutMode})`}
-            >
-              {layoutMode === 'stacked' ? <Columns className="w-3.5 h-3.5" /> : <Rows className="w-3.5 h-3.5" />}
-              <span>{layoutMode === 'stacked' ? 'Side-by-Side' : 'Stacked'}</span>
-            </button>
-
-            <button
-              onClick={handleSaveRequest}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border border-white/[0.08] rounded-lg text-xs font-medium transition"
-              title="Save Request (Cmd+S)"
-            >
-              <Save className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Save</span>
-            </button>
-
-            <button
-              onClick={() => setShowCodeModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border border-white/[0.08] rounded-lg text-xs font-medium transition"
-              title="Generate Client Code (cURL, JS, Python, Rust, Go)"
-            >
-              <Code className="w-3.5 h-3.5 text-blue-400" />
-              <span>Code</span>
-            </button>
-          </div>
-        </div>
-
-        {/* HTTP Omnibox URL Bar */}
-        <div className="p-4 bg-transparent border-b border-white/[0.07] flex-shrink-0">
-          <div className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.09] focus-within:border-indigo-500/60 focus-within:ring-2 focus-within:ring-indigo-500/20 rounded-2xl p-1.5 shadow-2xl flex items-center gap-2 transition">
-            {/* Method Selector */}
-            <select
-              value={method}
-              onChange={(e) => setMethod(e.target.value as HttpMethod)}
-              className={`font-mono font-bold text-xs px-3.5 py-2 rounded-xl border outline-none cursor-pointer transition ${getMethodBadgeClass(
-                method
-              )}`}
-            >
-              <option value="GET">GET</option>
-              <option value="POST">POST</option>
-              <option value="PUT">PUT</option>
-              <option value="PATCH">PATCH</option>
-              <option value="DELETE">DELETE</option>
-              <option value="HEAD">HEAD</option>
-              <option value="OPTIONS">OPTIONS</option>
-              <option value="CUSTOM">CUSTOM</option>
-            </select>
-
-            {method === 'CUSTOM' && (
+        {/* Top Unified Header & Request Omnibox */}
+          <div className="px-4 py-2.5 bg-[#0c0e17]/90 backdrop-blur-xl border-b border-white/[0.08] flex items-center justify-between gap-3 flex-shrink-0">
+            {/* Left: Request Name & Env Indicator */}
+            <div className="flex items-center gap-2 min-w-0">
               <input
                 type="text"
-                placeholder="METHOD"
-                value={customMethod}
-                onChange={(e) => setCustomMethod(e.target.value)}
-                className="w-24 bg-black/40 border border-white/[0.08] rounded-xl px-2.5 py-1.5 text-xs text-purple-400 font-mono outline-none"
+                value={requestName}
+                onChange={(e) => setRequestName(e.target.value)}
+                className="bg-white/[0.03] hover:bg-white/[0.06] focus:bg-black/50 border border-white/[0.08] focus:border-cyan-500/60 rounded-lg px-2.5 py-1 text-xs font-bold text-white outline-none w-44 truncate transition"
+                placeholder="Request Name"
               />
-            )}
-
-            {/* URL Input */}
-            <input
-              type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="flex-1 min-w-0 bg-transparent px-3 text-[13px] text-zinc-100 font-mono outline-none placeholder-zinc-500"
-              placeholder="{{baseUrl}}/api/v1/resource"
-            />
-
-            {unresolvedTokens.length > 0 && (
-              <span
-                className="text-[11px] text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/25 font-mono flex items-center gap-1.5 flex-shrink-0"
-                title={`Unresolved variable: ${unresolvedTokens.join(', ')}`}
-              >
-                <AlertTriangle className="w-3 h-3 text-amber-400" />
-                <span>{unresolvedTokens[0]}</span>
+              <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-md flex items-center gap-1.5 shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{environments.find((e) => e.id === selectedEnvId)?.name || 'Default Env'}</span>
               </span>
-            )}
+            </div>
 
-            {/* Send / Cancel Button */}
-            <button
-              onClick={handleSend}
-              disabled={isLoading}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/25 transition active:scale-95 disabled:opacity-50 flex-shrink-0 cursor-pointer"
-            >
-              <Send className={`w-3.5 h-3.5 ${isLoading ? 'animate-pulse' : ''}`} />
-              <span>{isLoading ? 'Executing...' : 'Send'}</span>
-              <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono ml-0.5">⌘↵</span>
-            </button>
+            {/* Center: Sleek HTTP Omnibox */}
+            <div className="flex-1 max-w-3xl flex items-center bg-[#07080c] border border-white/[0.1] focus-within:border-cyan-500/60 focus-within:ring-2 focus-within:ring-cyan-500/20 rounded-xl p-1 shadow-inner transition">
+              {/* Method Selector */}
+              <select
+                value={method}
+                onChange={(e) => setMethod(e.target.value as HttpMethod)}
+                className={`font-mono font-bold text-xs px-3 py-1.5 rounded-lg border outline-none cursor-pointer transition shrink-0 ${getMethodBadgeClass(
+                  method
+                )}`}
+              >
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="PATCH">PATCH</option>
+                <option value="DELETE">DELETE</option>
+                <option value="HEAD">HEAD</option>
+                <option value="OPTIONS">OPTIONS</option>
+                <option value="CUSTOM">CUSTOM</option>
+              </select>
+
+              {method === 'CUSTOM' && (
+                <input
+                  type="text"
+                  placeholder="METHOD"
+                  value={customMethod}
+                  onChange={(e) => setCustomMethod(e.target.value)}
+                  className="w-20 bg-black/40 border border-white/[0.08] rounded-lg px-2 py-1 text-xs text-purple-400 font-mono outline-none shrink-0 ml-1"
+                />
+              )}
+
+              {/* URL Input */}
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                className="flex-1 min-w-0 bg-transparent px-3 text-xs text-zinc-100 font-mono outline-none placeholder-zinc-500"
+                placeholder="{{baseUrl}}/api/v1/resource"
+              />
+
+              {unresolvedTokens.length > 0 && (
+                <span
+                  className="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/25 font-mono flex items-center gap-1 shrink-0 mr-1.5"
+                  title={`Unresolved variable: ${unresolvedTokens.join(', ')}`}
+                >
+                  <AlertTriangle className="w-3 h-3 text-amber-400" />
+                  <span>{unresolvedTokens[0]}</span>
+                </span>
+              )}
+
+              {/* Send Button */}
+              <button
+                onClick={handleSend}
+                disabled={isLoading}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-cyan-600 via-indigo-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white rounded-lg text-xs font-bold shadow-md shadow-indigo-500/20 transition active:scale-95 disabled:opacity-50 shrink-0 cursor-pointer"
+              >
+                <Send className={`w-3 h-3 ${isLoading ? 'animate-pulse' : ''}`} />
+                <span>{isLoading ? 'Sending...' : 'Send'}</span>
+                <span className="text-[10px] bg-white/20 px-1 py-0.2 rounded font-mono ml-0.5">⌘↵</span>
+              </button>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={handleSaveRequest}
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.08] rounded-lg text-xs font-medium transition cursor-pointer"
+                title="Save Request (Cmd+S)"
+              >
+                <Save className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Save</span>
+              </button>
+
+              <button
+                onClick={() => setShowCodeModal(true)}
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.08] rounded-lg text-xs font-medium transition cursor-pointer"
+                title="Generate Client Code"
+              >
+                <Code className="w-3.5 h-3.5 text-blue-400" />
+                <span>Code</span>
+              </button>
+
+              <button
+                onClick={() => setLayoutMode(layoutMode === 'stacked' ? 'split' : 'stacked')}
+                className="p-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.08] rounded-lg text-xs transition cursor-pointer"
+                title={`Layout: ${layoutMode === 'stacked' ? 'Side-by-Side' : 'Stacked'}`}
+              >
+                {layoutMode === 'stacked' ? <Columns className="w-3.5 h-3.5" /> : <Rows className="w-3.5 h-3.5" />}
+              </button>
+            </div>
           </div>
-        </div>
 
         {/* Dynamic Layout: Stacked vs Split */}
         <div
