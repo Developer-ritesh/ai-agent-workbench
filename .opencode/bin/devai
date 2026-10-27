@@ -1,0 +1,11 @@
+#!/bin/sh
+if [ -x /usr/bin/opencode ]; then
+  exec /usr/bin/opencode "$@"
+elif [ -x /bin/opencode ]; then
+  exec /bin/opencode "$@"
+elif which opencode >/dev/null 2>&1; then
+  exec opencode "$@"
+else
+  echo "opencode binary not found" >&2
+  exit 127
+fi
