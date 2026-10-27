@@ -40,6 +40,7 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const fitAddonRef = useRef<FitAddon | null>(null);
   const terminalIdRef = useRef<string>(`term-${Math.random().toString(36).substring(2, 9)}`);
   const unlistenRef = useRef<(() => void) | null>(null);
+  const isSpawningRef = useRef<boolean>(false);
 
   const sendCommand = (cmd: string) => {
     const termId = terminalIdRef.current;
@@ -48,20 +49,27 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
   };
 
   const spawnTerminal = useCallback(async () => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || isSpawningRef.current) return;
+    isSpawningRef.current = true;
 
-    // Clean up old terminal & kill previous PTY session
-    if (unlistenRef.current) {
-      unlistenRef.current();
-      unlistenRef.current = null;
-    }
-    if (terminalIdRef.current) {
-      TauriApi.ptyKill(terminalIdRef.current).catch(() => {});
-    }
-    if (termRef.current) {
-      termRef.current.dispose();
-      termRef.current = null;
-    }
+    try {
+      // Clean up old terminal & kill previous PTY session
+      if (unlistenRef.current) {
+        unlistenRef.current();
+        unlistenRef.current = null;
+      }
+      if (terminalIdRef.current) {
+        try {
+          await TauriApi.ptyKill(terminalIdRef.current);
+        } catch {}
+      }
+      if (termRef.current) {
+        termRef.current.dispose();
+        termRef.current = null;
+      }
+
+      // Small pause to allow OS and hypervisor sockets to release cleanly
+      await new Promise((r) => setTimeout(r, 60));
 
     const termId = `term-${Math.random().toString(36).substring(2, 9)}`;
     terminalIdRef.current = termId;
@@ -124,9 +132,8 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
     const cols = term.cols > 40 ? term.cols : computedCols;
     const rows = term.rows > 10 ? term.rows : computedRows;
 
-    try {
-      // 100% Isolated Linux Guest VM (Hardware-isolated sandbox)
-      await TauriApi.ptySpawn(termId, workspacePath, cols, rows);
+    // 100% Isolated Linux Guest VM (Hardware-isolated sandbox)
+    await TauriApi.ptySpawn(termId, workspacePath, cols, rows);
 
       const unlisten = await TauriApi.listenPtyOutput(termId, (data) => {
         term.write(data);
@@ -161,7 +168,9 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
 
       term.focus();
     } catch (err) {
-      term.writeln(`\r\n\x1b[31m[ERROR] Failed to spawn isolated Linux VM PTY: ${err}\x1b[0m\r\n`);
+      termRef.current?.writeln(`\r\n\x1b[31m[ERROR] Failed to spawn isolated Linux VM PTY: ${err}\x1b[0m\r\n`);
+    } finally {
+      isSpawningRef.current = false;
     }
   }, [workspacePath, workspaceName]);
 
@@ -181,26 +190,7 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
     };
   }, [spawnTerminal]);
 
-  // Listen for VM rotation events from Tauri IPC backend
-  useEffect(() => {
-    let unlisten: (() => void) | null = null;
-    let isMounted = true;
-
-    TauriApi.listenVmRotated((rotatedWsId) => {
-      if (isMounted && (!rotatedWsId || rotatedWsId === _workspaceId)) {
-        spawnTerminal();
-      }
-    }).then((fn) => {
-      unlisten = fn;
-    });
-
-    return () => {
-      isMounted = false;
-      if (unlisten) unlisten();
-    };
-  }, [_workspaceId, spawnTerminal]);
-
-  // Re-spawn terminal whenever vmRotateNonce prop increments
+  // Re-spawn terminal cleanly whenever vmRotateNonce prop increments
   useEffect(() => {
     if (vmRotateNonce && vmRotateNonce > 0) {
       spawnTerminal();

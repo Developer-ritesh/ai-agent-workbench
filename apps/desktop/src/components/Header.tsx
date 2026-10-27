@@ -80,11 +80,6 @@ export const Header: React.FC<HeaderProps> = ({
 
   const handleManualRotate = async () => {
     if (!activeWorkspace || isRotating) return;
-    // Manual rotate is user-initiated (the automatic timer calls onRotateVm
-    // directly, unaffected): confirm because it purges ephemeral guest caches.
-    if (!confirm('Rotate the VM now? Ephemeral guest caches will be purged and the workspace will restart on a fresh micro VM.')) {
-      return;
-    }
     setIsRotating(true);
     try {
       await onRotateVm(activeWorkspace.id);

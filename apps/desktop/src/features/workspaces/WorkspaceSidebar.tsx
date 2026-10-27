@@ -79,6 +79,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
   const [isVmLoading, setIsVmLoading] = useState(false);
   const [vmPanelTab, setVmPanelTab] = useState<'all' | 'vm' | 'host'>('all');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [isVmRotating, setIsVmRotating] = useState(false);
 
   const hostPath = workspace?.hostProjectPath || '';
   const folderName = workspace?.name || hostPath.split('/').filter(Boolean).pop() || 'Project';
@@ -1437,11 +1438,20 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
             <button
               className="btn btn-secondary btn-sm"
               style={{ flex: 1, justifyContent: 'center' }}
-              onClick={() => workspace && onRotateVm?.(workspace.id)}
+              disabled={isVmRotating || !workspace}
+              onClick={async () => {
+                if (!workspace || isVmRotating) return;
+                setIsVmRotating(true);
+                try {
+                  await onRotateVm?.(workspace.id);
+                } finally {
+                  setIsVmRotating(false);
+                }
+              }}
               title="Rotate VM runtime and refresh security credentials"
             >
-              <RotateCw size={13} />
-              <span>Rotate</span>
+              <RotateCw size={13} className={isVmRotating ? 'spin-animation' : ''} />
+              <span>{isVmRotating ? 'Rotating...' : 'Rotate'}</span>
             </button>
           </div>
         </div>

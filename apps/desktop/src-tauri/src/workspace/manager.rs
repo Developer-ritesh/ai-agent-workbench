@@ -180,8 +180,12 @@ impl WorkspaceManager {
         let old_vm_id = ws.vm_id.clone();
         let host_project_path = ws.host_project_path.clone();
 
-        // 1. Stop existing VM instance
+        // 1. Stop existing VM instance and purge from active_vms cache
         let _ = self.stop_vm(actual_id);
+        {
+            let mut vms = self.active_vms.lock().unwrap();
+            vms.remove(actual_id);
+        }
 
         // Terminate any lingering background vfkit instances for this workspace / old VM
         let _ = std::process::Command::new("pkill")

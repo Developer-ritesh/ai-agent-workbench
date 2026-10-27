@@ -154,9 +154,9 @@ export const App: React.FC = () => {
 
   const handleRotateVm = async (workspaceId: string) => {
     try {
-      await TauriApi.rotateVm(workspaceId);
+      const res = await TauriApi.rotateVm(workspaceId);
       setWorkspaces((prev) =>
-        prev.map((w) => (w.id === workspaceId ? { ...w, status: 'running' } : w))
+        prev.map((w) => (w.id === workspaceId ? { ...w, status: 'running', vmId: res?.vmId || w.vmId } : w))
       );
       setSecondsUntilRotate(autoRotateMinutes * 60);
       setVmRotateNonce((n) => n + 1);
