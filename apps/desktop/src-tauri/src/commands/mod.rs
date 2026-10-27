@@ -9,6 +9,7 @@ pub mod ports;
 pub mod api_client;
 pub mod browser_engine;
 pub mod opencode_config;
+pub mod proxy;
 
 pub use workspace::*;
 pub use vm::*;
@@ -21,3 +22,4 @@ pub use ports::*;
 pub use api_client::*;
 pub use browser_engine::*;
 pub use opencode_config::*;
+pub use proxy::*;

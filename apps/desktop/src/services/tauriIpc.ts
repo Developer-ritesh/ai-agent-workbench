@@ -21,6 +21,8 @@ import {
   OpencodeMcpServer,
   OpencodeSkillInfo,
   OpencodeSyncResult,
+  ProxyConfig,
+  ProxyStatus,
 } from '../types';
 
 let isTauriEnv = false;
@@ -865,6 +867,15 @@ export const TauriApi = {
       };
     }
   },
+
+  // Built-in Network Proxy & IP Masking System
+  getProxyConfig: () => callTauri<ProxyConfig>('proxy_get_config'),
+  setProxyConfig: (config: ProxyConfig, workspacePath?: string) =>
+    callTauri<ProxyStatus>('proxy_set_config', { config, workspacePath }),
+  testProxy: (proxyUrl?: string) =>
+    callTauri<ProxyStatus>('proxy_test', { proxyUrl }),
+  rotateProxyIp: (workspacePath?: string) =>
+    callTauri<ProxyStatus>('proxy_rotate_ip', { workspacePath }),
 };
 
 export const tauriIpc = TauriApi;

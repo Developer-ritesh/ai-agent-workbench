@@ -9,8 +9,9 @@ import {
   Clock,
   Key,
   ShieldCheck,
+  Globe,
 } from 'lucide-react';
-import { Workspace, ThemeMode } from '../types';
+import { Workspace, ThemeMode, ProxyStatus } from '../types';
 import { TauriApi } from '../services/tauriIpc';
 import { NetworkSpeedMeter } from './NetworkSpeedMeter';
 
@@ -69,6 +70,47 @@ export const Header: React.FC<HeaderProps> = ({
   const [isRotateMenuOpen, setIsRotateMenuOpen] = useState(false);
   const [isCredsModalOpen, setIsCredsModalOpen] = useState(false);
   const [isRotating, setIsRotating] = useState(false);
+  const [proxyStatus, setProxyStatus] = useState<ProxyStatus | null>(null);
+  const [isProxyMenuOpen, setIsProxyMenuOpen] = useState(false);
+  const [proxyInputUrl, setProxyInputUrl] = useState('');
+  const [isProxyLoading, setIsProxyLoading] = useState(false);
+
+  React.useEffect(() => {
+    TauriApi.testProxy().then((st) => {
+      setProxyStatus(st);
+      if (st.proxy_url) setProxyInputUrl(st.proxy_url);
+    }).catch(() => {});
+  }, [activeWorkspace?.id]);
+
+  const handleQuickSaveProxy = async (enabled: boolean, url?: string) => {
+    setIsProxyLoading(true);
+    try {
+      const targetUrl = url !== undefined ? url : proxyInputUrl;
+      const st = await TauriApi.setProxyConfig(
+        {
+          enabled,
+          proxy_type: 'http',
+          proxy_url: targetUrl,
+          auto_rotate: true,
+        },
+        activeWorkspace?.hostProjectPath
+      );
+      setProxyStatus(st);
+      if (st.proxy_url) setProxyInputUrl(st.proxy_url);
+    } finally {
+      setIsProxyLoading(false);
+    }
+  };
+
+  const handleQuickRotateProxy = async () => {
+    setIsProxyLoading(true);
+    try {
+      const st = await TauriApi.rotateProxyIp(activeWorkspace?.hostProjectPath);
+      setProxyStatus(st);
+    } finally {
+      setIsProxyLoading(false);
+    }
+  };
 
   const isVmRunning = activeWorkspace?.status === 'running';
 
@@ -375,6 +417,136 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <Key size={13} color="var(--accent-purple)" />
                   <span>System Credentials...</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Outbound Proxy & IP Masking Pill */}
+          <div style={{ position: 'relative' }}>
+            <div
+              className="topbar-pill"
+              onClick={() => setIsProxyMenuOpen(!isProxyMenuOpen)}
+              title={
+                proxyStatus?.is_masked
+                  ? `Proxy Active • Public IP Masked: ${proxyStatus.public_ip} ${proxyStatus.country ? `(${proxyStatus.country})` : ''}`
+                  : `Direct Internet Connection • Physical IP Exposed: ${proxyStatus?.public_ip || '...'}`
+              }
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 10px',
+                borderRadius: 'var(--radius-pill)',
+                background: proxyStatus?.is_masked ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.08)',
+                border: `1px solid ${proxyStatus?.is_masked ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.25)'}`,
+                cursor: 'pointer',
+                userSelect: 'none',
+              }}
+            >
+              <Globe size={12} color={proxyStatus?.is_masked ? '#10b981' : '#f87171'} />
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: proxyStatus?.is_masked ? '#34d399' : '#fca5a5',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {proxyStatus?.is_masked ? 'IP Masked' : 'Direct IP'}
+              </span>
+              <ChevronDown size={10} color="var(--text-muted)" />
+            </div>
+
+            {/* Quick Proxy Dropdown */}
+            {isProxyMenuOpen && (
+              <div className="dropdown-menu" style={{ width: 280, left: '50%', transform: 'translateX(-50%)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px' }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)' }}>
+                    NETWORK PROXY & IP MASKING
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 600,
+                      padding: '2px 6px',
+                      borderRadius: 4,
+                      background: proxyStatus?.is_masked ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                      color: proxyStatus?.is_masked ? '#34d399' : '#f87171',
+                    }}
+                  >
+                    {proxyStatus?.is_masked ? 'PROTECTED' : 'EXPOSED'}
+                  </div>
+                </div>
+
+                <div style={{ padding: '6px 8px', fontSize: 11, color: 'var(--text-secondary)' }}>
+                  Current Public IP:{' '}
+                  <strong style={{ color: proxyStatus?.is_masked ? '#34d399' : '#f87171' }}>
+                    {proxyStatus?.public_ip || 'Checking...'}
+                  </strong>
+                  {proxyStatus?.country ? ` (${proxyStatus.country})` : ''}
+                </div>
+
+                <div style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="http://127.0.0.1:7890 or socks5://..."
+                    value={proxyInputUrl}
+                    onChange={(e) => setProxyInputUrl(e.target.value)}
+                    style={{ fontSize: 11, padding: '4px 8px' }}
+                  />
+
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {['http://127.0.0.1:7890', 'socks5://127.0.0.1:1080'].map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        style={{ fontSize: 10, padding: '2px 6px', flex: 1 }}
+                        onClick={() => {
+                          setProxyInputUrl(p);
+                          handleQuickSaveProxy(true, p);
+                        }}
+                      >
+                        {p.includes('7890') ? 'Clash 7890' : 'SOCKS 1080'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ height: 1, background: 'var(--border-subtle)', margin: '4px 0' }} />
+
+                <div style={{ display: 'flex', gap: 6, padding: '4px 8px' }}>
+                  {proxyStatus?.enabled ? (
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      style={{ flex: 1, justifyContent: 'center' }}
+                      disabled={isProxyLoading}
+                      onClick={() => handleQuickSaveProxy(false)}
+                    >
+                      <span>Disable Proxy</span>
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-primary btn-sm"
+                      style={{ flex: 1, justifyContent: 'center' }}
+                      disabled={isProxyLoading || !proxyInputUrl.trim()}
+                      onClick={() => handleQuickSaveProxy(true)}
+                    >
+                      <span>Enable Proxy</span>
+                    </button>
+                  )}
+
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    disabled={isProxyLoading || !proxyStatus?.enabled}
+                    onClick={handleQuickRotateProxy}
+                    title="Rotate proxy circuit / IP"
+                  >
+                    <RotateCw size={11} className={isProxyLoading ? 'spin-animation' : ''} />
+                    <span>Rotate</span>
+                  </button>
                 </div>
               </div>
             )}

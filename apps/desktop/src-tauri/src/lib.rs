@@ -92,7 +92,11 @@ pub fn run() {
             commands::opencode_delete_mcp_server,
             commands::opencode_list_skills,
             commands::opencode_get_skill_content,
-            commands::opencode_sync_from_path
+            commands::opencode_sync_from_path,
+            commands::proxy_get_config,
+            commands::proxy_set_config,
+            commands::proxy_test,
+            commands::proxy_rotate_ip
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

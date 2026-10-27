@@ -20,8 +20,9 @@ import {
   Sliders,
   Search,
   Boxes,
+  Globe,
 } from 'lucide-react';
-import { ThemeMode, AuditEventRecord } from '../../types';
+import { ThemeMode, AuditEventRecord, ProxyConfig, ProxyStatus } from '../../types';
 import { TauriApi } from '../../services/tauriIpc';
 import { McpSkillsManager } from '../skills_mcp/McpSkillsManager';
 
@@ -163,9 +164,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [auditFilterType, setAuditFilterType] = useState('all');
   const [auditSearchQuery, setAuditSearchQuery] = useState('');
   const [isRefreshingAudit, setIsRefreshingAudit] = useState(false);
+  // Proxy & IP Masking State
+  const [proxyEnabled, setProxyEnabled] = useState(false);
+  const [proxyUrl, setProxyUrl] = useState('');
+  const [proxyAutoRotate, setProxyAutoRotate] = useState(true);
+  const [proxyStatus, setProxyStatus] = useState<ProxyStatus | null>(null);
+  const [isTestingProxy, setIsTestingProxy] = useState(false);
+  const [isRotatingProxy, setIsRotatingProxy] = useState(false);
 
   useEffect(() => {
     loadAuditLogs();
+    TauriApi.getProxyConfig().then((cfg) => {
+      setProxyEnabled(cfg.enabled);
+      setProxyUrl(cfg.proxy_url);
+      setProxyAutoRotate(cfg.auto_rotate);
+    }).catch(() => {});
+
+    TauriApi.testProxy().then((st) => {
+      setProxyStatus(st);
+    }).catch(() => {});
   }, []);
 
   // Initialize CSS variables from localStorage on mount
@@ -200,6 +217,48 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     localStorage.setItem('wb_accent_color', color);
     document.documentElement.style.setProperty('--accent-cyan', color);
     showToast(`✓ Accent color set to ${name}`);
+  };
+
+  const handleSaveProxyConfig = async () => {
+    try {
+      const cfg: ProxyConfig = {
+        enabled: proxyEnabled,
+        proxy_type: 'http',
+        proxy_url: proxyUrl,
+        auto_rotate: proxyAutoRotate,
+      };
+      const st = await TauriApi.setProxyConfig(cfg, activeWorkspacePath);
+      setProxyStatus(st);
+      showToast(st.is_masked ? `✓ Proxy active! Public IP masked to ${st.public_ip}` : '✓ Proxy configuration updated');
+    } catch (err: any) {
+      alert(`Failed to save proxy: ${err?.message || String(err)}`);
+    }
+  };
+
+  const handleTestProxy = async () => {
+    setIsTestingProxy(true);
+    try {
+      const st = await TauriApi.testProxy(proxyUrl);
+      setProxyStatus(st);
+      showToast(`Public IP: ${st.public_ip} ${st.country ? `(${st.country})` : ''} • ${st.latency_ms || 0}ms`);
+    } catch (err: any) {
+      alert(`Proxy test failed: ${err?.message || String(err)}`);
+    } finally {
+      setIsTestingProxy(false);
+    }
+  };
+
+  const handleRotateProxy = async () => {
+    setIsRotatingProxy(true);
+    try {
+      const st = await TauriApi.rotateProxyIp(activeWorkspacePath);
+      setProxyStatus(st);
+      showToast(`✓ IP Rotated! New Public IP: ${st.public_ip}`);
+    } catch (err: any) {
+      alert(`Rotate proxy failed: ${err?.message || String(err)}`);
+    } finally {
+      setIsRotatingProxy(false);
+    }
   };
 
   const handleFontSizeChange = (size: number) => {
@@ -1151,6 +1210,146 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <RotateCw size={13} />
                     <span>Purge Ephemeral Cache & Rotate Session Key</span>
                   </button>
+                </div>
+              </div>
+
+              {/* Outbound Network Proxy & Physical IP Masking Card */}
+              <div className="settings-section-card" style={{ marginTop: 16 }}>
+                <div className="settings-card-header">
+                  <h3>
+                    <Globe size={16} color="var(--accent-cyan)" />
+                    <span>Outbound Network Proxy & Physical IP Masking</span>
+                  </h3>
+                  {proxyStatus && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: 11,
+                        padding: '3px 8px',
+                        borderRadius: 999,
+                        background: proxyStatus.is_masked ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                        color: proxyStatus.is_masked ? '#10b981' : '#f87171',
+                        border: `1px solid ${proxyStatus.is_masked ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          background: proxyStatus.is_masked ? '#10b981' : '#f87171',
+                        }}
+                      />
+                      <span>
+                        {proxyStatus.is_masked
+                          ? `Masked: ${proxyStatus.public_ip} ${proxyStatus.country ? `(${proxyStatus.country})` : ''}`
+                          : `Direct IP Exposed: ${proxyStatus.public_ip}`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+                  Route all guest Linux microVM internet traffic (including OpenCode, curl, npm, and AI agent inference) through an outbound proxy to completely conceal your physical home/office IP and prevent cloud rate limiting.
+                </div>
+
+                <div className="settings-control-row">
+                  <div className="settings-control-label">
+                    <span>Enable Outbound Proxy</span>
+                    <span>Direct all guest VM network connections through the configured proxy</span>
+                  </div>
+
+                  <label className="settings-switch-toggle">
+                    <input
+                      type="checkbox"
+                      checked={proxyEnabled}
+                      onChange={(e) => setProxyEnabled(e.target.checked)}
+                    />
+                    <span className="settings-switch-slider" />
+                  </label>
+                </div>
+
+                <div className="settings-control-row">
+                  <div className="settings-control-label">
+                    <span>Proxy Endpoint URL</span>
+                    <span>Supports HTTP, HTTPS, or SOCKS5 proxies (e.g. <code>http://127.0.0.1:7890</code> or <code>socks5://127.0.0.1:1080</code>)</span>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8, flex: 1, maxWidth: 420 }}>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="http://127.0.0.1:7890 or socks5://..."
+                      value={proxyUrl}
+                      onChange={(e) => setProxyUrl(e.target.value)}
+                      style={{ fontSize: 12, flex: 1 }}
+                    />
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={handleTestProxy}
+                      disabled={isTestingProxy}
+                      title="Test connection and discover external public IP"
+                    >
+                      <RefreshCw size={12} className={isTestingProxy ? 'spin-animation' : ''} />
+                      <span>{isTestingProxy ? 'Testing...' : 'Test IP'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="settings-control-row">
+                  <div className="settings-control-label">
+                    <span>Auto-Rotate Proxy on VM Rotation</span>
+                    <span>Rotate proxy session/circuit whenever VM runtime is rotated</span>
+                  </div>
+
+                  <label className="settings-switch-toggle">
+                    <input
+                      type="checkbox"
+                      checked={proxyAutoRotate}
+                      onChange={(e) => setProxyAutoRotate(e.target.checked)}
+                    />
+                    <span className="settings-switch-slider" />
+                  </label>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, marginTop: 12, justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {['http://127.0.0.1:7890', 'socks5://127.0.0.1:1080', 'socks5://127.0.0.1:9050'].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        style={{ fontSize: 11, padding: '2px 8px' }}
+                        onClick={() => {
+                          setProxyUrl(preset);
+                          setProxyEnabled(true);
+                        }}
+                      >
+                        Preset: {preset.replace('127.0.0.1:', '')}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={handleRotateProxy}
+                      disabled={isRotatingProxy || !proxyEnabled}
+                      title="Request a new IP address from rotating proxy"
+                    >
+                      <RotateCw size={12} className={isRotatingProxy ? 'spin-animation' : ''} />
+                      <span>{isRotatingProxy ? 'Rotating...' : 'Rotate IP'}</span>
+                    </button>
+
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={handleSaveProxyConfig}
+                    >
+                      <span>Apply & Save Proxy</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </>

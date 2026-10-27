@@ -99,15 +99,17 @@ impl VmBackend for VfkitBackend {
                     let bin_dir = validated_path.join("node_modules").join(".bin");
                     let _ = fs::create_dir_all(&bin_dir);
                     let devai_shim = bin_dir.join("devai");
-                    if !devai_shim.exists() {
-                        let script = "#!/bin/sh\nif [ -x /usr/bin/opencode ]; then\n  exec /usr/bin/opencode \"$@\"\nelif [ -x /bin/opencode ]; then\n  exec /bin/opencode \"$@\"\nelse\n  exec opencode \"$@\"\nfi\n";
-                        let _ = fs::write(&devai_shim, script);
-                        #[cfg(unix)]
-                        {
-                            use std::os::unix::fs::PermissionsExt;
-                            let _ = fs::set_permissions(&devai_shim, fs::Permissions::from_mode(0o755));
-                        }
+                    let script = "#!/bin/sh\n# Auto-load proxy if available\nif [ -f /workspace/.proxy ]; then\n  export $(grep -E '^(HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|http_proxy|https_proxy|all_proxy|NO_PROXY|no_proxy)' /workspace/.proxy | xargs 2>/dev/null) 2>/dev/null\nfi\nif [ -f /root/.proxy ]; then\n  export $(grep -E '^(HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|http_proxy|https_proxy|all_proxy|NO_PROXY|no_proxy)' /root/.proxy | xargs 2>/dev/null) 2>/dev/null\nfi\n# Auto-load API keys if available\nif [ -f /workspace/.env ]; then\n  export $(grep -E '^(GEMINI_API_KEY|ANTHROPIC_API_KEY|OPENAI_API_KEY|DEEPSEEK_API_KEY|GROQ_API_KEY|OPENROUTER_API_KEY|OLLAMA_BASE_URL)' /workspace/.env | xargs 2>/dev/null) 2>/dev/null\nfi\nif [ -x /usr/bin/opencode ]; then\n  exec /usr/bin/opencode \"$@\"\nelif [ -x /bin/opencode ]; then\n  exec /bin/opencode \"$@\"\nelse\n  exec opencode \"$@\"\nfi\n";
+                    let _ = fs::write(&devai_shim, script);
+                    #[cfg(unix)]
+                    {
+                        use std::os::unix::fs::PermissionsExt;
+                        let _ = fs::set_permissions(&devai_shim, fs::Permissions::from_mode(0o755));
                     }
+
+                    // Sync workspace proxy file
+                    let proxy_cfg = crate::commands::proxy::load_proxy_config();
+                    crate::commands::proxy::write_workspace_proxy_files(&validated_path.to_string_lossy(), &proxy_cfg);
 
                     let mount_link = std::env::temp_dir().join(format!("ai-agent-ws-{}", vm.vm_id));
                     let _ = fs::remove_file(&mount_link);

@@ -363,6 +363,21 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
 
           <button
             className="btn-quick-cmd"
+            onClick={() => sendCommand('if [ -f /workspace/.proxy ]; then echo "Active Proxy:"; cat /workspace/.proxy; fi; echo -n "Outbound Public IP: "; curl -s -m 5 https://api.ipify.org || echo "Failed"')}
+            title="Check active proxy and public outbound IP"
+            style={{
+              background: 'rgba(16, 185, 129, 0.15)',
+              borderColor: 'rgba(16, 185, 129, 0.4)',
+              color: '#34d399',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            <span>Check Public IP</span>
+          </button>
+
+          <button
+            className="btn-quick-cmd"
             onClick={() => sendCommand('rotate-identity')}
             title="Rotate virtual machine ID, device ID and hostname"
             style={{

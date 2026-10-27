@@ -623,4 +623,23 @@ export type DevAiMcpServer = OpencodeMcpServer;
 export type DevAiSkillInfo = OpencodeSkillInfo;
 export type DevAiSyncResult = OpencodeSyncResult;
 
+// Network Proxy System
+export interface ProxyConfig {
+  enabled: boolean;
+  proxy_type: string;
+  proxy_url: string;
+  auto_rotate: boolean;
+}
+
+export interface ProxyStatus {
+  enabled: boolean;
+  proxy_url?: string;
+  public_ip: string;
+  country?: string;
+  is_masked: boolean;
+  latency_ms?: number;
+  last_checked_iso: string;
+}
+
+
 
