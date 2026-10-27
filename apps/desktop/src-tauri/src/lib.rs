@@ -60,6 +60,7 @@ pub fn run() {
             commands::fs_search,
             commands::git_status,
             commands::git_commit,
+            commands::git_log,
             commands::git_init,
             commands::opencode_clear_sessions,
             commands::opencode_clear_global_history,

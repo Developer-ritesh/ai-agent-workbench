@@ -1,0 +1,82 @@
+- generic [ref=f8e3]:
+  - banner [ref=f8e4]:
+    - generic [ref=f8e5]:
+      - generic [ref=f8e6]:
+        - generic [ref=f8e7]: A
+        - generic [ref=f8e8]: AI Agent Workbench
+      - button "Frontend Web App" [ref=f8e137] [cursor=pointer]
+      - button "Open project folder from your Mac (like VS Code)" [ref=f8e16] [cursor=pointer]
+    - generic [ref=f8e23]:
+      - generic "VM Running (Click to Stop)" [ref=f8e138] [cursor=pointer]: VM Active
+      - generic "Click to configure VM Auto-Rotation schedule" [ref=f8e28] [cursor=pointer]: 59m 41s
+      - button "Rotate" [ref=f8e36] [cursor=pointer]
+    - generic [ref=f8e41]:
+      - button "1.45 MB/s 380 KB/s 18ms" [ref=f8e139] [cursor=pointer]:
+        - generic [ref=f8e45]: 1.45 MB/s
+        - generic [ref=f8e49]: 380 KB/s
+        - generic [ref=f8e53]: 18ms
+      - generic [ref=f8e57]:
+        - button "Toggle Full Focus Mode" [ref=f8e58] [cursor=pointer]
+        - button "Toggle Primary Sidebar (Cmd+B)" [ref=f8e63] [cursor=pointer]
+        - button "Toggle Bottom Terminal Panel (Cmd+J)" [ref=f8e67] [cursor=pointer]
+        - button "Toggle Terminal Maximized Layout" [ref=f8e71] [cursor=pointer]
+      - button "Settings" [ref=f8e74] [cursor=pointer]
+      - generic "Developer Ritesh" [ref=f8e78]: DR
+  - generic [ref=f8e79]:
+    - complementary [ref=f8e80]:
+      - generic [ref=f8e81]:
+        - button "Explorer" [ref=f8e82] [cursor=pointer]
+        - button "Search" [ref=f8e88] [cursor=pointer]
+        - button "Git" [ref=f8e93] [cursor=pointer]
+        - button "Browser" [ref=f8e99] [cursor=pointer]
+        - button "API" [ref=f8e104] [cursor=pointer]
+        - button "Tests" [ref=f8e109] [cursor=pointer]
+        - button "Ports" [ref=f8e113] [cursor=pointer]
+        - button "Logs" [ref=f8e120] [cursor=pointer]
+        - button "VM" [ref=f8e124] [cursor=pointer]
+      - button "Settings" [active] [ref=f8e130] [cursor=pointer]
+    - generic [ref=f8e295]:
+      - generic [ref=f8e297]:
+        - heading "Preferences & Settings" [level=2] [ref=f8e298]
+        - paragraph [ref=f8e301]: Configure appearance, code editor, isolated VM hardware, AI Agent autonomy, and security parameters.
+      - generic [ref=f8e302]:
+        - generic [ref=f8e303]:
+          - button "Appearance" [ref=f8e304] [cursor=pointer]
+          - button "Code Editor" [ref=f8e312] [cursor=pointer]
+          - button "Linux VM Sandbox" [ref=f8e319] [cursor=pointer]
+          - button "AI Agent & OpenCode" [ref=f8e324] [cursor=pointer]
+          - button "Skills & MCP Servers" [ref=f8e329] [cursor=pointer]
+          - button "Security & Sandbox" [ref=f8e341] [cursor=pointer]
+          - button "SQLite Audit Trail" [ref=f8e345] [cursor=pointer]
+          - button "System & About" [ref=f8e351] [cursor=pointer]
+        - generic [ref=f8e355]:
+          - generic [ref=f8e356]:
+            - heading "Theme & Appearance Mode" [level=3] [ref=f8e358]
+            - generic [ref=f8e366]:
+              - generic [ref=f8e370] [cursor=pointer]:
+                - generic [ref=f8e371]: Dark Theme
+                - generic [ref=f8e372]: High-contrast dark IDE interface
+              - generic [ref=f8e380] [cursor=pointer]:
+                - generic [ref=f8e381]: Light Theme
+                - generic [ref=f8e382]: Clean high-visibility daytime palette
+          - generic [ref=f8e383]:
+            - heading "Accent Theme Color" [level=3] [ref=f8e385]
+            - generic [ref=f8e393]:
+              - generic [ref=f8e394]:
+                - generic [ref=f8e395]: Interactive UI Highlight Color
+                - generic [ref=f8e396]: Used for focus borders, terminal buttons, badges, and cursor glow
+              - generic [ref=f8e397]:
+                - button "Sky Cyan" [ref=f8e398] [cursor=pointer]
+                - button "Neon Emerald" [ref=f8e399] [cursor=pointer]
+                - button "Violet Purple" [ref=f8e400] [cursor=pointer]
+                - button "Sunset Amber" [ref=f8e401] [cursor=pointer]
+                - button "Coral Rose" [ref=f8e402] [cursor=pointer]
+                - button "Royal Blue" [ref=f8e403] [cursor=pointer]
+            - generic [ref=f8e404]:
+              - generic [ref=f8e405]:
+                - generic [ref=f8e406]: UI Scaling Density
+                - generic [ref=f8e407]: Overall layout font sizing and padding
+              - generic [ref=f8e408]:
+                - button "90%" [ref=f8e409] [cursor=pointer]
+                - button "100%" [ref=f8e410] [cursor=pointer]
+                - button "110%" [ref=f8e411] [cursor=pointer]

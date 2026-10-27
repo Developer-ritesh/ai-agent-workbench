@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Split,
+  SplitSquareHorizontal,
   MoreHorizontal,
   FileCode,
   FileJson,
@@ -11,6 +13,9 @@ import {
   RotateCw,
   Sparkles,
   Terminal as TermIcon,
+  Link2,
+  ClipboardCopy,
+  FileX,
 } from 'lucide-react';
 import { TauriApi } from '../../services/tauriIpc';
 
@@ -20,6 +25,8 @@ interface CodeEditorPanelProps {
   onSelectTab: (filePath: string) => void;
   onCloseTab: (filePath: string) => void;
 }
+
+type PaneId = 'left' | 'right';
 
 export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
   activeFilePath,
@@ -34,79 +41,119 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
   // Save status for UI feedback
   const [saveStatus, setSaveStatus] = useState<string>('AutoSave: On');
   const [isSaving, setIsSaving] = useState(false);
-  const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
+  // Cursor position tracked per split pane
+  const [cursorPos, setCursorPos] = useState<Record<PaneId, { line: number; col: number }>>({
+    left: { line: 1, col: 1 },
+    right: { line: 1, col: 1 },
+  });
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Split Editor Right: the file shown in the secondary pane (null = disabled)
+  const [splitPath, setSplitPath] = useState<string | null>(null);
+  // More Actions dropdown
+  const [showMoreMenu, setShowMoreMenu] = useState<boolean>(false);
+  const [moreAnchor, setMoreAnchor] = useState<{ top: number; right: number } | null>(null);
 
-  // Load real file content from host disk whenever activeFilePath changes and isn't cached yet
-  useEffect(() => {
-    if (!activeFilePath) return;
+  const textareaLeftRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRightRef = useRef<HTMLTextAreaElement>(null);
+  // Per-file debounced autosave timers (each split pane edits its own file)
+  const autosaveTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
-    if (fileContents[activeFilePath] === undefined) {
-      TauriApi.readFile(activeFilePath)
+  // Load real file content from host disk on demand (active or split pane)
+  const ensureContentLoaded = useCallback(
+    (filePath: string, snapContents: Record<string, string>) => {
+      if (!filePath || snapContents[filePath] !== undefined) return;
+      TauriApi.readFile(filePath)
         .then((content) => {
-          setFileContents((prev) => ({ ...prev, [activeFilePath]: content }));
+          setFileContents((prev) => ({ ...prev, [filePath]: content }));
         })
         .catch(() => {
           // If file is new or empty
           setFileContents((prev) => ({
             ...prev,
-            [activeFilePath]: `// ${activeFilePath.split('/').pop()}\n\n`,
+            [filePath]: `// ${filePath.split('/').pop()}\n\n`,
           }));
         });
-    }
-  }, [activeFilePath, fileContents]);
-
-  const activeContent = fileContents[activeFilePath] ?? '';
-
-  // Actual Save Function (writes directly to host disk)
-  const saveFile = useCallback(
-    async (filePath: string, content: string) => {
-      if (!filePath) return;
-      setIsSaving(true);
-      setSaveStatus('Saving...');
-
-      try {
-        await TauriApi.writeFile(filePath, content);
-        setDirtyFiles((prev) => {
-          const next = new Set(prev);
-          next.delete(filePath);
-          return next;
-        });
-        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        setSaveStatus(`✓ Saved at ${timeStr}`);
-      } catch (err: any) {
-        console.error('Failed to save file:', err);
-        setSaveStatus('Save error');
-      } finally {
-        setIsSaving(false);
-      }
     },
     []
   );
 
-  // Handle content edit with debounced AutoSave (1000ms)
-  const handleContentChange = (newContent: string) => {
-    setFileContents((prev) => ({ ...prev, [activeFilePath]: newContent }));
-    setDirtyFiles((prev) => new Set(prev).add(activeFilePath));
+  useEffect(() => {
+    ensureContentLoaded(activeFilePath, fileContents);
+  }, [activeFilePath, fileContents, ensureContentLoaded]);
+
+  useEffect(() => {
+    if (splitPath) ensureContentLoaded(splitPath, fileContents);
+  }, [splitPath, fileContents, ensureContentLoaded]);
+
+  // Clear split pane if its file was closed
+  useEffect(() => {
+    if (splitPath && !openFiles.includes(splitPath)) {
+      setSplitPath(null);
+    }
+  }, [openFiles, splitPath]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(autosaveTimersRef.current).forEach((t) => clearTimeout(t));
+      autosaveTimersRef.current = {};
+    };
+  }, []);
+
+  const activeContent = fileContents[activeFilePath] ?? '';
+  const splitContent = splitPath ? fileContents[splitPath] ?? '' : null;
+
+  // Actual Save Function (writes directly to host disk)
+  const saveFile = useCallback(async (filePath: string, content: string) => {
+    if (!filePath) return;
+    setIsSaving(true);
+    setSaveStatus('Saving...');
+
+    try {
+      await TauriApi.writeFile(filePath, content);
+      setDirtyFiles((prev) => {
+        const next = new Set(prev);
+        next.delete(filePath);
+        return next;
+      });
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setSaveStatus(`✓ Saved at ${timeStr}`);
+    } catch (err: any) {
+      console.error('Failed to save file:', err);
+      setSaveStatus('Save error');
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
+
+  // Handle content edit for ANY pane path, with per-path debounced AutoSave (1000ms)
+  const handleContentChange = useCallback((filePath: string, newContent: string) => {
+    setFileContents((prev) => ({ ...prev, [filePath]: newContent }));
+    setDirtyFiles((prev) => new Set(prev).add(filePath));
     setSaveStatus('● Unsaved');
 
-    // Debounced autosave
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-    }
-    autosaveTimerRef.current = setTimeout(() => {
-      saveFile(activeFilePath, newContent);
+    const timers = autosaveTimersRef.current;
+    if (timers[filePath]) clearTimeout(timers[filePath]);
+    timers[filePath] = setTimeout(() => {
+      setFileContents((latest) => {
+        void saveFile(filePath, latest[filePath] ?? newContent);
+        return latest;
+      });
+      delete timers[filePath];
     }, 1000);
+  }, [saveFile]);
+
+  const savePaneNow = (filePath: string) => {
+    if (autosaveTimersRef.current[filePath]) clearTimeout(autosaveTimersRef.current[filePath]);
+    saveFile(filePath, fileContents[filePath] ?? '');
   };
 
-  // Keyboard shortcuts: Cmd+S / Ctrl+S to save immediately, Tab indentation
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  // Keyboard shortcuts: Cmd+S saves the focused pane, Tab indents
+  const handleKeyDown = (filePath: string, content: string) => (
+    e: React.KeyboardEvent<HTMLTextAreaElement>
+  ) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
-      if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-      saveFile(activeFilePath, activeContent);
+      savePaneNow(filePath);
       return;
     }
 
@@ -116,9 +163,9 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
       const start = target.selectionStart;
       const end = target.selectionEnd;
       const spaces = '  '; // 2 spaces for tab
-      const updated = activeContent.substring(0, start) + spaces + activeContent.substring(end);
+      const updated = content.substring(0, start) + spaces + content.substring(end);
 
-      handleContentChange(updated);
+      handleContentChange(filePath, updated);
 
       requestAnimationFrame(() => {
         target.selectionStart = target.selectionEnd = start + spaces.length;
@@ -126,15 +173,54 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
     }
   };
 
-  const updateCursorPosition = () => {
-    if (!textareaRef.current) return;
-    const text = textareaRef.current.value.substring(0, textareaRef.current.selectionStart);
+  const updateCursorPosition = (pane: PaneId, ref: React.RefObject<HTMLTextAreaElement | null>) => () => {
+    if (!ref.current) return;
+    const text = ref.current.value.substring(0, ref.current.selectionStart);
     const lines = text.split('\n');
-    setCursorPos({
-      line: lines.length,
-      col: lines[lines.length - 1].length + 1,
-    });
+    setCursorPos((prev) => ({
+      ...prev,
+      [pane]: { line: lines.length, col: lines[lines.length - 1].length + 1 },
+    }));
   };
+
+  const toggleSplit = () => {
+    if (splitPath) {
+      setSplitPath(null);
+      return;
+    }
+    // Prefer a different open file for the split pane; fall back to the same file
+    const other = openFiles.find((f) => f !== activeFilePath);
+    setSplitPath(other ?? activeFilePath);
+    // Ensure the right pane is loaded before it renders
+    if (other) ensureContentLoaded(other, fileContents);
+  };
+
+  const openMoreMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+    setMoreAnchor({ top: rect.bottom + 6, right: Math.max(8, window.innerWidth - rect.right) });
+    setShowMoreMenu(true);
+  };
+
+  const moreAction = (action: 'copyPath' | 'copyContents' | 'closeTab') => {
+    const name = activeFilePath.split('/').pop() || activeFilePath;
+    if (action === 'copyPath') {
+      navigator.clipboard?.writeText(activeFilePath).catch(() => {});
+      setSaveStatus(`✓ Path copied: ${name}`);
+    } else if (action === 'copyContents') {
+      navigator.clipboard?.writeText(activeContent).catch(() => {});
+      setSaveStatus(`✓ Contents copied (${activeContent.length} chars)`);
+    } else if (action === 'closeTab') {
+      onCloseTab(activeFilePath);
+    }
+    setShowMoreMenu(false);
+  };
+
+  useEffect(() => {
+    if (!showMoreMenu) return;
+    const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape') setShowMoreMenu(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showMoreMenu]);
 
   const getFileIcon = (fileName: string) => {
     const lower = fileName.toLowerCase();
@@ -167,8 +253,88 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
     return 'Plain Text';
   };
 
-  const lineCount = Math.max(activeContent.split('\n').length, 1);
+  /** One editor pane (gutter + editable textarea + minimap strip). */
+  const renderPane = (pane: PaneId, filePath: string, content: string) => {
+    const ref = pane === 'left' ? textareaLeftRef : textareaRightRef;
+    const pos = cursorPos[pane];
+    const lineCount = Math.max(content.split('\n').length, 1);
+    return (
+      <div
+        className="editor-canvas"
+        style={{ flex: 1, minWidth: 0, width: 'auto' }}
+      >
+        {/* Pane header chip (right pane only) */}
+        {pane === 'right' && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '3px 8px',
+              borderBottom: '1px solid var(--border-panel)',
+              fontSize: 10,
+              color: 'var(--text-secondary)',
+              background: 'rgba(255,255,255,0.02)',
+            }}
+          >
+            <SplitSquareHorizontal size={11} color="var(--accent-cyan)" />
+            <span style={{ fontFamily: 'var(--font-mono, monospace)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>
+              {filePath.split('/').pop()}
+            </span>
+            <span style={{ marginLeft: 'auto', color: dirtyFiles.has(filePath) ? 'var(--accent-cyan)' : 'var(--status-emerald)' }}>
+              {dirtyFiles.has(filePath) ? '● Unsaved' : 'Synced'}
+            </span>
+            <span
+              className="editor-tab-close"
+              onClick={() => setSplitPath(null)}
+              title="Close Split"
+              style={{ cursor: 'pointer', display: 'flex' }}
+            >
+              <X size={12} />
+            </span>
+          </div>
+        )}
+        <div style={{ display: 'flex', flex: 1, minHeight: 0, position: 'relative' }}>
+          {/* Line Numbers Gutter */}
+          <div className="editor-gutter">
+            {Array.from({ length: lineCount }).map((_, i) => (
+              <div
+                key={i}
+                className={`gutter-line-number ${i + 1 === pos.line ? 'active' : ''}`}
+              >
+                {i + 1}
+              </div>
+            ))}
+          </div>
+
+          {/* Interactive Editor Monospace Area */}
+          <textarea
+            ref={ref}
+            className="editor-code-input"
+            value={content}
+            onChange={(e) => handleContentChange(filePath, e.target.value)}
+            onKeyDown={handleKeyDown(filePath, content)}
+            onKeyUp={updateCursorPosition(pane, ref)}
+            onClick={updateCursorPosition(pane, ref)}
+            spellCheck={false}
+            autoCapitalize="off"
+            autoComplete="off"
+            autoCorrect="off"
+            placeholder={pane === 'left' ? 'Start typing code or open a file...' : `Second view: ${filePath.split('/').pop()}`}
+          />
+
+          {/* Subtle Minimap representation on right edge */}
+          <div className="editor-minimap">
+            {content.slice(0, 1500)}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const isDirty = dirtyFiles.has(activeFilePath);
+  const statusPane: PaneId = 'left';
+  const statusPos = cursorPos[statusPane];
 
   return (
     <div className="ide-editor-container">
@@ -223,22 +389,85 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
           <button
             className="btn-icon"
             title="Save file immediately (Cmd+S)"
-            onClick={() => saveFile(activeFilePath, activeContent)}
+            onClick={() => savePaneNow(activeFilePath)}
           >
             <Save size={13} color={isDirty ? 'var(--accent-cyan)' : 'var(--text-secondary)'} />
           </button>
-          <button className="btn-icon" title="Split Editor Right">
+          <button
+            className="btn-icon"
+            title={splitPath ? 'Close Split Editor' : 'Split Editor Right'}
+            onClick={toggleSplit}
+            style={splitPath ? { color: 'var(--accent-cyan)' } : undefined}
+          >
             <Split size={14} />
           </button>
-          <button className="btn-icon" title="More Actions">
+          <button
+            className="btn-icon"
+            title="More Actions"
+            onClick={openMoreMenu}
+          >
             <MoreHorizontal size={14} />
           </button>
         </div>
       </div>
 
+      {/* More Actions dropdown — portal at <body> so no ancestor can clip it */}
+      {showMoreMenu && moreAnchor && createPortal(
+        <>
+          <div
+            onClick={() => setShowMoreMenu(false)}
+            style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
+            aria-hidden="true"
+          />
+          <div
+            style={{ position: 'fixed', top: moreAnchor.top, right: moreAnchor.right, zIndex: 9999, minWidth: 200 }}
+            role="menu"
+            aria-label="Editor More Actions"
+          >
+            {[
+              { id: 'copyPath' as const, icon: <Link2 size={13} />, label: `Copy Path` },
+              { id: 'copyContents' as const, icon: <ClipboardCopy size={13} />, label: `Copy File Contents` },
+              { id: 'closeTab' as const, icon: <FileX size={13} />, label: `Close Tab` },
+            ].map((item) => (
+              <button
+                key={item.id}
+                role="menuitem"
+                onClick={() => moreAction(item.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  width: '100%',
+                  padding: '8px 12px',
+                  fontSize: 12,
+                  color: item.id === 'closeTab' ? '#f87171' : 'var(--text-primary, #e2e8f0)',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontFamily: 'inherit',
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)')}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = 'transparent')}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </>,
+        document.body
+      )}
+
       {/* 2. Breadcrumbs Bar */}
       <div className="editor-breadcrumbs">
         <span>{activeFilePath || 'No file selected'}</span>
+        {splitPath && (
+          <span style={{ marginLeft: 8, fontSize: 10, color: 'var(--accent-cyan)' }}>
+            | Split: {splitPath.split('/').pop()}
+          </span>
+        )}
         {isSaving && (
           <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: 4 }}>
             <RotateCw size={10} className="spin-animation" /> Saving to disk...
@@ -288,39 +517,18 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
           </div>
         </div>
       ) : (
-        <div className="editor-canvas">
-          {/* Line Numbers Gutter */}
-          <div className="editor-gutter">
-            {Array.from({ length: lineCount }).map((_, i) => (
-              <div
-                key={i}
-                className={`gutter-line-number ${i + 1 === cursorPos.line ? 'active' : ''}`}
-              >
-                {i + 1}
-              </div>
-            ))}
-          </div>
-
-          {/* Interactive Editor Monospace Area */}
-          <textarea
-            ref={textareaRef}
-            className="editor-code-input"
-            value={activeContent}
-            onChange={(e) => handleContentChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onKeyUp={updateCursorPosition}
-            onClick={updateCursorPosition}
-            spellCheck={false}
-            autoCapitalize="off"
-            autoComplete="off"
-            autoCorrect="off"
-            placeholder="Start typing code or open a file..."
-          />
-
-          {/* Subtle Minimap representation on right edge */}
-          <div className="editor-minimap">
-            {activeContent.slice(0, 1500)}
-          </div>
+        /* Split layout: primary pane (+ optional secondary pane) */
+        <div
+          style={{
+            display: 'flex',
+            flex: 1,
+            minHeight: 0,
+            width: '100%',
+            overflow: 'hidden',
+          }}
+        >
+          {renderPane('left', activeFilePath, activeContent)}
+          {splitPath !== null && renderPane('right', splitPath, splitContent ?? '')}
         </div>
       )}
 
@@ -332,7 +540,7 @@ export const CodeEditorPanel: React.FC<CodeEditorPanelProps> = ({
         <div className="editor-status-item">UTF-8</div>
         <div className="editor-status-item">Spaces: 2</div>
         <div className="editor-status-item">
-          Ln {cursorPos.line}, Col {cursorPos.col}
+          Ln {statusPos.line}, Col {statusPos.col}
         </div>
         <div className="editor-status-item">
           {getLanguageName(activeFilePath)}

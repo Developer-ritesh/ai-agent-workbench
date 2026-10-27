@@ -1,0 +1,38 @@
+- generic [ref=f3e3]:
+  - banner [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - generic [ref=f3e6]:
+        - generic [ref=f3e7]: A
+        - generic [ref=f3e8]: AI Agent Workbench
+      - button "masticall-in" [ref=f3e10] [cursor=pointer]
+      - button "Open project folder from your Mac (like VS Code)" [ref=f3e16] [cursor=pointer]
+    - generic [ref=f3e23]:
+      - generic "VM Stopped (Click to Start)" [ref=f3e24] [cursor=pointer]: VM Stopped
+      - generic "Click to configure VM Auto-Rotation schedule" [ref=f3e28] [cursor=pointer]: 60m 00s
+      - button "Rotate" [ref=f3e36] [cursor=pointer]
+    - generic [ref=f3e41]:
+      - button "0 B/s 0 B/s 18ms" [ref=f3e43] [cursor=pointer]:
+        - generic [ref=f3e45]: 0 B/s
+        - generic [ref=f3e49]: 0 B/s
+        - generic [ref=f3e53]: 18ms
+      - generic [ref=f3e57]:
+        - button "Toggle Full Focus Mode" [ref=f3e58] [cursor=pointer]
+        - button "Toggle Primary Sidebar (Cmd+B)" [ref=f3e63] [cursor=pointer]
+        - button "Toggle Bottom Terminal Panel (Cmd+J)" [ref=f3e67] [cursor=pointer]
+        - button "Toggle Terminal Maximized Layout" [ref=f3e71] [cursor=pointer]
+      - button "Settings" [ref=f3e74] [cursor=pointer]
+      - generic "Developer Ritesh" [ref=f3e78]: DR
+  - generic [ref=f3e79]:
+    - complementary [ref=f3e80]:
+      - generic [ref=f3e81]:
+        - button "Explorer" [ref=f3e82] [cursor=pointer]
+        - button "Search" [ref=f3e88] [cursor=pointer]
+        - button "Git" [ref=f3e93] [cursor=pointer]
+        - button "Browser" [ref=f3e99] [cursor=pointer]
+        - button "API" [ref=f3e104] [cursor=pointer]
+        - button "Tests" [ref=f3e109] [cursor=pointer]
+        - button "Ports" [ref=f3e113] [cursor=pointer]
+        - button "Logs" [ref=f3e120] [cursor=pointer]
+        - button "VM" [ref=f3e124] [cursor=pointer]
+      - button "Settings" [ref=f3e130] [cursor=pointer]
+    - generic [ref=f3e135]: Loading workspace...

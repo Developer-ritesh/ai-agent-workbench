@@ -1,0 +1,82 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: A
+        - generic [ref=e8]: AI Agent Workbench
+      - button "Frontend Web App" [ref=e10] [cursor=pointer]
+      - button "Open project folder from your Mac (like VS Code)" [ref=e16] [cursor=pointer]
+    - generic [ref=e23]:
+      - generic "VM Running (Click to Stop)" [ref=e24] [cursor=pointer]: VM Active
+      - generic "Click to configure VM Auto-Rotation schedule" [ref=e28] [cursor=pointer]: 56m 50s
+      - button "Rotate" [ref=e36] [cursor=pointer]
+    - generic [ref=e41]:
+      - button "1.45 MB/s 380 KB/s 18ms" [ref=e43] [cursor=pointer]:
+        - generic [ref=e45]: 1.45 MB/s
+        - generic [ref=e49]: 380 KB/s
+        - generic [ref=e53]: 18ms
+      - generic [ref=e57]:
+        - button "Toggle Full Focus Mode" [ref=e58] [cursor=pointer]
+        - button "Toggle Primary Sidebar (Cmd+B)" [ref=e63] [cursor=pointer]
+        - button "Toggle Bottom Terminal Panel (Cmd+J)" [ref=e67] [cursor=pointer]
+        - button "Toggle Terminal Maximized Layout" [ref=e71] [cursor=pointer]
+      - button "Settings" [ref=e74] [cursor=pointer]
+      - generic "Developer Ritesh" [ref=e78]: DR
+  - generic [ref=e79]:
+    - complementary [ref=e80]:
+      - generic [ref=e81]:
+        - button "Explorer" [ref=e82] [cursor=pointer]
+        - button "Search" [ref=e88] [cursor=pointer]
+        - button "Git" [ref=e93] [cursor=pointer]
+        - button "Browser" [ref=e99] [cursor=pointer]
+        - button "API" [ref=e104] [cursor=pointer]
+        - button "Tests" [ref=e109] [cursor=pointer]
+        - button "Ports" [ref=e113] [cursor=pointer]
+        - button "Logs" [ref=e120] [cursor=pointer]
+        - button "VM" [ref=e124] [cursor=pointer]
+      - button "Settings" [active] [ref=e130] [cursor=pointer]
+    - generic [ref=e1061]:
+      - generic [ref=e1063]:
+        - heading "Preferences & Settings" [level=2] [ref=e1064]
+        - paragraph [ref=e1067]: Configure appearance, code editor, isolated VM hardware, AI Agent autonomy, and security parameters.
+      - generic [ref=e1068]:
+        - generic [ref=e1069]:
+          - button "Appearance" [ref=e1070] [cursor=pointer]
+          - button "Code Editor" [ref=e1078] [cursor=pointer]
+          - button "Linux VM Sandbox" [ref=e1085] [cursor=pointer]
+          - button "AI Agent & OpenCode" [ref=e1090] [cursor=pointer]
+          - button "Skills & MCP Servers" [ref=e1095] [cursor=pointer]
+          - button "Security & Sandbox" [ref=e1107] [cursor=pointer]
+          - button "SQLite Audit Trail" [ref=e1111] [cursor=pointer]
+          - button "System & About" [ref=e1117] [cursor=pointer]
+        - generic [ref=e1121]:
+          - generic [ref=e1122]:
+            - heading "Theme & Appearance Mode" [level=3] [ref=e1124]
+            - generic [ref=e1132]:
+              - generic [ref=e1136] [cursor=pointer]:
+                - generic [ref=e1137]: Dark Theme
+                - generic [ref=e1138]: High-contrast dark IDE interface
+              - generic [ref=e1146] [cursor=pointer]:
+                - generic [ref=e1147]: Light Theme
+                - generic [ref=e1148]: Clean high-visibility daytime palette
+          - generic [ref=e1149]:
+            - heading "Accent Theme Color" [level=3] [ref=e1151]
+            - generic [ref=e1159]:
+              - generic [ref=e1160]:
+                - generic [ref=e1161]: Interactive UI Highlight Color
+                - generic [ref=e1162]: Used for focus borders, terminal buttons, badges, and cursor glow
+              - generic [ref=e1163]:
+                - button "Sky Cyan" [ref=e1164] [cursor=pointer]
+                - button "Neon Emerald" [ref=e1165] [cursor=pointer]
+                - button "Violet Purple" [ref=e1166] [cursor=pointer]
+                - button "Sunset Amber" [ref=e1167] [cursor=pointer]
+                - button "Coral Rose" [ref=e1168] [cursor=pointer]
+                - button "Royal Blue" [ref=e1169] [cursor=pointer]
+            - generic [ref=e1170]:
+              - generic [ref=e1171]:
+                - generic [ref=e1172]: UI Scaling Density
+                - generic [ref=e1173]: Overall layout font sizing and padding
+              - generic [ref=e1174]:
+                - button "90%" [ref=e1175] [cursor=pointer]
+                - button "100%" [ref=e1176] [cursor=pointer]
+                - button "110%" [ref=e1177] [cursor=pointer]

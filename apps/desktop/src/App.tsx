@@ -29,7 +29,8 @@ const DEFAULT_WORKSPACE: Workspace = {
 export const App: React.FC = () => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([DEFAULT_WORKSPACE]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(DEFAULT_WORKSPACE.id);
-  const [theme, setTheme] = useState<ThemeMode>('dark');
+  const themePref = (localStorage.getItem('--wb-theme') as ThemeMode | null) || 'dark';
+  const [theme, setTheme] = useState<ThemeMode>(themePref);
   const [activityTab, setActivityTab] = useState<ActivityTab>('explorer');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -50,7 +51,19 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    // Persist the user's theme choice across sessions; 'system' follows the OS.
+    localStorage.setItem('--wb-theme', theme);
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const resolveSystem = (): 'dark' | 'light' => (mq.matches ? 'dark' : 'light');
+    const apply = () => {
+      const resolved = theme === 'system' ? resolveSystem() : theme;
+      document.documentElement.setAttribute('data-theme', resolved);
+    };
+    apply();
+    if (theme === 'system') {
+      mq.addEventListener('change', apply);
+      return () => mq.removeEventListener('change', apply);
+    }
   }, [theme]);
 
   // Auto-Rotate Countdown Timer

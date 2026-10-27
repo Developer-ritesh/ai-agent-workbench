@@ -79,11 +79,15 @@ export const PortForwardingPanel: React.FC<PortForwardingPanelProps> = ({ onOpen
   };
 
   const handleRemoveForward = async (id: string) => {
+    if (!confirm(`Remove this port forwarding mapping? Traffic between the VM guest port and the local target will stop immediately.`)) {
+      return;
+    }
     try {
       await tauriIpc.portsForwardRemove(id);
       setPorts((prev) => prev.filter((p) => p.id !== id));
     } catch (err: any) {
       console.error('Failed to remove forward:', err);
+      setErrorMsg(String(err?.message || err || 'Failed to remove port mapping'));
     }
   };
 

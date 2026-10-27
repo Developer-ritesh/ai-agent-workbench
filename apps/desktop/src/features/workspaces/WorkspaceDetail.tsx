@@ -200,7 +200,7 @@ export const WorkspaceDetail: React.FC<WorkspaceDetailProps> = ({
           </div>
         ) : activityTab === 'git' ? (
           <div className="flex-1 flex min-h-0 overflow-hidden bg-zinc-950">
-            <GitDiffViewer workspaceId={workspace.id} />
+            <GitDiffViewer workspaceId={workspace.id} hostPath={workspace.hostProjectPath} />
           </div>
         ) : (
           /* Default: Code Editor + Bottom Integrated Terminal */

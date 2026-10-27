@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   GitBranch,
   RefreshCw,
@@ -13,12 +13,16 @@ import {
   Rows,
   ShieldCheck,
   AlertTriangle,
+  ChevronUp,
 } from 'lucide-react';
 import { TauriApi } from '../../services/tauriIpc';
 import { ResizableSplitter } from '../../components/common/ResizableSplitter';
+import type { GitLogEntry } from '../../types';
 
 interface GitDiffViewerProps {
   workspaceId: string;
+  /** Workspace folder on the host filesystem — git commands run here */
+  hostPath?: string;
 }
 
 interface DiffLine {
@@ -36,7 +40,7 @@ interface ChangedFile {
   status: 'modified' | 'added' | 'deleted';
 }
 
-export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => {
+export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId, hostPath }) => {
   const [gitStatus, setGitStatus] = useState<string>('Loading Git status...');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeDiffFile, setActiveDiffFile] = useState<string>('src/auth/service.rs');
@@ -55,7 +59,7 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
 
   // Code Audit State
   const [isReviewing, setIsReviewing] = useState<boolean>(false);
-  const [showAuditPanel, setShowAuditPanel] = useState<boolean>(true);
+  const [showAuditPanel, setShowAuditPanel] = useState<boolean>(false);
   const [auditReport, setAuditReport] = useState<{
     summary: string;
     riskLevel: 'low' | 'medium' | 'high';
@@ -92,6 +96,13 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
   const [rightStudioTab, setRightStudioTab] = useState<'diff' | 'history'>('diff');
   const [reviewNote, setReviewNote] = useState<string>('');
   const [reviewApproved, setReviewApproved] = useState<boolean>(false);
+
+  // Real commit flow + real history (backend git_commit / git_log)
+  const [commitHistory, setCommitHistory] = useState<GitLogEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState<boolean>(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [committing, setCommitting] = useState<boolean>(false);
+  const [commitResult, setCommitResult] = useState<{ ok: boolean; text: string } | null>(null);
 
   // Comprehensive Hunk Diff Lines mapped by active file
   const diffsByFile: Record<string, DiffLine[]> = {
@@ -176,6 +187,32 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
       setIsRefreshing(false);
     }
   };
+
+  // Real commit history from the workspace git repository (backend git_log)
+  const fetchCommitHistory = useCallback(async () => {
+    if (!hostPath) {
+      setHistoryError('Connect a real workspace folder to view commit history.');
+      setCommitHistory([]);
+      return;
+    }
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const entries = await TauriApi.gitLog(hostPath, 50);
+      setCommitHistory(entries || []);
+    } catch (err: any) {
+      setCommitHistory([]);
+      setHistoryError(String(err?.message || err || 'Failed to read commit history'));
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [hostPath]);
+
+  useEffect(() => {
+    if (rightStudioTab === 'history') {
+      void fetchCommitHistory();
+    }
+  }, [rightStudioTab, fetchCommitHistory, commitResult]);
 
   const handleRunAudit = () => {
     setIsReviewing(true);
@@ -310,14 +347,53 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
             />
             <button
               onClick={async () => {
-                await TauriApi.terminalExecute(workspaceId, `git commit -am "${commitMessage}"`);
-                fetchGitStatus();
+                if (!hostPath) {
+                  setCommitResult({ ok: false, text: 'Connect a real workspace folder to commit changes.' });
+                  return;
+                }
+                if (!commitMessage.trim()) {
+                  setCommitResult({ ok: false, text: 'Enter a commit message before committing.' });
+                  return;
+                }
+                const stagedFiles = files.filter((f) => f.staged).map((f) => f.path);
+                if (stagedFiles.length === 0) {
+                  setCommitResult({ ok: false, text: 'No changes staged — use Stage All or stage individual files first.' });
+                  return;
+                }
+                setCommitting(true);
+                try {
+                  const out = await TauriApi.gitCommit(hostPath, commitMessage, stagedFiles);
+                  const firstLine = String(out).split('\n').find((l) => l.trim()) || 'Committed';
+                  setCommitResult({ ok: true, text: firstLine });
+                  fetchGitStatus();
+                  setCommitMessage('');
+                } catch (err: any) {
+                  setCommitResult({ ok: false, text: String(err?.message || err || 'Commit failed') });
+                } finally {
+                  setCommitting(false);
+                }
               }}
-              className="w-full py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-500/25 active:scale-95"
+              disabled={committing}
+              className="w-full py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-500/25 active:scale-95 disabled:opacity-60"
             >
-              <GitCommit size={14} />
-              <span>Commit &amp; Sync</span>
+              <GitCommit size={14} className={committing ? 'animate-pulse' : ''} />
+              <span>{committing ? 'Committing...' : 'Commit & Sync'}</span>
             </button>
+
+            {commitResult && (
+              <button
+                onClick={() => setCommitResult(null)}
+                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[10.5px] font-mono leading-snug border transition ${
+                  commitResult.ok
+                    ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25'
+                    : 'bg-rose-500/10 text-rose-300 border-rose-500/25 hover:bg-rose-500/20'
+                }`}
+              >
+                {commitResult.ok ? '✓ ' : '✕ '}
+                {commitResult.text}
+                <span className="text-zinc-500"> (click to dismiss)</span>
+              </button>
+            )}
           </div>
 
           {/* Changed Files List */}
@@ -425,7 +501,7 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
                       : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
-                  Commit History (5)
+                  Commit History ({commitHistory.length})
                 </button>
               </div>
 
@@ -498,7 +574,7 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
 
           {/* STUDIO CONTENT: EITHER DIFF OR COMMIT HISTORY */}
           {rightStudioTab === 'history' ? (
-            /* Full Repository Commit History Timeline */
+            /* Full Repository Commit History Timeline — REAL git log data */
             <div className="flex-1 overflow-y-auto p-6 space-y-4 font-sans select-text">
               <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
                 <div className="flex items-center gap-2">
@@ -508,46 +584,24 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
                 <span className="text-xs text-zinc-400 font-mono">Branch: <strong className="text-emerald-400">main</strong> (origin/main)</span>
               </div>
 
+              {historyError && (
+                <div className="p-4 bg-amber-500/10 border border-amber-500/25 rounded-xl text-amber-300 text-xs leading-relaxed">
+                  ⚠ {historyError}
+                </div>
+              )}
+
+              {!historyError && historyLoading && (
+                <div className="p-5 text-zinc-400 text-xs font-mono">Loading commit history…</div>
+              )}
+
+              {!historyError && !historyLoading && commitHistory.length === 0 && (
+                <div className="p-6 bg-white/[0.02] border border-white/[0.08] rounded-xl text-zinc-400 text-xs leading-relaxed">
+                  No commits yet in this repository. Stage your changes and click <strong className="text-emerald-400">Commit &amp; Sync</strong> to create the first commit — it will appear here immediately.
+                </div>
+              )}
+
               <div className="space-y-3">
-                {[
-                  {
-                    hash: 'dd0e6ff',
-                    message: 'feat(vm): add full VM & Host telemetry with IP addresses, device info, uname, and architecture',
-                    author: 'Developer-ritesh',
-                    time: 'Just now',
-                    stats: '+727 -144',
-                    badge: 'HEAD -> main',
-                  },
-                  {
-                    hash: '32ed065',
-                    message: 'feat(header): responsive header with single rotate button and clean layout',
-                    author: 'Developer-ritesh',
-                    time: '1 hour ago',
-                    stats: '+312 -88',
-                    badge: 'origin/main',
-                  },
-                  {
-                    hash: '090aee4',
-                    message: 'feat(api): overhaul API studio with Postman v2.1 import/export and sandboxed script runner',
-                    author: 'Developer-ritesh',
-                    time: '3 hours ago',
-                    stats: '+1120 -95',
-                  },
-                  {
-                    hash: 'e18e312',
-                    message: 'feat(vm): add hardware virtualization with Apple vfkit and memory ballooning',
-                    author: 'Developer-ritesh',
-                    time: 'Yesterday',
-                    stats: '+850 -42',
-                  },
-                  {
-                    hash: 'a942fd1',
-                    message: 'feat(init): initialize AI Agent Workbench monorepo with Tauri v2 and React 19',
-                    author: 'Developer-ritesh',
-                    time: '2 days ago',
-                    stats: '+1420 -0',
-                  },
-                ].map((commit) => (
+                {commitHistory.map((commit) => (
                   <div
                     key={commit.hash}
                     className="p-4 bg-white/[0.025] hover:bg-white/[0.05] border border-white/[0.08] hover:border-indigo-500/40 rounded-xl transition space-y-2 group"
@@ -557,16 +611,15 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
                         <span className="font-mono text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2.5 py-0.5 rounded-lg border border-cyan-500/20">
                           {commit.hash}
                         </span>
-                        {commit.badge && (
+                        {commit.is_head && (
                           <span className="text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                            {commit.badge}
+                            HEAD → main
                           </span>
                         )}
                         <span className="text-xs text-zinc-400">• {commit.author}</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-[11px] font-mono text-emerald-400">{commit.stats}</span>
-                        <span className="text-[11px] text-zinc-500">{commit.time}</span>
+                        <span className="text-[11px] text-zinc-500">{commit.time_label}</span>
                         <button
                           onClick={() => navigator.clipboard.writeText(commit.hash)}
                           className="p-1 text-zinc-500 hover:text-zinc-200 transition opacity-0 group-hover:opacity-100"
@@ -588,10 +641,15 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
               {showAuditPanel && auditReport && (
                 <div className="px-5 py-3.5 bg-white/[0.02] border-b border-white/[0.07] text-xs space-y-2 shrink-0 animate-in fade-in">
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 font-bold text-zinc-200">
+                    <button
+                      onClick={() => setShowAuditPanel(false)}
+                      className="flex items-center gap-2 font-bold text-zinc-200 hover:text-white transition cursor-pointer"
+                      title="Collapse audit findings"
+                    >
                       <ShieldCheck className="w-4 h-4 text-emerald-400" />
                       Security &amp; Architecture Audit Findings
-                    </span>
+                      <ChevronUp className="w-3.5 h-3.5 text-zinc-500" />
+                    </button>
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                       Risk Level: {auditReport.riskLevel}
                     </span>
@@ -619,11 +677,11 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
                         key={idx}
                         className={`flex items-start transition-colors ${
                           line.type === 'add'
-                            ? 'bg-emerald-500/[0.08] text-emerald-200 border-l-2 border-emerald-500'
+                            ? 'bg-emerald-500/[0.06] text-emerald-300/90 border-l-2 border-emerald-500/40'
                             : line.type === 'del'
-                            ? 'bg-rose-500/[0.08] text-rose-200 border-l-2 border-rose-500'
+                            ? 'bg-rose-500/[0.06] text-rose-300/90 border-l-2 border-rose-500/40'
                             : line.type === 'header'
-                            ? 'bg-indigo-500/[0.12] text-indigo-300 font-bold border-y border-indigo-500/20'
+                            ? 'bg-indigo-500/[0.10] text-indigo-300 font-bold border-y border-indigo-500/20'
                             : 'text-zinc-300 hover:bg-white/[0.02]'
                         }`}
                       >
@@ -653,7 +711,7 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
                         <div
                           key={idx}
                           className={`flex items-start text-xs py-1 ${
-                            line.type === 'del' ? 'bg-rose-500/[0.12] text-rose-200 rounded px-1' : 'text-zinc-400'
+                            line.type === 'del' ? 'bg-rose-500/[0.08] text-rose-300/90 rounded px-1' : 'text-zinc-400'
                           }`}
                         >
                           <span className="w-10 select-none text-zinc-600 text-right pr-2 shrink-0 font-mono">
@@ -671,7 +729,7 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
                         <div
                           key={idx}
                           className={`flex items-start text-xs py-1 ${
-                            line.type === 'add' ? 'bg-emerald-500/[0.12] text-emerald-200 rounded px-1' : 'text-zinc-400'
+                            line.type === 'add' ? 'bg-emerald-500/[0.08] text-emerald-300/90 rounded px-1' : 'text-zinc-400'
                           }`}
                         >
                           <span className="w-10 select-none text-zinc-600 text-right pr-2 shrink-0 font-mono">

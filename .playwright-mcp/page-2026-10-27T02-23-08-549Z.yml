@@ -1,0 +1,12 @@
+- generic [ref=f7e3]:
+  - generic [ref=f7e4]: "[plugin:@tailwindcss/vite:generate:serve] Unterminated string: 's own preflight (in @layer base) already resets margins,'"
+  - generic [ref=f7e5]: /Users/developerritesh/Dev-Action-2026/AI Agent Workbench/apps/desktop/src/index.css
+  - generic [ref=f7e6]: at Lr (file:///Users/developerritesh/Dev-Action-2026/AI%20Agent%20Workbench/apps/desktop/node_modules/tailwindcss/dist/lib.mjs:3:6795) at Te (file:///Users/developerritesh/Dev-Action-2026/AI%20Agent%20Workbench/apps/desktop/node_modules/tailwindcss/dist/lib.mjs:3:3510) at zf (file:///Users/developerritesh/Dev-Action-2026/AI%20Agent%20Workbench/apps/desktop/node_modules/tailwindcss/dist/lib.mjs:38:1384) at fu (file:///Users/developerritesh/Dev-Action-2026/AI%20Agent%20Workbench/apps/desktop/node_modules/@tailwindcss/node/dist/index.mjs:10:3464) at z.generate (file:///Users/developerritesh/Dev-Action-2026/AI%20Agent%20Workbench/apps/desktop/node_modules/@tailwindcss/vite/dist/index.mjs:1:6019) at TransformPluginContext.handler (file:///Users/developerritesh/Dev-Action-2026/AI%20Agent%20Workbench/apps/desktop/node_modules/@tailwindcss/vite/dist/index.mjs:1:3141) at EnvironmentPluginContainer.transform (file:///Users/developerritesh/Dev-Action-2026/AI%20Agent%20Workbench/apps/desktop/node_modules/vite/dist/node/chunks/node.js:8582:51) at loadAndTransform (file:///Users/developerritesh/Dev-Action-2026/AI%20Agent%20Workbench/apps/desktop/node_modules/vite/dist/node/chunks/node.js:20155:48) at async viteTransformMiddleware (file:///Users/developerritesh/Dev-Action-2026/AI%20Agent%20Workbench/apps/desktop/node_modules/vite/dist/node/chunks/node.js:20375:20)
+  - generic [ref=f7e7]:
+    - text: Click outside, press Esc key, or fix the code to dismiss.You can also disable this overlay by setting
+    - code [ref=f7e8]: server.hmr.overlay
+    - text: to
+    - code [ref=f7e9]: "false"
+    - text: in
+    - code [ref=f7e10]: vite.config.ts
+    - text: .

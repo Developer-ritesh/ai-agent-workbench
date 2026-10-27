@@ -1,0 +1,127 @@
+- generic [ref=f8e3]:
+  - banner [ref=f8e4]:
+    - generic [ref=f8e5]:
+      - generic [ref=f8e6]:
+        - generic [ref=f8e7]: A
+        - generic [ref=f8e8]: AI Agent Workbench
+      - button "Frontend Web App" [ref=f8e137] [cursor=pointer]
+      - button "Open project folder from your Mac (like VS Code)" [ref=f8e16] [cursor=pointer]
+    - generic [ref=f8e23]:
+      - generic "VM Running (Click to Stop)" [ref=f8e138] [cursor=pointer]: VM Active
+      - generic "Click to configure VM Auto-Rotation schedule" [ref=f8e28] [cursor=pointer]: 59m 11s
+      - button "Rotate" [ref=f8e36] [cursor=pointer]
+    - generic [ref=f8e41]:
+      - button "1.45 MB/s 380 KB/s 18ms" [ref=f8e139] [cursor=pointer]:
+        - generic [ref=f8e45]: 1.45 MB/s
+        - generic [ref=f8e49]: 380 KB/s
+        - generic [ref=f8e53]: 18ms
+      - generic [ref=f8e57]:
+        - button "Toggle Full Focus Mode" [ref=f8e58] [cursor=pointer]
+        - button "Toggle Primary Sidebar (Cmd+B)" [ref=f8e63] [cursor=pointer]
+        - button "Toggle Bottom Terminal Panel (Cmd+J)" [ref=f8e67] [cursor=pointer]
+        - button "Toggle Terminal Maximized Layout" [ref=f8e71] [cursor=pointer]
+      - button "Settings" [ref=f8e74] [cursor=pointer]
+      - generic "Developer Ritesh" [ref=f8e78]: DR
+  - generic [ref=f8e79]:
+    - complementary [ref=f8e80]:
+      - generic [ref=f8e81]:
+        - button "Explorer" [ref=f8e82] [cursor=pointer]
+        - button "Search" [ref=f8e88] [cursor=pointer]
+        - button "Git" [ref=f8e93] [cursor=pointer]
+        - button "Browser" [ref=f8e99] [cursor=pointer]
+        - button "API" [ref=f8e104] [cursor=pointer]
+        - button "Tests" [ref=f8e109] [cursor=pointer]
+        - button "Ports" [ref=f8e113] [cursor=pointer]
+        - button "Logs" [ref=f8e120] [cursor=pointer]
+        - button "VM" [ref=f8e124] [cursor=pointer]
+      - button "Settings" [ref=f8e130] [cursor=pointer]
+    - generic [ref=f8e295]:
+      - generic [ref=f8e297]:
+        - heading "Preferences & Settings" [level=2] [ref=f8e298]
+        - paragraph [ref=f8e301]: Configure appearance, code editor, isolated VM hardware, AI Agent autonomy, and security parameters.
+      - generic [ref=f8e302]:
+        - generic [ref=f8e303]:
+          - button "Appearance" [ref=f8e304] [cursor=pointer]
+          - button "Code Editor" [ref=f8e312] [cursor=pointer]
+          - button "Linux VM Sandbox" [ref=f8e319] [cursor=pointer]
+          - button "AI Agent & OpenCode" [ref=f8e324] [cursor=pointer]
+          - button "Skills & MCP Servers" [ref=f8e329] [cursor=pointer]
+          - button "Security & Sandbox" [ref=f8e341] [cursor=pointer]
+          - button "SQLite Audit Trail" [ref=f8e345] [cursor=pointer]
+          - button "System & About" [ref=f8e351] [cursor=pointer]
+        - generic [ref=f8e413]:
+          - generic [ref=f8e414]:
+            - generic [ref=f8e427]:
+              - generic [ref=f8e428]:
+                - heading "OpenCode Skills & MCP Server Management" [level=1] [ref=f8e429]
+                - generic [ref=f8e430]: v2.1.4 Config
+              - paragraph [ref=f8e431]: Bundled Model Context Protocol tools and 400+ autonomous agent skills integrated with your isolated Linux microVM.
+            - generic [ref=f8e432]:
+              - button "Sync / Reinstall from Path" [ref=f8e433] [cursor=pointer]
+              - button "Reload configuration" [ref=f8e438] [cursor=pointer]
+          - generic [ref=f8e444]:
+            - generic [ref=f8e446]:
+              - generic [ref=f8e447]: Active MCP Servers
+              - generic [ref=f8e448]:
+                - text: "17"
+                - generic [ref=f8e449]: / 17 installed
+            - generic [ref=f8e455]:
+              - generic [ref=f8e456]: Pre-Installed Skills
+              - generic [ref=f8e457]: 4 autonomous capabilities
+            - generic [ref=f8e463]:
+              - generic [ref=f8e464]: MicroVM Provisioning
+              - generic [ref=f8e465]: Mounted at ~/.config/opencode
+          - generic [ref=f8e472]:
+            - generic [ref=f8e474]:
+              - button "Model Context Protocol (MCP) Servers 17" [ref=f8e475] [cursor=pointer]:
+                - generic [ref=f8e479]: Model Context Protocol (MCP) Servers
+                - generic [ref=f8e480]: "17"
+              - button "Developer Skills Directory 4" [active] [ref=f8e481] [cursor=pointer]:
+                - generic [ref=f8e485]: Developer Skills Directory
+                - generic [ref=f8e486]: "4"
+            - generic [ref=f8e983]:
+              - generic [ref=f8e984]:
+                - textbox "Filter 400+ skills by title, domain (e.g. accessibility, security, react, api)..." [ref=f8e986]
+                - generic [ref=f8e987]:
+                  - button "all" [ref=f8e988] [cursor=pointer]
+                  - button "security" [ref=f8e989] [cursor=pointer]
+                  - button "frontend" [ref=f8e990] [cursor=pointer]
+                  - button "agent" [ref=f8e991] [cursor=pointer]
+                  - button "backend" [ref=f8e992] [cursor=pointer]
+              - generic [ref=f8e994]:
+                - generic [ref=f8e995] [cursor=pointer]:
+                  - generic [ref=f8e996]:
+                    - generic [ref=f8e997]:
+                      - generic [ref=f8e998]: Accessibility (WCAG 2.2)
+                      - generic [ref=f8e999]: accessibility
+                    - paragraph [ref=f8e1000]: Design, implement, and audit inclusive digital products using WCAG 2.2 Level AA.
+                  - generic [ref=f8e1001]:
+                    - generic [ref=f8e1002]: 3 files
+                    - generic [ref=f8e1006]: Inspect SKILL.md
+                - generic [ref=f8e1010] [cursor=pointer]:
+                  - generic [ref=f8e1011]:
+                    - generic [ref=f8e1012]:
+                      - generic [ref=f8e1013]: Agent Architecture Audit
+                      - generic [ref=f8e1014]: agent-architecture-audit
+                    - paragraph [ref=f8e1015]: Evaluate autonomous AI agents against safety, tool-use, and prompt-injection baselines.
+                  - generic [ref=f8e1016]:
+                    - generic [ref=f8e1017]: 3 files
+                    - generic [ref=f8e1021]: Inspect SKILL.md
+                - generic [ref=f8e1025] [cursor=pointer]:
+                  - generic [ref=f8e1026]:
+                    - generic [ref=f8e1027]:
+                      - generic [ref=f8e1028]: API Design
+                      - generic [ref=f8e1029]: api-design
+                    - paragraph [ref=f8e1030]: Design RESTful, gRPC, and GraphQL APIs with schema-first validation.
+                  - generic [ref=f8e1031]:
+                    - generic [ref=f8e1032]: 3 files
+                    - generic [ref=f8e1036]: Inspect SKILL.md
+                - generic [ref=f8e1040] [cursor=pointer]:
+                  - generic [ref=f8e1041]:
+                    - generic [ref=f8e1042]:
+                      - generic [ref=f8e1043]: React Modern Patterns
+                      - generic [ref=f8e1044]: react-patterns
+                    - paragraph [ref=f8e1045]: Best practices for React 19, hooks, Suspense, and state management.
+                  - generic [ref=f8e1046]:
+                    - generic [ref=f8e1047]: 4 files
+                    - generic [ref=f8e1051]: Inspect SKILL.md

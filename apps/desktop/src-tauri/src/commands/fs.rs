@@ -155,6 +155,18 @@ pub struct GitFileChange {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GitLogEntry {
+    pub hash: String,
+    pub author: String,
+    /// Author timestamp (Unix seconds)
+    pub time: i64,
+    /// Human-friendly relative time ("3m ago", "2h ago", "5d ago")
+    pub time_label: String,
+    pub message: String,
+    pub is_head: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GitStatusResult {
     pub branch: String,
     pub is_git_repo: bool,
@@ -431,15 +443,27 @@ pub fn git_status(path: String) -> Result<GitStatusResult, String> {
 }
 
 #[tauri::command]
-pub fn git_commit(path: String, message: String) -> Result<String, String> {
+pub fn git_commit(path: String, message: String, files: Option<Vec<String>>) -> Result<String, String> {
     if message.trim().is_empty() {
         return Err("Commit message cannot be empty".to_string());
     }
 
-    let _ = std::process::Command::new("git")
-        .args(&["-C", &path, "add", "-A"])
-        .output()
-        .map_err(|e| format!("git add failed: {}", e))?;
+    // Stage ONLY the files the user staged in the UI (or everything when none
+    // were provided — mirrors `git add -A`).
+    let stage_files = files.unwrap_or_default();
+    if stage_files.is_empty() {
+        let _ = std::process::Command::new("git")
+            .args(&["-C", &path, "add", "-A"])
+            .output()
+            .map_err(|e| format!("git add failed: {}", e))?;
+    } else {
+        let mut cmd = std::process::Command::new("git");
+        cmd.arg("-C").arg(&path).arg("add").arg("--");
+        for f in &stage_files {
+            cmd.arg(f);
+        }
+        let _ = cmd.output().map_err(|e| format!("git add failed: {}", e))?;
+    }
 
     let output = std::process::Command::new("git")
         .args(&["-C", &path, "commit", "-m", &message])
@@ -454,6 +478,71 @@ pub fn git_commit(path: String, message: String) -> Result<String, String> {
     } else {
         Err(if !stderr.is_empty() { stderr } else { stdout })
     }
+}
+
+/// Real commit history from the repository (git log). Empty result means the
+/// repository has no commits yet (or is not a git repository).
+#[tauri::command]
+pub fn git_log(path: String, limit: Option<u32>) -> Result<Vec<GitLogEntry>, String> {
+    let limit = limit.unwrap_or(50).clamp(1, 500) as usize;
+
+    let output = std::process::Command::new("git")
+        .args(&["-C", &path, "log", &format!("-n{}", limit), "--pretty=format:%h|%an|%at|%s"])
+        .output()
+        .map_err(|e| format!("git log failed: {}", e))?;
+
+    if !output.status.success() {
+        // Not a repo / no commits — an empty history is valid state, not an error
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if stderr.contains("does not have any commits yet") || stderr.contains("unknown revision") {
+            return Ok(Vec::new());
+        }
+        return Ok(Vec::new());
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+
+    let mut head = true;
+    let mut entries = Vec::new();
+    for line in stdout.lines() {
+        let mut parts = line.splitn(4, '|');
+        let hash = parts.next().unwrap_or("").trim().to_string();
+        let author = parts.next().unwrap_or("").trim().to_string();
+        let at: i64 = parts.next().unwrap_or("0").trim().parse().unwrap_or(0);
+        let message = parts.next().unwrap_or("").trim().to_string();
+        if hash.is_empty() {
+            continue;
+        }
+
+        let delta = (now - at).max(0);
+        let time_label = if delta < 60 {
+            "just now".to_string()
+        } else if delta < 3600 {
+            format!("{}m ago", delta / 60)
+        } else if delta < 86400 {
+            format!("{}h ago", delta / 3600)
+        } else if delta < 86400 * 30 {
+            format!("{}d ago", delta / 86400)
+        } else {
+            format!("{}mo ago", delta / (86400 * 30))
+        };
+
+        entries.push(GitLogEntry {
+            hash,
+            author,
+            time: at,
+            time_label,
+            message,
+            is_head: head,
+        });
+        head = false;
+    }
+
+    Ok(entries)
 }
 
 #[tauri::command]

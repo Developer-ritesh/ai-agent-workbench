@@ -1,0 +1,123 @@
+- generic [ref=f8e3]:
+  - banner [ref=f8e4]:
+    - generic [ref=f8e5]:
+      - generic [ref=f8e6]:
+        - generic [ref=f8e7]: A
+        - generic [ref=f8e8]: AI Agent Workbench
+      - button "Frontend Web App" [ref=f8e137] [cursor=pointer]
+      - button "Open project folder from your Mac (like VS Code)" [ref=f8e16] [cursor=pointer]
+    - generic [ref=f8e23]:
+      - generic "VM Running (Click to Stop)" [ref=f8e138] [cursor=pointer]: VM Active
+      - generic "Click to configure VM Auto-Rotation schedule" [ref=f8e28] [cursor=pointer]: 58m 51s
+      - button "Rotate" [ref=f8e36] [cursor=pointer]
+    - generic [ref=f8e41]:
+      - button "1.45 MB/s 380 KB/s 18ms" [ref=f8e139] [cursor=pointer]:
+        - generic [ref=f8e45]: 1.45 MB/s
+        - generic [ref=f8e49]: 380 KB/s
+        - generic [ref=f8e53]: 18ms
+      - generic [ref=f8e57]:
+        - button "Toggle Full Focus Mode" [ref=f8e58] [cursor=pointer]
+        - button "Toggle Primary Sidebar (Cmd+B)" [ref=f8e63] [cursor=pointer]
+        - button "Toggle Bottom Terminal Panel (Cmd+J)" [ref=f8e67] [cursor=pointer]
+        - button "Toggle Terminal Maximized Layout" [ref=f8e71] [cursor=pointer]
+      - button "Settings" [ref=f8e74] [cursor=pointer]
+      - generic "Developer Ritesh" [ref=f8e78]: DR
+  - generic [ref=f8e79]:
+    - complementary [ref=f8e80]:
+      - generic [ref=f8e81]:
+        - button "Explorer" [ref=f8e82] [cursor=pointer]
+        - button "Search" [ref=f8e88] [cursor=pointer]
+        - button "Git" [ref=f8e93] [cursor=pointer]
+        - button "Browser" [active] [ref=f8e99] [cursor=pointer]
+        - button "API" [ref=f8e104] [cursor=pointer]
+        - button "Tests" [ref=f8e109] [cursor=pointer]
+        - button "Ports" [ref=f8e113] [cursor=pointer]
+        - button "Logs" [ref=f8e120] [cursor=pointer]
+        - button "VM" [ref=f8e124] [cursor=pointer]
+      - button "Settings" [ref=f8e130] [cursor=pointer]
+    - generic [ref=f8e1058]:
+      - generic [ref=f8e1059]:
+        - generic [ref=f8e1060] [cursor=pointer]:
+          - generic [ref=f8e1064]: Dev Server Preview
+          - button "Close Tab" [ref=f8e1065]
+        - generic [ref=f8e1069] [cursor=pointer]:
+          - generic [ref=f8e1073]: Local API Gateway
+          - button "Close Tab" [ref=f8e1074]
+        - button "New Tab (Cmd+T)" [ref=f8e1078] [cursor=pointer]
+        - button "Duplicate Current Tab" [ref=f8e1080] [cursor=pointer]
+        - generic [ref=f8e1084]:
+          - generic [ref=f8e1085]:
+            - generic [ref=f8e1086]: "Ports:"
+            - button ":3000" [ref=f8e1087] [cursor=pointer]
+            - button ":5173" [ref=f8e1088] [cursor=pointer]
+            - button ":8080" [ref=f8e1089] [cursor=pointer]
+          - 'generic "CDP Target: http://127.0.0.1:9222/json (PID: Active)" [ref=f8e1090]': CDP :9222
+          - generic [ref=f8e1093]:
+            - button "Dark" [ref=f8e1094] [cursor=pointer]
+            - button "Light" [ref=f8e1095] [cursor=pointer]
+      - generic [ref=f8e1096]:
+        - generic [ref=f8e1097]:
+          - button "Back" [ref=f8e1098] [cursor=pointer]
+          - button "Forward" [ref=f8e1101] [cursor=pointer]
+          - button "Reload (Cmd+R)" [ref=f8e1104] [cursor=pointer]
+          - button "Home" [ref=f8e1108] [cursor=pointer]
+        - generic [ref=f8e1112]:
+          - generic "Site Security & Permissions" [ref=f8e1113] [cursor=pointer]: Secure
+          - textbox "Search or enter URL (e.g. http://127.0.0.1:5173)..." [ref=f8e1117]: http://127.0.0.1:5173
+          - generic [ref=f8e1118]:
+            - button "Bookmark Page" [ref=f8e1119] [cursor=pointer]
+            - button "Copy URL" [ref=f8e1122] [cursor=pointer]
+            - link "Open in System Browser" [ref=f8e1126] [cursor=pointer]:
+              - /url: http://127.0.0.1:5173
+            - button "Navigate" [ref=f8e1131] [cursor=pointer]
+        - generic [ref=f8e1135]:
+          - generic [ref=f8e1136]:
+            - button "⚡ Interactive App" [ref=f8e1137] [cursor=pointer]
+            - button "🌐 Raw Iframe" [ref=f8e1138] [cursor=pointer]
+          - generic [ref=f8e1139]:
+            - button "Desktop" [ref=f8e1140] [cursor=pointer]
+            - button "Mobile" [ref=f8e1143] [cursor=pointer]
+          - button "Emulation & Browser Tools" [ref=f8e1147] [cursor=pointer]
+          - button "Snapshot" [ref=f8e1149] [cursor=pointer]
+          - button "DevTools" [ref=f8e1154] [cursor=pointer]
+          - button "Inspector" [ref=f8e1159] [cursor=pointer]
+      - generic [ref=f8e1167]:
+        - generic [ref=f8e1168]:
+          - generic [ref=f8e1169]:
+            - generic [ref=f8e1170]: ⚡
+            - generic [ref=f8e1171]:
+              - generic [ref=f8e1172]: Workspace Web Preview
+              - generic [ref=f8e1173]: Live HMR Connected
+          - generic [ref=f8e1174]:
+            - generic [ref=f8e1175] [cursor=pointer]: Overview
+            - generic [ref=f8e1176] [cursor=pointer]: Components
+            - generic [ref=f8e1177] [cursor=pointer]: API Docs
+            - generic [ref=f8e1178]: DR
+        - generic [ref=f8e1179]:
+          - generic [ref=f8e1180]:
+            - generic [ref=f8e1181]: Interactive Development Sandbox
+            - heading "Full-Bleed Responsive Viewport Canvas" [level=2] [ref=f8e1186]
+            - paragraph [ref=f8e1187]: This viewport simulates your live frontend runtime with full interactive state, responsive breakpoints (Desktop & Mobile), and hot-module reloading. Use the toolbar above to switch between simulated mode and the raw browser iframe.
+            - generic [ref=f8e1188]:
+              - button "Switch to Raw Iframe (http://127.0.0.1:5173)" [ref=f8e1189] [cursor=pointer]
+              - button "View Host Telemetry" [ref=f8e1190] [cursor=pointer]
+          - generic [ref=f8e1194]:
+            - generic [ref=f8e1195]:
+              - generic [ref=f8e1196]:
+                - generic [ref=f8e1197]: Interactive Reactive Counter
+                - generic [ref=f8e1198]: Client State OK
+              - paragraph [ref=f8e1199]: "Verify DOM event listeners, virtual DOM diffing, and reactive state updates in the viewport:"
+              - generic [ref=f8e1200]:
+                - button "-" [ref=f8e1201] [cursor=pointer]
+                - generic [ref=f8e1202]: "0"
+                - button "+" [ref=f8e1203] [cursor=pointer]
+                - button "Reset" [ref=f8e1204] [cursor=pointer]
+            - generic [ref=f8e1205]:
+              - generic [ref=f8e1206]:
+                - generic [ref=f8e1207]: MicroVM API Endpoint Probe
+                - generic [ref=f8e1208]: :3000 Active
+              - paragraph [ref=f8e1209]:
+                - text: Send a probe to
+                - code [ref=f8e1210]: http://127.0.0.1:3000/api/v1/health
+                - text: "over the local virtio socket:"
+              - button "Test Health Endpoint" [ref=f8e1212] [cursor=pointer]

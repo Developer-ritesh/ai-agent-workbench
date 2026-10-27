@@ -1,0 +1,245 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: A
+        - generic [ref=e8]: AI Agent Workbench
+      - button "Frontend Web App" [ref=e10] [cursor=pointer]
+      - button "Open project folder from your Mac (like VS Code)" [ref=e16] [cursor=pointer]
+    - generic [ref=e23]:
+      - generic "VM Running (Click to Stop)" [ref=e24] [cursor=pointer]: VM Active
+      - generic "Click to configure VM Auto-Rotation schedule" [ref=e28] [cursor=pointer]: 56m 58s
+      - button "Rotate" [ref=e36] [cursor=pointer]
+    - generic [ref=e41]:
+      - button "1.45 MB/s 380 KB/s 18ms" [ref=e43] [cursor=pointer]:
+        - generic [ref=e45]: 1.45 MB/s
+        - generic [ref=e49]: 380 KB/s
+        - generic [ref=e53]: 18ms
+      - generic [ref=e57]:
+        - button "Toggle Full Focus Mode" [ref=e58] [cursor=pointer]
+        - button "Toggle Primary Sidebar (Cmd+B)" [ref=e63] [cursor=pointer]
+        - button "Toggle Bottom Terminal Panel (Cmd+J)" [ref=e67] [cursor=pointer]
+        - button "Toggle Terminal Maximized Layout" [ref=e71] [cursor=pointer]
+      - button "Settings" [ref=e74] [cursor=pointer]
+      - generic "Developer Ritesh" [ref=e78]: DR
+  - generic [ref=e79]:
+    - complementary [ref=e80]:
+      - generic [ref=e81]:
+        - button "Explorer" [ref=e82] [cursor=pointer]
+        - button "Search" [ref=e88] [cursor=pointer]
+        - button "Git" [active] [ref=e93] [cursor=pointer]
+        - button "Browser" [ref=e99] [cursor=pointer]
+        - button "API" [ref=e104] [cursor=pointer]
+        - button "Tests" [ref=e109] [cursor=pointer]
+        - button "Ports" [ref=e113] [cursor=pointer]
+        - button "Logs" [ref=e120] [cursor=pointer]
+        - button "VM" [ref=e124] [cursor=pointer]
+      - button "Settings" [ref=e130] [cursor=pointer]
+    - generic [ref=e772]:
+      - generic [ref=e773]:
+        - generic [ref=e774]:
+          - 'generic "On branch main Changes not staged for commit: modified: src/auth.rs modified: tests/auth_test.rs no changes added to commit (use \"git add\" to update)" [ref=e775] [cursor=pointer]': main
+          - generic [ref=e782]:
+            - generic [ref=e783]: 3 changed files
+            - generic [ref=e784]: •
+            - generic [ref=e785]: "+46"
+            - generic [ref=e786]: "-3"
+        - generic [ref=e787]:
+          - button "Create Snapshot" [ref=e788] [cursor=pointer]
+          - button "Security Audit" [ref=e792] [cursor=pointer]
+          - button "Refresh Status" [ref=e797] [cursor=pointer]
+      - generic [ref=e803]:
+        - generic [ref=e804]:
+          - generic [ref=e805]:
+            - generic [ref=e806]:
+              - generic [ref=e807]: Commit Changes
+              - generic [ref=e808]: ⌘Enter
+            - 'textbox "Commit message (e.g. feat: verify auth tokens)..." [ref=e809]': "feat: implement secure token verification"
+            - button "Commit & Sync" [ref=e810] [cursor=pointer]
+          - generic [ref=e814]:
+            - generic [ref=e815]:
+              - generic [ref=e816]: Changes (3)
+              - button "Stage All" [ref=e817] [cursor=pointer]
+            - generic [ref=e818] [cursor=pointer]:
+              - generic [ref=e819]:
+                - checkbox [checked] [ref=e820]
+                - generic [ref=e826]: src/auth/service.rs
+              - generic [ref=e827]:
+                - generic [ref=e828]: "+7"
+                - generic [ref=e829]: "-3"
+            - generic [ref=e830] [cursor=pointer]:
+              - generic [ref=e831]:
+                - checkbox [checked] [ref=e832]
+                - generic [ref=e838]: src/auth/claims.rs
+              - generic [ref=e839]:
+                - generic [ref=e840]: "+24"
+                - generic [ref=e841]: "-0"
+            - generic [ref=e842] [cursor=pointer]:
+              - generic [ref=e843]:
+                - checkbox [ref=e844]
+                - generic [ref=e850]: src/auth/keys.pem
+              - generic [ref=e851]:
+                - generic [ref=e852]: "+15"
+                - generic [ref=e853]: "-0"
+            - generic [ref=e854]:
+              - generic [ref=e855]:
+                - generic [ref=e856]: Safety Snapshots
+                - generic [ref=e857]: Rollback Ready
+              - generic [ref=e858]:
+                - generic [ref=e859]:
+                  - generic [ref=e860]:
+                    - generic [ref=e861]: Pre-Agent Auth Refactor
+                    - generic [ref=e862]: Today, 10:15 AM
+                  - button "Rollback to this snapshot" [ref=e863] [cursor=pointer]
+                - generic [ref=e867]:
+                  - generic [ref=e868]:
+                    - generic [ref=e869]: Baseline Working Tree
+                    - generic [ref=e870]: Yesterday, 18:30 PM
+                  - button "Rollback to this snapshot" [ref=e871] [cursor=pointer]
+        - generic "Drag to resize panel (Double-click to reset)" [ref=e875]
+        - generic [ref=e877]:
+          - generic [ref=e878]:
+            - generic [ref=e879]:
+              - generic [ref=e880]:
+                - button "Diff Comparison" [ref=e881] [cursor=pointer]
+                - button "Commit History (5)" [ref=e882] [cursor=pointer]
+              - generic [ref=e883]:
+                - generic [ref=e889]: src/auth/service.rs
+                - button "Copy file path" [ref=e890] [cursor=pointer]
+            - generic [ref=e894]:
+              - generic [ref=e895]:
+                - button "Unified" [ref=e896] [cursor=pointer]
+                - button "Split" [ref=e900] [cursor=pointer]
+              - 'button "Audit: LOW" [ref=e904] [cursor=pointer]'
+          - generic [ref=e905]:
+            - generic [ref=e906]:
+              - generic [ref=e907]:
+                - generic [ref=e908]: Security & Architecture Audit Findings
+                - generic [ref=e912]: "Risk Level: low"
+              - paragraph [ref=e913]: The proposed changes introduce secure RS256 token verification using JSON Web Token claims.
+              - generic [ref=e914]:
+                - generic [ref=e915]:
+                  - generic [ref=e916]: ✓
+                  - generic [ref=e917]: Constant-time signature comparison verified via cryptographic provider.
+                - generic [ref=e918]:
+                  - generic [ref=e919]: ✓
+                  - generic [ref=e920]: Added token expiration and audience claim validation.
+                - generic [ref=e921]:
+                  - generic [ref=e922]: ⚠
+                  - generic [ref=e923]: Ensure public key JWKS caching handles network timeouts gracefully.
+            - generic [ref=e924]:
+              - generic [ref=e925]:
+                - generic [ref=e926]: "@@ -1,8 +1,13 @@ use declarations"
+                - generic [ref=e928]:
+                  - generic [ref=e929]: "1"
+                  - generic [ref=e930]: "1"
+                  - generic [ref=e931]: use std::sync::Arc;
+                - generic [ref=e932]:
+                  - generic [ref=e933]: "2"
+                  - generic [ref=e934]: "2"
+                  - generic [ref=e935]: use tokio::sync::RwLock;
+                - generic [ref=e936]:
+                  - generic [ref=e937]: "3"
+                  - generic [ref=e938]: +
+                  - generic [ref=e939]: "use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, Header, Validation};"
+                - generic [ref=e940]:
+                  - generic [ref=e941]: "4"
+                  - generic [ref=e942]: +
+                  - generic [ref=e943]: "use crate::auth::claims::{Claims, Role};"
+                - generic [ref=e944]:
+                  - generic [ref=e945]: "5"
+                  - generic [ref=e946]: +
+                  - generic [ref=e947]: use crate::security::errors::AuthError;
+                - generic [ref=e948]:
+                  - generic [ref=e949]: "3"
+                  - generic [ref=e950]: "6"
+                - generic [ref=e952]: "@@ -14,12 +19,25 @@ pub mod auth {"
+                - generic [ref=e954]:
+                  - generic [ref=e955]: "14"
+                  - generic [ref=e956]: "19"
+                  - generic [ref=e957]: "use serde::{Deserialize, Serialize};"
+                - generic [ref=e958]:
+                  - generic [ref=e959]: "15"
+                  - generic [ref=e960]: "-"
+                  - generic [ref=e961]: "pub fn authenticate_user(token: &str) -> bool {"
+                - generic [ref=e962]:
+                  - generic [ref=e963]: "16"
+                  - generic [ref=e964]: "-"
+                  - generic [ref=e965]: token == "secret_hardcoded_admin"
+                - generic [ref=e966]:
+                  - generic [ref=e967]: "17"
+                  - generic [ref=e968]: "-"
+                  - generic [ref=e969]: "}"
+                - generic [ref=e970]:
+                  - generic [ref=e971]: "20"
+                  - generic [ref=e972]: +
+                  - generic [ref=e973]: "pub fn authenticate_user(token: &str) -> Result<Claims, AuthError> {"
+                - generic [ref=e974]:
+                  - generic [ref=e975]: "21"
+                  - generic [ref=e976]: +
+                  - generic [ref=e977]: let mut validation = Validation::new(Algorithm::RS256);
+                - generic [ref=e978]:
+                  - generic [ref=e979]: "22"
+                  - generic [ref=e980]: +
+                  - generic [ref=e981]: validation.validate_exp = true;
+                - generic [ref=e982]:
+                  - generic [ref=e983]: "23"
+                  - generic [ref=e984]: +
+                  - generic [ref=e985]: validation.set_audience(&["ai-workbench-gateway"]);
+                - generic [ref=e986]:
+                  - generic [ref=e987]: "24"
+                  - generic [ref=e988]: +
+                  - generic [ref=e989]: let token_data = decode::<Claims>(token, &DECODING_KEY, &validation)?;
+                - generic [ref=e990]:
+                  - generic [ref=e991]: "25"
+                  - generic [ref=e992]: +
+                  - generic [ref=e993]: Ok(token_data.claims)
+                - generic [ref=e994]:
+                  - generic [ref=e995]: "26"
+                  - generic [ref=e996]: +
+                  - generic [ref=e997]: "}"
+                - generic [ref=e998]:
+                  - generic [ref=e999]: "18"
+                  - generic [ref=e1000]: "27"
+                - generic [ref=e1002]:
+                  - generic [ref=e1003]: "19"
+                  - generic [ref=e1004]: "28"
+                  - generic [ref=e1005]: "pub fn revoke_session(session_id: &str) {"
+                - generic [ref=e1006]:
+                  - generic [ref=e1007]: "20"
+                  - generic [ref=e1008]: "29"
+                  - generic [ref=e1009]: tracing::info!(session_id, "Revoking active session");
+                - generic [ref=e1010]:
+                  - generic [ref=e1011]: "30"
+                  - generic [ref=e1012]: +
+                  - generic [ref=e1013]: token_store::invalidate_token(session_id);
+                - generic [ref=e1014]:
+                  - generic [ref=e1015]: "21"
+                  - generic [ref=e1016]: "31"
+                  - generic [ref=e1017]: "}"
+              - generic [ref=e1018]:
+                - generic [ref=e1019]:
+                  - generic [ref=e1020]: Interactive Code Review & Sign-off
+                  - generic [ref=e1025]: Pending Sign-off
+                - textbox "Add code review remarks or security validation notes..." [ref=e1026]
+                - generic [ref=e1027]:
+                  - generic [ref=e1028]: "Target: src/auth/service.rs • Branch: main"
+                  - generic [ref=e1029]:
+                    - button "Discard Changes" [ref=e1030] [cursor=pointer]
+                    - button "Request Changes" [ref=e1035] [cursor=pointer]
+                    - button "Approve Changes" [ref=e1039] [cursor=pointer]
+              - generic [ref=e1043]:
+                - generic [ref=e1044]:
+                  - generic [ref=e1045]: Recent Branch Commits on main
+                  - button "View Full History →" [ref=e1048] [cursor=pointer]
+                - generic [ref=e1049]:
+                  - generic [ref=e1050]:
+                    - generic [ref=e1051]:
+                      - generic [ref=e1052]: dd0e6ff
+                      - generic [ref=e1053]: "feat(vm): add full VM & Host telemetry with IP addresses, device info, uname, and architecture"
+                    - generic [ref=e1054]: Just now
+                  - generic [ref=e1055]:
+                    - generic [ref=e1056]:
+                      - generic [ref=e1057]: 32ed065
+                      - generic [ref=e1058]: "feat(header): responsive header with single rotate button and clean layout"
+                    - generic [ref=e1059]: 1 hour ago

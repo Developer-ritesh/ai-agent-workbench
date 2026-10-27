@@ -1,0 +1,314 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: A
+        - generic [ref=e8]: AI Agent Workbench
+      - button "Frontend Web App" [ref=e10] [cursor=pointer]
+      - button "Open project folder from your Mac (like VS Code)" [ref=e16] [cursor=pointer]
+    - generic [ref=e23]:
+      - generic "VM Running (Click to Stop)" [ref=e24] [cursor=pointer]: VM Active
+      - generic "Click to configure VM Auto-Rotation schedule" [ref=e28] [cursor=pointer]: 56m 43s
+      - button "Rotate" [ref=e36] [cursor=pointer]
+    - generic [ref=e41]:
+      - button "1.45 MB/s 380 KB/s 18ms" [ref=e43] [cursor=pointer]:
+        - generic [ref=e45]: 1.45 MB/s
+        - generic [ref=e49]: 380 KB/s
+        - generic [ref=e53]: 18ms
+      - generic [ref=e57]:
+        - button "Toggle Full Focus Mode" [ref=e58] [cursor=pointer]
+        - button "Toggle Primary Sidebar (Cmd+B)" [ref=e63] [cursor=pointer]
+        - button "Toggle Bottom Terminal Panel (Cmd+J)" [ref=e67] [cursor=pointer]
+        - button "Toggle Terminal Maximized Layout" [ref=e71] [cursor=pointer]
+      - button "Settings" [ref=e74] [cursor=pointer]
+      - generic "Developer Ritesh" [ref=e78]: DR
+  - generic [ref=e79]:
+    - complementary [ref=e80]:
+      - generic [ref=e81]:
+        - button "Explorer" [ref=e82] [cursor=pointer]
+        - button "Search" [ref=e88] [cursor=pointer]
+        - button "Git" [ref=e93] [cursor=pointer]
+        - button "Browser" [ref=e99] [cursor=pointer]
+        - button "API" [ref=e104] [cursor=pointer]
+        - button "Tests" [ref=e109] [cursor=pointer]
+        - button "Ports" [ref=e113] [cursor=pointer]
+        - button "Logs" [ref=e120] [cursor=pointer]
+        - button "VM" [ref=e124] [cursor=pointer]
+      - button "Settings" [ref=e130] [cursor=pointer]
+    - generic [ref=e1061]:
+      - generic [ref=e1063]:
+        - heading "Preferences & Settings" [level=2] [ref=e1064]
+        - paragraph [ref=e1067]: Configure appearance, code editor, isolated VM hardware, AI Agent autonomy, and security parameters.
+      - generic [ref=e1068]:
+        - generic [ref=e1069]:
+          - button "Appearance" [ref=e1070] [cursor=pointer]
+          - button "Code Editor" [ref=e1078] [cursor=pointer]
+          - button "Linux VM Sandbox" [ref=e1085] [cursor=pointer]
+          - button "AI Agent & OpenCode" [ref=e1090] [cursor=pointer]
+          - button "Skills & MCP Servers" [active] [ref=e1095] [cursor=pointer]
+          - button "Security & Sandbox" [ref=e1107] [cursor=pointer]
+          - button "SQLite Audit Trail" [ref=e1111] [cursor=pointer]
+          - button "System & About" [ref=e1117] [cursor=pointer]
+        - generic [ref=e1179]:
+          - generic [ref=e1180]:
+            - generic [ref=e1193]:
+              - generic [ref=e1194]:
+                - heading "OpenCode Skills & MCP Server Management" [level=1] [ref=e1195]
+                - generic [ref=e1196]: v2.1.4 Config
+              - paragraph [ref=e1197]: Bundled Model Context Protocol tools and 400+ autonomous agent skills integrated with your isolated Linux microVM.
+            - generic [ref=e1198]:
+              - button "Sync / Reinstall from Path" [ref=e1199] [cursor=pointer]
+              - button "Reload configuration" [ref=e1204] [cursor=pointer]
+          - generic [ref=e1210]:
+            - generic [ref=e1212]:
+              - generic [ref=e1213]: Active MCP Servers
+              - generic [ref=e1214]:
+                - text: "17"
+                - generic [ref=e1215]: / 17 installed
+            - generic [ref=e1221]:
+              - generic [ref=e1222]: Pre-Installed Skills
+              - generic [ref=e1223]: 4 autonomous capabilities
+            - generic [ref=e1229]:
+              - generic [ref=e1230]: MicroVM Provisioning
+              - generic [ref=e1231]: Mounted at ~/.config/opencode
+          - generic [ref=e1238]:
+            - generic [ref=e1239]:
+              - generic [ref=e1240]:
+                - button "Model Context Protocol (MCP) Servers 17" [ref=e1241] [cursor=pointer]:
+                  - generic [ref=e1245]: Model Context Protocol (MCP) Servers
+                  - generic [ref=e1246]: "17"
+                - button "Developer Skills Directory 4" [ref=e1247] [cursor=pointer]:
+                  - generic [ref=e1251]: Developer Skills Directory
+                  - generic [ref=e1252]: "4"
+              - button "Add MCP Server" [ref=e1253] [cursor=pointer]
+            - generic [ref=e1256]:
+              - generic [ref=e1257]:
+                - textbox "Search MCP servers by name, command, or remote endpoint URL..." [ref=e1259]
+                - generic [ref=e1260]:
+                  - button "All (17)" [ref=e1261] [cursor=pointer]
+                  - button "Local (12)" [ref=e1262] [cursor=pointer]
+                  - button "Remote (5)" [ref=e1263] [cursor=pointer]
+                  - button "Active (17)" [ref=e1264] [cursor=pointer]
+                  - button "Disabled (0)" [ref=e1265] [cursor=pointer]
+              - generic [ref=e1267]:
+                - generic [ref=e1268] [cursor=pointer]:
+                  - generic [ref=e1269]:
+                    - generic [ref=e1274]:
+                      - generic [ref=e1275]:
+                        - generic [ref=e1276]: dart
+                        - generic [ref=e1277]: local
+                      - generic [ref=e1278]: Active & Ready
+                    - button "Enabled" [ref=e1281]
+                  - generic [ref=e1282]: dart mcp-server
+                  - generic [ref=e1284]:
+                    - button "View Configuration Details" [ref=e1285]
+                    - button "Edit Server" [ref=e1289]
+                    - button "Delete Server" [ref=e1292]
+                - generic [ref=e1296] [cursor=pointer]:
+                  - generic [ref=e1297]:
+                    - generic [ref=e1302]:
+                      - generic [ref=e1303]:
+                        - generic [ref=e1304]: heroui
+                        - generic [ref=e1305]: local
+                      - generic [ref=e1306]: Active & Ready
+                    - button "Enabled" [ref=e1309]
+                  - generic [ref=e1310]: npx -y @heroui/react-mcp@latest
+                  - generic [ref=e1312]:
+                    - button "View Configuration Details" [ref=e1313]
+                    - button "Edit Server" [ref=e1317]
+                    - button "Delete Server" [ref=e1320]
+                - generic [ref=e1324] [cursor=pointer]:
+                  - generic [ref=e1325]:
+                    - generic [ref=e1330]:
+                      - generic [ref=e1331]:
+                        - generic [ref=e1332]: playwright
+                        - generic [ref=e1333]: local
+                      - generic [ref=e1334]: Active & Ready
+                    - button "Enabled" [ref=e1337]
+                  - generic [ref=e1338]: npx -y @playwright/mcp@latest
+                  - generic [ref=e1340]:
+                    - button "View Configuration Details" [ref=e1341]
+                    - button "Edit Server" [ref=e1345]
+                    - button "Delete Server" [ref=e1348]
+                - generic [ref=e1352] [cursor=pointer]:
+                  - generic [ref=e1353]:
+                    - generic [ref=e1359]:
+                      - generic [ref=e1360]:
+                        - generic [ref=e1361]: context7
+                        - generic [ref=e1362]: remote
+                      - generic [ref=e1363]: Active & Ready
+                    - button "Enabled" [ref=e1366]
+                  - generic [ref=e1367]: https://mcp.context7.com/mcp
+                  - generic [ref=e1369]:
+                    - button "View Configuration Details" [ref=e1370]
+                    - button "Edit Server" [ref=e1374]
+                    - button "Delete Server" [ref=e1377]
+                - generic [ref=e1381] [cursor=pointer]:
+                  - generic [ref=e1382]:
+                    - generic [ref=e1388]:
+                      - generic [ref=e1389]:
+                        - generic [ref=e1390]: gh_grep
+                        - generic [ref=e1391]: remote
+                      - generic [ref=e1392]: Active & Ready
+                    - button "Enabled" [ref=e1395]
+                  - generic [ref=e1396]: https://mcp.grep.app
+                  - generic [ref=e1398]:
+                    - button "View Configuration Details" [ref=e1399]
+                    - button "Edit Server" [ref=e1403]
+                    - button "Delete Server" [ref=e1406]
+                - generic [ref=e1410] [cursor=pointer]:
+                  - generic [ref=e1411]:
+                    - generic [ref=e1417]:
+                      - generic [ref=e1418]:
+                        - generic [ref=e1419]: stitch
+                        - generic [ref=e1420]: remote
+                      - generic [ref=e1421]: Active & Ready
+                    - button "Enabled" [ref=e1424]
+                  - generic [ref=e1425]: https://stitch.googleapis.com/mcp
+                  - generic [ref=e1427]:
+                    - button "View Configuration Details" [ref=e1428]
+                    - button "Edit Server" [ref=e1432]
+                    - button "Delete Server" [ref=e1435]
+                - generic [ref=e1439] [cursor=pointer]:
+                  - generic [ref=e1440]:
+                    - generic [ref=e1445]:
+                      - generic [ref=e1446]:
+                        - generic [ref=e1447]: thinking
+                        - generic [ref=e1448]: local
+                      - generic [ref=e1449]: Active & Ready
+                    - button "Enabled" [ref=e1452]
+                  - generic [ref=e1453]: npx -y @modelcontextprotocol/server-sequential-thinking
+                  - generic [ref=e1455]:
+                    - button "View Configuration Details" [ref=e1456]
+                    - button "Edit Server" [ref=e1460]
+                    - button "Delete Server" [ref=e1463]
+                - generic [ref=e1467] [cursor=pointer]:
+                  - generic [ref=e1468]:
+                    - generic [ref=e1473]:
+                      - generic [ref=e1474]:
+                        - generic [ref=e1475]: filesystem
+                        - generic [ref=e1476]: local
+                      - generic [ref=e1477]: Active & Ready
+                    - button "Enabled" [ref=e1480]
+                  - generic [ref=e1481]: npx -y @modelcontextprotocol/server-filesystem /Users/developerritesh/Dev-Action-2026
+                  - generic [ref=e1483]:
+                    - button "View Configuration Details" [ref=e1484]
+                    - button "Edit Server" [ref=e1488]
+                    - button "Delete Server" [ref=e1491]
+                - generic [ref=e1495] [cursor=pointer]:
+                  - generic [ref=e1496]:
+                    - generic [ref=e1501]:
+                      - generic [ref=e1502]:
+                        - generic [ref=e1503]: google-search
+                        - generic [ref=e1504]: local
+                      - generic [ref=e1505]: Active & Ready
+                    - button "Enabled" [ref=e1508]
+                  - generic [ref=e1509]: npx -y @mcp-server/google-search-mcp@latest
+                  - generic [ref=e1511]:
+                    - button "View Configuration Details" [ref=e1512]
+                    - button "Edit Server" [ref=e1516]
+                    - button "Delete Server" [ref=e1519]
+                - generic [ref=e1523] [cursor=pointer]:
+                  - generic [ref=e1524]:
+                    - generic [ref=e1529]:
+                      - generic [ref=e1530]:
+                        - generic [ref=e1531]: memory
+                        - generic [ref=e1532]: local
+                      - generic [ref=e1533]: Active & Ready
+                    - button "Enabled" [ref=e1536]
+                  - generic [ref=e1537]: npx -y @modelcontextprotocol/server-memory
+                  - generic [ref=e1539]:
+                    - button "View Configuration Details" [ref=e1540]
+                    - button "Edit Server" [ref=e1544]
+                    - button "Delete Server" [ref=e1547]
+                - generic [ref=e1551] [cursor=pointer]:
+                  - generic [ref=e1552]:
+                    - generic [ref=e1557]:
+                      - generic [ref=e1558]:
+                        - generic [ref=e1559]: puppeteer
+                        - generic [ref=e1560]: local
+                      - generic [ref=e1561]: Active & Ready
+                    - button "Enabled" [ref=e1564]
+                  - generic [ref=e1565]: npx -y @modelcontextprotocol/server-puppeteer
+                  - generic [ref=e1567]:
+                    - button "View Configuration Details" [ref=e1568]
+                    - button "Edit Server" [ref=e1572]
+                    - button "Delete Server" [ref=e1575]
+                - generic [ref=e1579] [cursor=pointer]:
+                  - generic [ref=e1580]:
+                    - generic [ref=e1586]:
+                      - generic [ref=e1587]:
+                        - generic [ref=e1588]: supabase
+                        - generic [ref=e1589]: remote
+                      - generic [ref=e1590]: Active & Ready
+                    - button "Enabled" [ref=e1593]
+                  - generic [ref=e1594]: https://mcp.supabase.com/mcp
+                  - generic [ref=e1596]:
+                    - button "View Configuration Details" [ref=e1597]
+                    - button "Edit Server" [ref=e1601]
+                    - button "Delete Server" [ref=e1604]
+                - generic [ref=e1608] [cursor=pointer]:
+                  - generic [ref=e1609]:
+                    - generic [ref=e1615]:
+                      - generic [ref=e1616]:
+                        - generic [ref=e1617]: sentry
+                        - generic [ref=e1618]: remote
+                      - generic [ref=e1619]: Active & Ready
+                    - button "Enabled" [ref=e1622]
+                  - generic [ref=e1623]: https://mcp.sentry.dev/mcp
+                  - generic [ref=e1625]:
+                    - button "View Configuration Details" [ref=e1626]
+                    - button "Edit Server" [ref=e1630]
+                    - button "Delete Server" [ref=e1633]
+                - generic [ref=e1637] [cursor=pointer]:
+                  - generic [ref=e1638]:
+                    - generic [ref=e1643]:
+                      - generic [ref=e1644]:
+                        - generic [ref=e1645]: fetch
+                        - generic [ref=e1646]: local
+                      - generic [ref=e1647]: Active & Ready
+                    - button "Enabled" [ref=e1650]
+                  - generic [ref=e1651]: uvx --with mcp<2 mcp-server-fetch
+                  - generic [ref=e1653]:
+                    - button "View Configuration Details" [ref=e1654]
+                    - button "Edit Server" [ref=e1658]
+                    - button "Delete Server" [ref=e1661]
+                - generic [ref=e1665] [cursor=pointer]:
+                  - generic [ref=e1666]:
+                    - generic [ref=e1671]:
+                      - generic [ref=e1672]:
+                        - generic [ref=e1673]: florence2
+                        - generic [ref=e1674]: local
+                      - generic [ref=e1675]: Active & Ready
+                    - button "Enabled" [ref=e1678]
+                  - generic [ref=e1679]: uvx --from git+https://github.com/jkawamoto/mcp-florence2 mcp-florence2
+                  - generic [ref=e1681]:
+                    - button "View Configuration Details" [ref=e1682]
+                    - button "Edit Server" [ref=e1686]
+                    - button "Delete Server" [ref=e1689]
+                - generic [ref=e1693] [cursor=pointer]:
+                  - generic [ref=e1694]:
+                    - generic [ref=e1699]:
+                      - generic [ref=e1700]:
+                        - generic [ref=e1701]: rea
+                        - generic [ref=e1702]: local
+                      - generic [ref=e1703]: Active & Ready
+                    - button "Enabled" [ref=e1706]
+                  - generic [ref=e1707]: npx -y rea-agents@6.5.0 mcp
+                  - generic [ref=e1709]:
+                    - button "View Configuration Details" [ref=e1710]
+                    - button "Edit Server" [ref=e1714]
+                    - button "Delete Server" [ref=e1717]
+                - generic [ref=e1721] [cursor=pointer]:
+                  - generic [ref=e1722]:
+                    - generic [ref=e1727]:
+                      - generic [ref=e1728]:
+                        - generic [ref=e1729]: chrome-devtools
+                        - generic [ref=e1730]: local
+                      - generic [ref=e1731]: Active & Ready
+                    - button "Enabled" [ref=e1734]
+                  - generic [ref=e1735]: npx -y chrome-devtools-mcp@latest
+                  - generic [ref=e1737]:
+                    - button "View Configuration Details" [ref=e1738]
+                    - button "Edit Server" [ref=e1742]
+                    - button "Delete Server" [ref=e1745]

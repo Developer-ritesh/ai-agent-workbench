@@ -10,6 +10,7 @@ import {
   FileTreeNode,
   SearchResult,
   GitStatusResult,
+  GitLogEntry,
   NetworkStats,
   PortForwardMapping,
   ApiRequestConfig,
@@ -421,7 +422,33 @@ function mockCall<T>(cmd: string, args: Record<string, unknown>): Promise<T> {
             break;
           }
           case 'git_commit': {
-            resolve('Commit successful' as unknown as T);
+            resolve('Commit successful (dev preview)' as unknown as T);
+            break;
+          }
+          case 'git_log': {
+            // Honest dev-preview: the mock browser has no real repository wired
+            // up, so history is empty and the UI shows its explanatory empty state.
+            resolve([] as unknown as T);
+            break;
+          }
+          case 'ports_forward_create': {
+            const mapping = {
+              id: `port-${(args.localPort as number) || Math.floor(Math.random() * 10000)}`,
+              guestPort: args.guestPort ?? 3000,
+              localPort: args.localPort ?? 3000,
+              protocol: args.protocol || 'http',
+              status: 'active',
+              processName: 'user-created',
+              targetUrl: `http://127.0.0.1:${args.localPort ?? 3000}`,
+              isListening: true,
+            };
+            resolve(mapping as unknown as T);
+            break;
+          }
+          case 'ports_forward_remove': {
+            // Dev-browser mock: report success so the UI list updates; the real
+            // Tauri backend (commands/ports.rs PortManager) performs the actual teardown.
+            resolve(undefined as unknown as T);
             break;
           }
           case 'git_init': {
@@ -587,7 +614,9 @@ export const TauriApi = {
 
   // Git / Source Control
   gitStatus: (path: string) => callTauri<GitStatusResult>('git_status', { path }),
-  gitCommit: (path: string, message: string) => callTauri<string>('git_commit', { path, message }),
+  gitCommit: (path: string, message: string, files?: string[]) =>
+    callTauri<string>('git_commit', { path, message, files: files ?? null }),
+  gitLog: (path: string, limit: number = 50) => callTauri<GitLogEntry[]>('git_log', { path, limit }),
   gitInit: (path: string) => callTauri<string>('git_init', { path }),
 
   // OpenCode Session Management

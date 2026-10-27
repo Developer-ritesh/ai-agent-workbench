@@ -24,6 +24,8 @@ import {
   Terminal,
   FileCode,
   WrapText,
+  ChevronDown,
+  Info,
 } from 'lucide-react';
 import {
   HttpMethod,
@@ -52,6 +54,8 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
   const [requestSplitPercent, setRequestSplitPercent] = useState<number>(50);
   const [wrapResponse, setWrapResponse] = useState<boolean>(true);
   const [copiedCurl, setCopiedCurl] = useState<boolean>(false);
+  // Live request preview dock (evaluated URL + cURL) — collapsed by default to keep the request pane dense.
+  const [showRequestPreview, setShowRequestPreview] = useState<boolean>(false);
   const [copiedResolvedUrl, setCopiedResolvedUrl] = useState<boolean>(false);
 
   // Request State
@@ -1303,52 +1307,13 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                       </button>
                     </div>
 
-                    {/* Evaluated Live URL with Copy */}
-                    <div className="p-3 bg-black/40 border border-white/[0.08] rounded-xl space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[11px] font-semibold text-zinc-400 flex items-center gap-1.5">
-                          <Globe className="w-3 h-3 text-cyan-400" />
-                          Evaluated Live Request Target
-                        </span>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(getResolvedFullUrl());
-                            setCopiedResolvedUrl(true);
-                            setTimeout(() => setCopiedResolvedUrl(false), 2000);
-                          }}
-                          className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 transition cursor-pointer"
-                        >
-                          {copiedResolvedUrl ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                          <span>{copiedResolvedUrl ? 'Copied' : 'Copy URL'}</span>
-                        </button>
-                      </div>
-                      <div className="font-mono text-xs text-cyan-300 break-all bg-white/[0.02] p-2 rounded-lg border border-white/[0.04] select-all">
-                        {getResolvedFullUrl()}
-                      </div>
-                    </div>
-
-                    {/* Real-time cURL Command Box */}
-                    <div className="p-3 bg-black/40 border border-white/[0.08] rounded-xl space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[11px] font-semibold text-zinc-400 flex items-center gap-1.5">
-                          <Terminal className="w-3 h-3 text-emerald-400" />
-                          Live cURL Terminal Equivalent
-                        </span>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(getRealtimeCurlCommand());
-                            setCopiedCurl(true);
-                            setTimeout(() => setCopiedCurl(false), 2000);
-                          }}
-                          className="flex items-center gap-1 text-[11px] text-emerald-400 hover:text-emerald-300 transition cursor-pointer"
-                        >
-                          {copiedCurl ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                          <span>{copiedCurl ? 'Copied' : 'Copy cURL'}</span>
-                        </button>
-                      </div>
-                      <pre className="font-mono text-[11px] text-emerald-300/90 whitespace-pre-wrap bg-white/[0.02] p-2.5 rounded-lg border border-white/[0.04] overflow-x-auto select-all">
-                        {getRealtimeCurlCommand()}
-                      </pre>
+                    <div className="flex items-center justify-between text-xs text-zinc-500 border-t border-white/[0.04] pt-2.5">
+                      <span className="text-[11px] flex items-center gap-1.5">
+                        <Info className="w-3.5 h-3.5 text-zinc-500" />
+                        {params.filter((p) => p.enabled).length} parameter
+                        {params.filter((p) => p.enabled).length === 1 ? '' : 's'} enabled — edit above; open
+                        <span className="text-cyan-400">Request Preview</span> below for the resolved URL &amp; cURL.
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1644,6 +1609,74 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                       onChange={(e) => setTimeoutSeconds(Number(e.target.value))}
                       className="w-20 bg-white/[0.03] border border-white/[0.08] rounded px-2 py-1 text-xs text-zinc-100 text-center"
                     />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Live Request Preview Dock — pinned footer, collapsible (keeps the pane dense,
+                while the resolved URL / cURL stay one click away on every tab) */}
+            <div className="border-t border-white/[0.08] bg-[#0c0e17]/70 flex-shrink-0">
+              <div className="flex items-center justify-between px-4 py-2">
+                <button
+                  onClick={() => setShowRequestPreview(!showRequestPreview)}
+                  className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-400 hover:text-cyan-300 transition cursor-pointer"
+                  title={showRequestPreview ? 'Collapse request preview' : 'Expand request preview'}
+                >
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform ${showRequestPreview ? '' : '-rotate-90'}`}
+                  />
+                  <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Request Preview</span>
+                </button>
+                {showRequestPreview && (
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(getResolvedFullUrl());
+                        setCopiedResolvedUrl(true);
+                        setTimeout(() => setCopiedResolvedUrl(false), 2000);
+                      }}
+                      className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 transition cursor-pointer"
+                    >
+                      {copiedResolvedUrl ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedResolvedUrl ? 'Copied' : 'Copy URL'}</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(getRealtimeCurlCommand());
+                        setCopiedCurl(true);
+                        setTimeout(() => setCopiedCurl(false), 2000);
+                      }}
+                      className="flex items-center gap-1 text-[11px] text-emerald-400 hover:text-emerald-300 transition cursor-pointer"
+                    >
+                      {copiedCurl ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedCurl ? 'Copied' : 'Copy cURL'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {showRequestPreview && (
+                <div className="px-4 pb-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  <div className="p-3 bg-black/40 border border-white/[0.08] rounded-xl space-y-1.5">
+                    <div className="text-[11px] font-semibold text-zinc-400 flex items-center gap-1.5">
+                      <Globe className="w-3 h-3 text-cyan-400" />
+                      Evaluated Live Request Target
+                    </div>
+                    <div className="font-mono text-xs text-cyan-300 break-all bg-white/[0.02] p-2 rounded-lg border border-white/[0.04] select-all">
+                      {getResolvedFullUrl()}
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-black/40 border border-white/[0.08] rounded-xl space-y-1.5">
+                    <div className="text-[11px] font-semibold text-zinc-400 flex items-center gap-1.5">
+                      <Terminal className="w-3 h-3 text-emerald-400" />
+                      Live cURL Terminal Equivalent
+                    </div>
+                    <pre className="font-mono text-[11px] text-emerald-300/90 whitespace-pre-wrap bg-white/[0.02] p-2.5 rounded-lg border border-white/[0.04] overflow-x-auto select-all m-0">
+                      {getRealtimeCurlCommand()}
+                    </pre>
                   </div>
                 </div>
               )}

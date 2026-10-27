@@ -161,6 +161,17 @@ export interface GitStatusResult {
   changes: GitFileChange[];
 }
 
+export interface GitLogEntry {
+  hash: string;
+  author: string;
+  /** Author timestamp (Unix seconds) */
+  time: number;
+  /** Human-friendly relative time label from the backend */
+  time_label: string;
+  message: string;
+  is_head: boolean;
+}
+
 export interface NetworkStats {
   is_online: boolean;
   latency_ms: number;

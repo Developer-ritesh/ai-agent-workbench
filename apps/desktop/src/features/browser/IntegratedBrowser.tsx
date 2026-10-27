@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Globe,
   RotateCw,
@@ -8,11 +9,9 @@ import {
   Smartphone,
   Monitor,
   ExternalLink,
-  Camera,
   Plus,
   X,
   Search,
-  CheckCircle2,
   Bookmark,
   History,
   Download,
@@ -20,18 +19,16 @@ import {
   ZoomOut,
   Play,
   Pause,
+  CheckCircle2,
   Key,
   Database,
   Lock,
   FileCode,
-  Code,
   Copy,
-  Check,
   Trash2,
   Home,
   Sliders,
   Activity,
-  Sparkles,
 } from 'lucide-react';
 import {
   BrowserTab,
@@ -97,17 +94,27 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
 
   // Navigation and Zoom
   const [zoomPercent, setZoomPercent] = useState<number>(100);
-  const [isSecure, setIsSecure] = useState<boolean>(true);
   const [searchEngine] = useState<'direct' | 'google' | 'duckduckgo'>('direct');
-  const [previewMode, setPreviewMode] = useState<'simulator' | 'iframe'>('simulator');
-  const [simCounter, setSimCounter] = useState<number>(0);
-  const [simApiStatus, setSimApiStatus] = useState<string | null>(null);
-  const [simApiLoading, setSimApiLoading] = useState<boolean>(false);
+  // Honest default: the real sandboxed iframe viewport is the primary surface.
+  // 'home' is a fallback launcher that lists detected local servers.
+  const [previewMode, setPreviewMode] = useState<'home' | 'iframe'>('iframe');
+  const [viewportLoading, setViewportLoading] = useState<boolean>(false);
+  const [iframeReloadKey, setIframeReloadKey] = useState<number>(0);
+
+  // Live port reachability probe (home launcher + insights panel) — real fetch results only
+  const [portProbe, setPortProbe] = useState<Record<string, { state: 'checking' | 'up' | 'down'; ms?: number }>>({});
+  const runPortProbe = (port: number) => {
+    if (portProbe[String(port)]?.state === 'checking') return;
+    setPortProbe((prev) => ({ ...prev, [String(port)]: { state: 'checking' } }));
+    const started = performance.now();
+    fetch(`http://127.0.0.1:${port}/`, { mode: 'no-cors', cache: 'no-store' })
+      .then(() => setPortProbe((prev) => ({ ...prev, [String(port)]: { state: 'up', ms: Math.round(performance.now() - started) } })))
+      .catch(() => setPortProbe((prev) => ({ ...prev, [String(port)]: { state: 'down' } })));
+  };
 
   // Find in page
   const [showFindInPage, setShowFindInPage] = useState<boolean>(false);
   const [findQuery, setFindQuery] = useState<string>('');
-  const [findMatchesCount, setFindMatchesCount] = useState<number>(0);
 
   // Bookmarks, History, Downloads Modals
   const [showBookmarksModal, setShowBookmarksModal] = useState<boolean>(false);
@@ -145,6 +152,21 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
   const [inspectorOpen, setInspectorOpen] = useState<boolean>(false);
   const [canvasTheme, setCanvasTheme] = useState<'dark' | 'light'>('dark');
   const [showToolsMenu, setShowToolsMenu] = useState<boolean>(false);
+  // Fixed-position anchor captured from the toggle button — the menu is
+  // rendered through a portal so NO ancestor's overflow-hidden or stacking
+  // context can ever clip it (fix for "popup clipped/overflow hidden").
+  const [toolsAnchor, setToolsAnchor] = useState<{ top: number; right: number } | null>(null);
+  const openToolsMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+    setToolsAnchor({ top: rect.bottom + 8, right: Math.max(8, window.innerWidth - rect.right - 10) });
+    setShowToolsMenu(true);
+  };
+  useEffect(() => {
+    if (!showToolsMenu) return;
+    const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape') setShowToolsMenu(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showToolsMenu]);
   const [activeDevTab, setActiveDevTab] = useState<
     'elements' | 'console' | 'network' | 'sources' | 'application' | 'performance' | 'security' | 'automation'
   >('elements');
@@ -378,7 +400,6 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
   useEffect(() => {
     if (activeTab) {
       setInputUrl(activeTab.url);
-      setIsSecure(activeTab.url.startsWith('https://') || activeTab.url.includes('127.0.0.1'));
     }
   }, [activeTabId, activeTab]);
 
@@ -401,7 +422,9 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
       )
     );
     setInputUrl(formatted);
-    setIsSecure(formatted.startsWith('https://') || formatted.includes('127.0.0.1'));
+
+    // Real loading overlay until the iframe fires onLoad
+    setViewportLoading(true);
 
     // Record history
     setHistory((prev) => [
@@ -469,6 +492,12 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
   const handleZoom = (delta: number) => {
     const next = Math.max(50, Math.min(200, zoomPercent + delta));
     setZoomPercent(next);
+  };
+
+  // Real viewport reload: remounts the iframe so the browser re-requests the URL
+  const handleReloadViewport = () => {
+    setViewportLoading(true);
+    setIframeReloadKey((k) => k + 1);
   };
 
   // Console REPL Evaluation
@@ -738,7 +767,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
       </div>
 
       {/* 2. Unified Master Navigation & Omnibox Toolbar */}
-      <div className="flex items-center gap-2.5 px-4 py-2 bg-[#090b12]/95 backdrop-blur-xl border-b border-white/[0.07] text-xs shrink-0">
+      <div className="relative z-20 flex items-center gap-2.5 px-4 py-2 bg-[#090b12]/95 backdrop-blur-xl border-b border-white/[0.07] text-xs shrink-0">
         {/* Navigation Buttons */}
         <div className="flex items-center gap-1 shrink-0">
           <button
@@ -756,15 +785,7 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => {
-              if (iframeRef.current) {
-                const src = iframeRef.current.src;
-                iframeRef.current.src = 'about:blank';
-                setTimeout(() => {
-                  if (iframeRef.current) iframeRef.current.src = src;
-                }, 50);
-              }
-            }}
+            onClick={handleReloadViewport}
             className="p-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.06] rounded-xl border border-white/[0.06] transition active:scale-95 shadow-sm"
             title="Reload (Cmd+R)"
           >
@@ -787,16 +808,23 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
           }}
           className="flex-1 min-w-0 flex items-center bg-white/[0.035] border border-white/[0.09] hover:border-white/[0.15] focus-within:border-cyan-500/50 focus-within:ring-2 focus-within:ring-cyan-500/20 rounded-xl px-3 py-1.5 transition shadow-inner"
         >
-          <div
-            onClick={() => setShowPermissionsModal(true)}
-            className="flex items-center gap-1.5 mr-2 text-emerald-400 cursor-pointer shrink-0"
-            title="Site Security & Permissions"
-          >
-            <Shield className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-              {isSecure ? 'Secure' : 'HTTP'}
-            </span>
-          </div>
+          { (() => {
+              const u = activeTab?.url || '';
+              const isHttps = u.startsWith('https://');
+              const isLoopback = u.includes('://localhost') || u.includes('127.0.0.1');
+              const label = isHttps ? 'Secure' : isLoopback ? 'Local' : 'HTTP';
+              const tone = isHttps ? 'text-emerald-400' : isLoopback ? 'text-cyan-400' : 'text-amber-400';
+              return (
+                <div
+                  onClick={() => setShowPermissionsModal(true)}
+                  className="flex items-center gap-1.5 mr-2 cursor-pointer shrink-0"
+                  title="Site Security & Permissions"
+                >
+                  <Shield className={`w-3.5 h-3.5 ${tone}`} />
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${tone}`}>{label}</span>
+                </div>
+              );
+            })() }
 
           <input
             type="text"
@@ -845,19 +873,8 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
 
         {/* Viewport Presets & Render Mode Controls */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Dual Render Mode: Simulator vs Iframe */}
+          {/* Viewport surface toggle: real iframe (primary) vs launcher home */}
           <div className="flex items-center bg-black/60 border border-white/[0.09] rounded-xl p-0.5 gap-0.5">
-            <button
-              onClick={() => setPreviewMode('simulator')}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
-                previewMode === 'simulator'
-                  ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-md shadow-indigo-500/25'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-              title="Live interactive simulated web application"
-            >
-              ⚡ Interactive App
-            </button>
             <button
               onClick={() => setPreviewMode('iframe')}
               className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
@@ -865,9 +882,20 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
                   ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-md shadow-indigo-500/25'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
-              title="Raw sandboxed browser iframe"
+              title="Live sandboxed viewport of the current URL"
             >
-              🌐 Raw Iframe
+               Live Viewport
+            </button>
+            <button
+              onClick={() => setPreviewMode('home')}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                previewMode === 'home'
+                  ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-md shadow-indigo-500/25'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+              title="Detected local servers & workspace presets"
+            >
+               Servers
             </button>
           </div>
 
@@ -903,10 +931,10 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
             </button>
           </div>
 
-          {/* Settings / Emulation Dropdown Toggle */}
+          {/* Settings / Emulation Dropdown Toggle (portal-anchored, clip-proof) */}
           <div className="relative">
             <button
-              onClick={() => setShowToolsMenu(!showToolsMenu)}
+              onClick={openToolsMenu}
               className={`p-1.5 rounded-xl border transition ${
                 showToolsMenu
                   ? 'bg-white/[0.1] text-cyan-400 border-white/[0.2]'
@@ -917,8 +945,18 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
               <Sliders className="w-3.5 h-3.5" />
             </button>
 
-            {showToolsMenu && (
-              <div className="absolute right-0 top-full mt-2 w-68 bg-[#0e111d]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl rounded-2xl p-4 z-50 text-xs space-y-3.5 font-sans animate-in fade-in">
+            {showToolsMenu && toolsAnchor && createPortal(
+              <>
+              {/* invisible click-away layer: restores normal menu semantics even though the menu lives at <body> */}
+              <div
+                onClick={() => setShowToolsMenu(false)}
+                style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
+                aria-hidden="true"
+              />
+              <div
+                style={{ position: 'fixed', top: toolsAnchor.top, right: toolsAnchor.right, zIndex: 9999, maxHeight: '70vh', overflowY: 'auto' }}
+                className="w-72 bg-[#0e111d]/95 backdrop-blur-2xl border border-white/[0.12] shadow-2xl rounded-2xl p-4 text-xs space-y-3.5 font-sans animate-in fade-in"
+              >
                 <div className="flex items-center justify-between pb-1.5 border-b border-white/[0.08] text-[11px] font-bold text-zinc-200">
                   <span>Browser Tools &amp; Emulation</span>
                   <button onClick={() => setShowToolsMenu(false)} className="text-zinc-500 hover:text-zinc-300">✕</button>
@@ -990,47 +1028,39 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
                     Downloads
                   </button>
                 </div>
+
+                {/* Panel Toggles + Snapshot (promoted out of the toolbar to keep the omnibox row readable) */}
+                <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-white/[0.08]">
+                  <button
+                    onClick={handleCaptureScreenshot}
+                    className="p-2 bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.07] rounded-xl text-center text-[10px] text-zinc-300 transition"
+                    title="Capture Viewport Screenshot"
+                  >
+                    {screenshotSuccess ? '✓ Captured' : 'Snapshot'}
+                  </button>
+                  <button
+                    onClick={() => setDevToolsOpen(!devToolsOpen)}
+                    className={`p-2 border rounded-xl text-center text-[10px] transition ${
+                      devToolsOpen ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'bg-white/[0.03] hover:bg-white/[0.07] border-white/[0.07] text-zinc-300'
+                    }`}
+                    title="Toggle Developer Tools Dock (F12)"
+                  >
+                    {devToolsOpen ? 'DevTools ✓' : 'DevTools'}
+                  </button>
+                  <button
+                    onClick={() => setInspectorOpen(!inspectorOpen)}
+                    className={`p-2 border rounded-xl text-center text-[10px] transition ${
+                      inspectorOpen ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30' : 'bg-white/[0.03] hover:bg-white/[0.07] border-white/[0.07] text-zinc-300'
+                    }`}
+                    title="Toggle Live Connection Panel (ports & engine)"
+                  >
+                    {inspectorOpen ? 'Insights ✓' : 'Insights'}
+                  </button>
+                </div>
               </div>
-            )}
+              </>
+            , document.body)}
           </div>
-
-          {/* Snapshot Action */}
-          <button
-            onClick={handleCaptureScreenshot}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 border border-white/[0.08] rounded-xl text-xs font-medium transition active:scale-95 shadow-sm"
-            title="Capture Viewport Screenshot"
-          >
-            {screenshotSuccess ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Camera className="w-3.5 h-3.5 text-emerald-400" />}
-            <span>Snapshot</span>
-          </button>
-
-          {/* Toggle DevTools Dock */}
-          <button
-            onClick={() => setDevToolsOpen(!devToolsOpen)}
-            className={`px-3.5 py-1.5 rounded-xl border text-xs font-semibold transition active:scale-95 flex items-center gap-1.5 cursor-pointer ${
-              devToolsOpen
-                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
-                : 'bg-white/[0.04] text-zinc-300 border-white/[0.08] hover:bg-white/[0.08]'
-            }`}
-            title="Toggle Developer Tools (F12 / Cmd+Option+I)"
-          >
-            <Code className="w-3.5 h-3.5" />
-            <span>{devToolsOpen ? 'DevTools Active' : 'DevTools'}</span>
-          </button>
-
-          {/* Toggle Diagnostics / Host Inspector Drawer */}
-          <button
-            onClick={() => setInspectorOpen(!inspectorOpen)}
-            className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition active:scale-95 flex items-center gap-1.5 cursor-pointer ${
-              inspectorOpen
-                ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
-                : 'bg-white/[0.04] text-zinc-300 border-white/[0.08] hover:bg-white/[0.08]'
-            }`}
-            title="Toggle Diagnostics & Host Telemetry"
-          >
-            <Activity className="w-3.5 h-3.5 text-cyan-400" />
-            <span>{inspectorOpen ? 'Inspector Active' : 'Inspector'}</span>
-          </button>
         </div>
       </div>
 
@@ -1042,16 +1072,13 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
             <input
               type="text"
               value={findQuery}
-              onChange={(e) => {
-                setFindQuery(e.target.value);
-                setFindMatchesCount(e.target.value ? Math.floor(Math.random() * 5) + 1 : 0);
-              }}
+              onChange={(e) => setFindQuery(e.target.value)}
               placeholder="Find in page..."
               className="bg-black/40 border border-white/[0.08] rounded px-2.5 py-1 text-xs text-zinc-100 outline-none w-48 font-mono"
               autoFocus
             />
-            <span className="text-[10px] text-zinc-400 font-mono">
-              {findQuery ? `${findMatchesCount} matches` : '0 matches'}
+            <span className="text-[10px] text-zinc-500 font-mono max-w-[150px] truncate" title="The sandboxed frame does not expose its document to the host shell">
+              in-frame text search unavailable
             </span>
             <button
               onClick={() => setShowFindInPage(false)}
@@ -1074,161 +1101,134 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
 
             {/* Embedded Content Viewport */}
             <div className={`flex-1 relative flex flex-col overflow-hidden ${canvasTheme === 'dark' ? 'bg-[#0d101b]' : 'bg-white'}`}>
-              {previewMode === 'simulator' ? (
-                /* Interactive Web App Simulator (Clean full-height application viewport) */
-                <div className="h-full w-full flex flex-col overflow-y-auto font-sans text-zinc-200 bg-gradient-to-b from-[#0d111d] to-[#080a12] select-text">
-                  {/* Clean Web App Top Navbar */}
-                  <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.08] bg-[#0c0f1a]/80 backdrop-blur-md shrink-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-indigo-500/20">
-                        ⚡
-                      </div>
-                      <div className="font-bold text-sm text-white flex items-center gap-2">
-                        <span>Workspace Web Preview</span>
-                        <span className="text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">
-                          Live HMR Connected
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-xs">
-                      <span className="text-zinc-400 hover:text-white cursor-pointer transition">Overview</span>
-                      <span className="text-zinc-400 hover:text-white cursor-pointer transition">Components</span>
-                      <span className="text-zinc-400 hover:text-white cursor-pointer transition">API Docs</span>
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-xs flex items-center justify-center">
-                        DR
-                      </div>
-                    </div>
+              {previewMode === 'home' ? (
+                /* Honest launcher: lists REAL detected local servers, real engine info, no synthetic app shell */
+                <div className="h-full w-full flex flex-col overflow-y-auto bg-gradient-to-b from-[#0d111d] to-[#080a12]">
+                  <div className="px-6 pt-6 pb-3 border-b border-white/[0.07] bg-[#0c0f1a]/80 backdrop-blur-md shrink-0">
+                    <h2 className="text-base font-bold text-white font-sans">Sandbox Servers</h2>
+                    <p className="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+                      Nothing is being rendered right now. This launcher lists the dev-server ports detected for this workspace and the browser engine driving the Live Viewport. Pick a target to load it, or type a URL in the address bar above.
+                    </p>
                   </div>
 
-                  {/* Spacious Web Application Content Area */}
-                  <div className="flex-1 p-8 max-w-5xl mx-auto w-full space-y-6">
-                    {/* Hero Section */}
-                    <div className="p-6 rounded-2xl bg-gradient-to-r from-blue-950/30 via-indigo-950/20 to-purple-950/30 border border-white/[0.08] shadow-xl space-y-3">
-                      <div className="flex items-center gap-2 text-cyan-400 text-xs font-semibold uppercase tracking-wider">
-                        <Sparkles className="w-4 h-4" />
-                        <span>Interactive Development Sandbox</span>
+                  <div className="flex-1 p-6 space-y-6 max-w-5xl mx-auto w-full">
+                    {/* Detected ports — REAL data with live reachability probes */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Detected Ports ({detectedPorts.length})</span>
+                        <button
+                          onClick={() => detectedPorts.forEach((p) => runPortProbe(p))}
+                          className="px-3 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-[11px] text-zinc-300 transition"
+                        >
+                          Probe all
+                        </button>
                       </div>
-                      <h2 className="text-xl font-bold text-white">Full-Bleed Responsive Viewport Canvas</h2>
-                      <p className="text-xs text-zinc-400 max-w-2xl leading-relaxed">
-                        This viewport simulates your live frontend runtime with full interactive state, responsive breakpoints (Desktop &amp; Mobile), and hot-module reloading. Use the toolbar above to switch between simulated mode and the raw browser iframe.
-                      </p>
-                      <div className="flex items-center gap-3 pt-2">
-                        <button
-                          onClick={() => setPreviewMode('iframe')}
-                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-500/20 cursor-pointer"
-                        >
-                          Switch to Raw Iframe ({activeTab?.url})
-                        </button>
-                        <button
-                          onClick={() => setInspectorOpen(true)}
-                          className="px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 rounded-xl text-xs font-semibold border border-white/[0.08] transition cursor-pointer flex items-center gap-1.5"
-                        >
-                          <Activity className="w-3.5 h-3.5 text-cyan-400" />
-                          <span>View Host Telemetry</span>
-                        </button>
+                      {detectedPorts.length === 0 ? (
+                        <div className="p-6 border border-dashed border-white/[0.12] rounded-2xl text-center">
+                          <p className="text-sm font-semibold text-zinc-300">No dev-server ports detected</p>
+                          <p className="text-xs text-zinc-500 mt-1">Start a dev server in the workspace (e.g. <code className="font-mono text-zinc-400">npm run dev</code>, <code className="font-mono text-zinc-400">python -m http.server</code>) and it will appear here. Ports/Tests panels can also surface running listeners.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                          {detectedPorts.map((port) => (
+                            <div key={port} className="p-4 bg-white/[0.02] border border-white/[0.08] rounded-2xl flex items-center justify-between shadow-lg">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-mono text-sm font-bold text-cyan-300">127.0.0.1:{port}</span>
+                                  {portProbe[port]?.state === 'up' && (
+                                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">up{portProbe[port].ms !== undefined ? ` • ${portProbe[port].ms}ms` : ''}</span>
+                                  )}
+                                  {portProbe[port]?.state === 'down' && (
+                                    <span className="text-[10px] font-mono text-rose-400 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded">no response</span>
+                                  )}
+                                  {portProbe[port]?.state === 'checking' && (
+                                    <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded animate-pulse">probing…</span>
+                                  )}
+                                  {!portProbe[port] && (
+                                    <span className="text-[10px] font-mono text-zinc-500 bg-white/[0.03] border border-white/[0.08] px-1.5 py-0.5 rounded">not probed</span>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-zinc-500 font-mono truncate max-w-[260px]">http://127.0.0.1:{port}</p>
+                              </div>
+                              <button
+                                onClick={() => handleNavigate(`http://127.0.0.1:${port}`)}
+                                className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-[11px] font-bold transition shadow-lg shadow-indigo-500/20 shrink-0"
+                              >
+                                Open live
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Engine info — REAL state from browser engine status IPC */}
+                    <div className="space-y-3">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">Browser Engine</span>
+                      <div className="p-4 bg-white/[0.02] border border-white/[0.08] rounded-2xl grid grid-cols-2 gap-x-6 gap-y-2 text-xs font-mono">
+                        <div className="flex justify-between gap-4"><span className="text-zinc-500">Status</span><span className={engineStatus.isRunning ? 'text-emerald-400' : 'text-amber-400'}>{engineStatus.isRunning ? 'Running' : 'Not detected'}</span></div>
+                        <div className="flex justify-between gap-4"><span className="text-zinc-500">CDP</span><span className="text-zinc-200">:{engineStatus.cdpPort}</span></div>
+                        <div className="flex justify-between gap-4"><span className="text-zinc-500">Version</span><span className="text-zinc-300 truncate max-w-[220px] text-right">{engineStatus.version || 'unknown'}</span></div>
+                        <div className="flex justify-between gap-4"><span className="text-zinc-500">Profile</span><span className="text-zinc-300 truncate max-w-[220px] text-right">{engineStatus.profileDir || 'default'}</span></div>
                       </div>
                     </div>
 
-                    {/* Interactive Component Showcase Grid */}
-                    <div className="grid grid-cols-2 gap-5">
-                      {/* Reactive State Tester */}
-                      <div className="p-5 bg-white/[0.02] border border-white/[0.08] rounded-2xl space-y-3 shadow-lg">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-zinc-200">Interactive Reactive Counter</span>
-                          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Client State OK</span>
-                        </div>
-                        <p className="text-xs text-zinc-400">
-                          Verify DOM event listeners, virtual DOM diffing, and reactive state updates in the viewport:
-                        </p>
-                        <div className="flex items-center gap-3 pt-1">
-                          <button
-                            onClick={() => setSimCounter((c) => c - 1)}
-                            className="w-9 h-9 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold flex items-center justify-center transition active:scale-95 text-sm border border-white/[0.08] cursor-pointer"
-                          >
-                            -
-                          </button>
-                          <span className="font-mono text-xl font-bold text-cyan-400 min-w-12 text-center">
-                            {simCounter}
-                          </span>
-                          <button
-                            onClick={() => setSimCounter((c) => c + 1)}
-                            className="w-9 h-9 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold flex items-center justify-center transition active:scale-95 text-sm border border-white/[0.08] cursor-pointer"
-                          >
-                            +
-                          </button>
-                          <button
-                            onClick={() => setSimCounter(0)}
-                            className="text-xs text-zinc-500 hover:text-zinc-300 ml-auto font-mono underline cursor-pointer"
-                          >
-                            Reset
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Endpoint Connectivity Tester */}
-                      <div className="p-5 bg-white/[0.02] border border-white/[0.08] rounded-2xl space-y-3 shadow-lg">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-zinc-200">MicroVM API Endpoint Probe</span>
-                          <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">:3000 Active</span>
-                        </div>
-                        <p className="text-xs text-zinc-400">
-                          Send a probe to <code>http://127.0.0.1:3000/api/v1/health</code> over the local virtio socket:
-                        </p>
-                        <div className="flex items-center gap-2 pt-1">
-                          <button
-                            onClick={async () => {
-                              setSimApiLoading(true);
-                              try {
-                                const res = await fetch('http://127.0.0.1:3000/api/v1/health').catch(() => null);
-                                if (res && res.ok) {
-                                  const data = await res.json();
-                                  setSimApiStatus(`200 OK • status: ${data.status || 'healthy'}`);
-                                } else {
-                                  setSimApiStatus('200 OK • MicroVM health probe verified (12ms latency)');
-                                }
-                              } catch {
-                                setSimApiStatus('200 OK • MicroVM health probe verified (12ms latency)');
-                              } finally {
-                                setSimApiLoading(false);
-                              }
-                            }}
-                            disabled={simApiLoading}
-                            className="px-4 py-2 bg-emerald-600/80 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
-                          >
-                            <span>{simApiLoading ? 'Pinging...' : 'Test Health Endpoint'}</span>
-                          </button>
-                          {simApiStatus && (
-                            <span className="text-[11px] font-mono text-emerald-300 truncate max-w-[220px]">
-                              {simApiStatus}
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                    <div className="p-4 border border-white/[0.08] rounded-2xl bg-white/[0.02] text-xs text-zinc-400 leading-relaxed">
+                      <span className="font-semibold text-zinc-300">Frame isolation:</span> The live viewport runs in a sandboxed frame with scripts and forms enabled, but no Tauri IPC access — web pages never reach host APIs, files, or the VM. Settings for this behavior are under the shield icon in the address bar.
                     </div>
                   </div>
                 </div>
               ) : (
-                /* Raw Sandboxed Webview Iframe */
-                <iframe
-                  ref={iframeRef}
-                  src={activeTab?.url}
-                  title={activeTab?.title}
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                  className={`w-full flex-1 border-none transition-colors ${canvasTheme === 'dark' ? 'bg-[#0d101b]' : 'bg-white'}`}
-                />
+                /* LIVE VIEWPORT: real sandboxed iframe with loading overlay & honest helpers */
+                <div className="relative flex-1 flex flex-col overflow-hidden">
+                  <iframe
+                    ref={iframeRef}
+                    key={`${iframeReloadKey}-${activeTab?.url}`}
+                    src={activeTab?.url}
+                    title={activeTab?.title}
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                    onLoad={() => setViewportLoading(false)}
+                    className={`w-full flex-1 border-none transition-colors ${canvasTheme === 'dark' ? 'bg-[#0d101b]' : 'bg-white'}`}
+                  />
+
+                  {/* Loading overlay — real state until iframe onLoad */}
+                  {viewportLoading && (
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[#08090d]/85 backdrop-blur-sm pointer-events-none">
+                      <div className="w-7 h-7 rounded-full border-2 border-cyan-500/30 border-t-cyan-400 animate-spin" />
+                      <span className="text-xs text-zinc-400 font-mono">Loading {activeTab?.url || 'page'}…</span>
+                    </div>
+                  )}
+
+                  {/* Honest floating helpers: if a server is down the frame stays blank — reload or escape to launcher */}
+                  <div className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5">
+                    <button
+                      onClick={handleReloadViewport}
+                      className="px-2.5 py-1.5 bg-[#0e111d]/90 hover:bg-[#161a29] border border-white/[0.12] text-zinc-300 rounded-lg text-[11px] font-medium flex items-center gap-1.5 backdrop-blur-md transition shadow-lg"
+                      title="Reload the live viewport"
+                    >
+                      <RotateCw className="w-3 h-3" /> Reload
+                    </button>
+                    <button
+                      onClick={() => setPreviewMode('home')}
+                      className="px-2.5 py-1.5 bg-[#0e111d]/90 hover:bg-[#161a29] border border-white/[0.12] text-zinc-300 rounded-lg text-[11px] font-medium flex items-center gap-1.5 backdrop-blur-md transition shadow-lg"
+                      title="If the page stays blank, the server may be down — open the server launcher"
+                    >
+                       Blank? Servers
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Slide-out Inspector Drawer */}
+        {/* Right Slide-out Insights Drawer — real probes + real engine state only */}
         {inspectorOpen && (
           <div className="w-80 bg-[#0c0e17]/95 backdrop-blur-2xl border-l border-white/[0.08] flex flex-col flex-shrink-0 animate-in slide-in-from-right duration-200 z-30">
             <div className="px-4 py-3 border-b border-white/[0.08] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-cyan-400" />
-                <span className="font-bold text-xs uppercase tracking-wider text-zinc-200">Host &amp; MicroVM Telemetry</span>
+                <span className="font-bold text-xs uppercase tracking-wider text-zinc-200">Live Connection Panel</span>
               </div>
               <button
                 onClick={() => setInspectorOpen(false)}
@@ -1239,86 +1239,73 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs font-sans">
-              {/* Telemetry Cards */}
+              {/* Real port reachability — measured, not assumed */}
               <div className="space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">System Metrics</span>
-                <div className="grid grid-cols-1 gap-2.5">
-                  <div className="p-3 bg-white/[0.03] border border-white/[0.08] rounded-xl space-y-1">
-                    <div className="flex items-center justify-between text-zinc-400">
-                      <span>API Roundtrip</span>
-                      <span className="text-[10px] text-emerald-400 font-mono">● Socket Ready</span>
-                    </div>
-                    <div className="text-lg font-bold text-cyan-400 font-mono">14 ms</div>
-                  </div>
-
-                  <div className="p-3 bg-white/[0.03] border border-white/[0.08] rounded-xl space-y-1">
-                    <div className="flex items-center justify-between text-zinc-400">
-                      <span>MicroVM RAM Usage</span>
-                      <span className="text-[10px] text-zinc-400 font-mono">virtio-blk</span>
-                    </div>
-                    <div className="text-lg font-bold text-purple-400 font-mono">384 MB / 4 GB</div>
-                    <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full w-[9.6%]" />
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-white/[0.03] border border-white/[0.08] rounded-xl space-y-1">
-                    <div className="flex items-center justify-between text-zinc-400">
-                      <span>Dev Server Ports</span>
-                      <span className="text-[10px] text-emerald-400 font-mono">3 Active</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 pt-1">
-                      {detectedPorts.map((p) => (
-                        <span key={p} className="px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 font-mono text-[10px] rounded-md font-bold">
-                          :{p}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Endpoint Health Probe */}
-              <div className="space-y-2 pt-2 border-t border-white/[0.08]">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Guest Health Probe</span>
-                <div className="p-3 bg-white/[0.02] border border-white/[0.08] rounded-xl space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-zinc-300">/api/v1/health</span>
-                    <span className="text-[10px] text-emerald-400 font-bold">200 OK</span>
-                  </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Dev-Server Ports ({detectedPorts.length})</span>
                   <button
-                    onClick={async () => {
-                      setSimApiLoading(true);
-                      try {
-                        const res = await fetch('http://127.0.0.1:3000/api/v1/health').catch(() => null);
-                        if (res && res.ok) {
-                          const data = await res.json();
-                          setSimApiStatus(`200 OK • status: ${data.status || 'healthy'}`);
-                        } else {
-                          setSimApiStatus('200 OK • MicroVM health probe verified (12ms latency)');
-                        }
-                      } catch {
-                        setSimApiStatus('200 OK • MicroVM health probe verified (12ms latency)');
-                      } finally {
-                        setSimApiLoading(false);
-                      }
-                    }}
-                    disabled={simApiLoading}
-                    className="w-full py-1.5 bg-emerald-600/80 hover:bg-emerald-500 text-white font-bold rounded-lg transition text-xs shadow cursor-pointer"
+                    onClick={() => detectedPorts.forEach((p) => runPortProbe(p))}
+                    className="px-2 py-0.5 bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] rounded text-[10px] text-zinc-300 transition"
                   >
-                    {simApiLoading ? 'Pinging Guest VM...' : 'Dispatch Live Probe'}
+                    Probe all
                   </button>
-                  {simApiStatus && (
-                    <div className="p-2 bg-black/40 border border-white/[0.06] rounded font-mono text-[10px] text-emerald-300 break-all">
-                      {simApiStatus}
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {detectedPorts.map((p) => {
+                    const st = portProbe[p];
+                    return (
+                      <div key={p} className="p-3 bg-white/[0.02] border border-white/[0.08] rounded-xl flex items-center justify-between font-mono">
+                        <span className="text-cyan-300 font-bold">127.0.0.1:{p}</span>
+                        {st?.state === 'up' && <span className="text-[10px] text-emerald-400">up{st.ms !== undefined ? ` • ${st.ms}ms` : ''}</span>}
+                        {st?.state === 'down' && <span className="text-[10px] text-rose-400">no response</span>}
+                        {st?.state === 'checking' && <span className="text-[10px] text-amber-400 animate-pulse">probing…</span>}
+                        {!st && <span className="text-[10px] text-zinc-500">not probed</span>}
+                      </div>
+                    );
+                  })}
+                  {detectedPorts.length === 0 && (
+                    <div className="p-3 border border-dashed border-white/[0.12] rounded-xl text-[11px] text-zinc-500">
+                      No ports detected on this workspace. Start a dev server to see entries here.
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* CDP Target Details */}
+              {/* Current URL reachability — real fetch timing to the active tab origin */}
               <div className="space-y-2 pt-2 border-t border-white/[0.08]">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Chromium DevTools Protocol</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Current Address</span>
+                <div className="p-3 bg-white/[0.02] border border-white/[0.08] rounded-xl space-y-2.5">
+                  <div className="font-mono text-[10px] text-zinc-300 break-all">{activeTab?.url || '—'}</div>
+                  <button
+                    onClick={() => {
+                      if (!activeTab?.url || portProbe.__url?.state === 'checking') return;
+                      setPortProbe((prev) => ({ ...prev, __url: { state: 'checking' } }));
+                      const t0 = performance.now();
+                      fetch(activeTab.url, { mode: 'no-cors', cache: 'no-store' })
+                        .then(() => setPortProbe((prev) => ({ ...prev, __url: { state: 'up', ms: Math.round(performance.now() - t0) } })))
+                        .catch(() => setPortProbe((prev) => ({ ...prev, __url: { state: 'down' } })));
+                    }}
+                    disabled={portProbe.__url?.state === 'checking'}
+                    className="w-full py-1.5 bg-cyan-600/80 hover:bg-cyan-500 text-white font-bold rounded-lg transition text-xs shadow cursor-pointer disabled:opacity-50"
+                  >
+                    {portProbe.__url?.state === 'checking' ? 'Probing…' : 'Probe this address'}
+                  </button>
+                  {portProbe.__url?.state === 'up' && (
+                    <div className="p-2 bg-black/40 border border-white/[0.06] rounded font-mono text-[10px] text-emerald-300 break-all">
+                      reachable • {portProbe.__url.ms}ms latency measured
+                    </div>
+                  )}
+                  {portProbe.__url?.state === 'down' && (
+                    <div className="p-2 bg-black/40 border border-white/[0.06] rounded font-mono text-[10px] text-rose-300 break-all">
+                      unreachable from the workbench — the server is likely stopped
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Engine details — real state reported by the Tauri browser-engine IPC */}
+              <div className="space-y-2 pt-2 border-t border-white/[0.08]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Browser Engine</span>
                 <div className="p-3 bg-black/40 border border-white/[0.08] rounded-xl font-mono text-[11px] space-y-1.5 text-zinc-400">
                   <div className="flex justify-between">
                     <span>CDP Port:</span>
@@ -1326,11 +1313,11 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span>Engine PID:</span>
-                    <span className="text-emerald-400">{engineStatus.pid}</span>
+                    <span className={engineStatus.pid ? 'text-emerald-400' : 'text-zinc-500'}>{engineStatus.pid ?? 'not detected'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Profile:</span>
-                    <span className="text-zinc-300 truncate max-w-[130px]">~/.ai-agent-workbench</span>
+                    <span className="text-zinc-300 truncate max-w-[130px]">{engineStatus.profileDir || 'default'}</span>
                   </div>
                   <div className="text-[10px] text-zinc-500 pt-1 border-t border-white/[0.06] truncate">
                     {engineStatus.version}
@@ -1356,6 +1343,12 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
           {/* DevTools Tab Bar */}
           <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-800 bg-zinc-950 text-xs">
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+              <span
+                className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-950/60 text-amber-400 border border-amber-800/50"
+                title="This dock mirrors demo data — live CDP capture is a planned engine feature"
+              >
+                Simulated data
+              </span>
               {(
                 [
                   'elements',
@@ -2055,15 +2048,19 @@ export const IntegratedBrowser: React.FC<IntegratedBrowserProps> = ({
                 <span>Geolocation & Camera</span>
                 <span className="text-zinc-400">Ask (Blocked by default)</span>
               </div>
+              {/* Honest no-op: the sandboxed iframe view has no cookie jar to clear
+                  from the host side, so this control is disabled until a real
+                  cookie-site-data command exists on the backend. */}
               <button
-                onClick={() => {
-                  alert('Cleared local cookies and cache for this origin.');
-                  setShowPermissionsModal(false);
-                }}
-                className="w-full py-1.5 bg-rose-900/30 hover:bg-rose-900/50 text-rose-300 border border-rose-800 rounded text-xs transition mt-2"
+                disabled
+                title="Not available yet: the integrated view is a sandboxed iframe, so the host cannot clear the embedded site's cookies or storage. Plug-in isolation prevents cross-frame cache access."
+                className="w-full py-1.5 bg-rose-900/20 text-rose-300/50 border border-rose-900/40 rounded text-xs mt-2 cursor-not-allowed"
               >
                 Clear Cookies & Site Data
               </button>
+              <p className="text-[10px] text-zinc-500 leading-snug mt-1">
+                Unavailable in the sandboxed view — cookies and storage live inside the isolated frame and are cleared automatically when the tab is closed.
+              </p>
             </div>
           </div>
         </div>

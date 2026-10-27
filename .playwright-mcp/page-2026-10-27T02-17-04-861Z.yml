@@ -1,0 +1,100 @@
+- generic [ref=f2e3]:
+  - banner [ref=f2e4]:
+    - generic [ref=f2e5]:
+      - generic [ref=f2e6]:
+        - generic [ref=f2e7]: A
+        - generic [ref=f2e8]: AI Agent Workbench
+      - button "Frontend Web App" [ref=f2e137] [cursor=pointer]
+      - button "Open project folder from your Mac (like VS Code)" [ref=f2e16] [cursor=pointer]
+    - generic [ref=f2e23]:
+      - generic "VM Running (Click to Stop)" [ref=f2e138] [cursor=pointer]: VM Active
+      - generic "Click to configure VM Auto-Rotation schedule" [ref=f2e28] [cursor=pointer]: 59m 59s
+      - button "Rotate" [ref=f2e36] [cursor=pointer]
+    - generic [ref=f2e41]:
+      - button "1.45 MB/s 380 KB/s 18ms" [ref=f2e139] [cursor=pointer]:
+        - generic [ref=f2e45]: 1.45 MB/s
+        - generic [ref=f2e49]: 380 KB/s
+        - generic [ref=f2e53]: 18ms
+      - generic [ref=f2e57]:
+        - button "Toggle Full Focus Mode" [ref=f2e58] [cursor=pointer]
+        - button "Toggle Primary Sidebar (Cmd+B)" [ref=f2e63] [cursor=pointer]
+        - button "Toggle Bottom Terminal Panel (Cmd+J)" [ref=f2e67] [cursor=pointer]
+        - button "Toggle Terminal Maximized Layout" [ref=f2e71] [cursor=pointer]
+      - button "Settings" [ref=f2e74] [cursor=pointer]
+      - generic "Developer Ritesh" [ref=f2e78]: DR
+  - generic [ref=f2e79]:
+    - complementary [ref=f2e80]:
+      - generic [ref=f2e81]:
+        - button "Explorer" [ref=f2e82] [cursor=pointer]
+        - button "Search" [ref=f2e88] [cursor=pointer]
+        - button "Git" [ref=f2e93] [cursor=pointer]
+        - button "Browser" [ref=f2e99] [cursor=pointer]
+        - button "API" [ref=f2e104] [cursor=pointer]
+        - button "Tests" [ref=f2e109] [cursor=pointer]
+        - button "Ports" [ref=f2e113] [cursor=pointer]
+        - button "Logs" [ref=f2e120] [cursor=pointer]
+        - button "VM" [ref=f2e124] [cursor=pointer]
+      - button "Settings" [ref=f2e130] [cursor=pointer]
+    - generic [ref=f2e140]:
+      - generic [ref=f2e142]:
+        - generic [ref=f2e143]:
+          - generic [ref=f2e144]: Explorer
+          - generic [ref=f2e145]:
+            - button "New File" [ref=f2e146] [cursor=pointer]
+            - button "New Folder" [ref=f2e148] [cursor=pointer]
+            - button "Refresh Explorer" [ref=f2e151] [cursor=pointer]
+            - button "Open Folder..." [ref=f2e157] [cursor=pointer]
+        - generic [ref=f2e162]:
+          - generic [ref=f2e163] [cursor=pointer]:
+            - generic "/Users/developer/Projects/web-app" [ref=f2e166]: Frontend Web App
+            - generic [ref=f2e167]: HOST FS
+          - generic [ref=f2e168]:
+            - paragraph [ref=f2e169]: No files found in workspace directory.
+            - button "Open Folder..." [ref=f2e170] [cursor=pointer]
+      - generic "Drag to resize sidebar" [ref=f2e176]
+      - generic [ref=f2e177]:
+        - generic [ref=f2e179]:
+          - generic [ref=f2e180]:
+            - generic "/Users/developer/Projects/web-app/README.md" [ref=f2e182] [cursor=pointer]:
+              - generic [ref=f2e186]: README.md
+              - generic "Close (Cmd+W)" [ref=f2e187]
+            - generic [ref=f2e191]:
+              - button "Save file immediately (Cmd+S)" [ref=f2e192] [cursor=pointer]
+              - button "Split Editor Right" [ref=f2e197] [cursor=pointer]
+              - button "More Actions" [ref=f2e203] [cursor=pointer]
+          - generic [ref=f2e208]: /Users/developer/Projects/web-app/README.md
+          - generic [ref=f2e210]:
+            - generic [ref=f2e211]:
+              - generic [ref=f2e212]: "1"
+              - generic [ref=f2e213]: "2"
+              - generic [ref=f2e214]: "3"
+            - textbox "Start typing code or open a file..." [ref=f2e215]: // README.md
+            - generic [ref=f2e216]: // README.md
+          - generic [ref=f2e217]:
+            - generic [ref=f2e218]: "AutoSave: On"
+            - generic [ref=f2e219]: UTF-8
+            - generic [ref=f2e220]: "Spaces: 2"
+            - generic [ref=f2e221]: Ln 1, Col 1
+            - generic [ref=f2e222]: Markdown
+        - generic "Drag to resize terminal panel" [ref=f2e223]
+        - generic [ref=f2e225]:
+          - generic [ref=f2e226]:
+            - generic [ref=f2e227]:
+              - generic [ref=f2e228] [cursor=pointer]: Terminal
+              - generic [ref=f2e229] [cursor=pointer]: Logs
+              - generic [ref=f2e230] [cursor=pointer]: Problems
+              - generic [ref=f2e231] [cursor=pointer]: Output
+            - generic [ref=f2e232]:
+              - button "opencode" [ref=f2e233] [cursor=pointer]
+              - button "Ctrl+C" [ref=f2e238] [cursor=pointer]
+              - button "ls -la" [ref=f2e242] [cursor=pointer]
+              - button "ip addr" [ref=f2e246] [cursor=pointer]
+              - button "uname -a" [ref=f2e248] [cursor=pointer]
+            - generic [ref=f2e250]:
+              - generic [ref=f2e251]: Linux Guest VM (Isolated aarch64)
+              - button "Restart Shell Session" [ref=f2e255] [cursor=pointer]
+              - button "Clear Terminal Screen" [ref=f2e259] [cursor=pointer]
+              - button "Maximize Terminal Panel (Full Height)" [ref=f2e263] [cursor=pointer]
+          - generic [ref=f2e273]:
+            - generic:
+              - textbox "Terminal input" [active]
