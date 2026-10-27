@@ -358,6 +358,36 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
 
           <button
             className="btn-quick-cmd"
+            onClick={() => sendCommand('rotate-network')}
+            title="Rotate virtual MAC, IPv4 DHCP lease and IPv6 privacy address"
+            style={{
+              background: 'rgba(16, 185, 129, 0.15)',
+              borderColor: 'rgba(16, 185, 129, 0.4)',
+              color: '#34d399',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            <span>Rotate IP/MAC</span>
+          </button>
+
+          <button
+            className="btn-quick-cmd"
+            onClick={() => sendCommand('rotate-identity')}
+            title="Rotate virtual machine ID, device ID and hostname"
+            style={{
+              background: 'rgba(168, 85, 247, 0.15)',
+              borderColor: 'rgba(168, 85, 247, 0.4)',
+              color: '#c084fc',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            <span>Rotate Device ID</span>
+          </button>
+
+          <button
+            className="btn-quick-cmd"
             onClick={() => sendCommand('uname -a')}
             title="Verify isolated Linux aarch64 kernel"
             style={{ whiteSpace: 'nowrap', flexShrink: 0 }}

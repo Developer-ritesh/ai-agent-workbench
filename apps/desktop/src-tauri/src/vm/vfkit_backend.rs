@@ -92,7 +92,8 @@ impl VmBackend for VfkitBackend {
 
                     cmd.arg("-k").arg(&kernel_file);
                     cmd.arg("-i").arg(&initrd_file);
-                    cmd.arg("-C").arg("console=hvc0 quiet rdinit=/init random.trust_cpu=on");
+                    let boot_nonce = uuid::Uuid::new_v4().to_string();
+                    cmd.arg("-C").arg(format!("console=hvc0 quiet rdinit=/init random.trust_cpu=on boot_nonce={}", &boot_nonce[..8]));
 
                     // Ensure devai executable shim exists in workspace node_modules/.bin so guest VM path can always invoke it
                     let bin_dir = validated_path.join("node_modules").join(".bin");

@@ -97,9 +97,11 @@ impl PtyManager {
         cmd.arg(kernel.to_string_lossy().to_string());
         cmd.arg("-i");
         cmd.arg(initramfs.to_string_lossy().to_string());
+        let boot_nonce = uuid::Uuid::new_v4().to_string();
         cmd.arg("-C");
         cmd.arg(format!(
-            "console=hvc0 quiet rdinit=/init random.trust_cpu=on term_cols={} term_rows={}",
+            "console=hvc0 quiet rdinit=/init random.trust_cpu=on boot_nonce={} term_cols={} term_rows={}",
+            &boot_nonce[..8],
             cols.max(40),
             rows.max(10)
         ));
