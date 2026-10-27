@@ -20,6 +20,10 @@ import {
   Globe,
   Columns,
   Rows,
+  Sparkles,
+  Terminal,
+  FileCode,
+  WrapText,
 } from 'lucide-react';
 import {
   HttpMethod,
@@ -36,6 +40,7 @@ import { tauriIpc } from '../../services/tauriIpc';
 import { runPreRequestScript, runPostResponseTests } from './scriptEngine';
 import { generateCodeSnippet, CodeLanguage } from './codeGenerators';
 import { importPostmanCollection, exportPostmanCollection, importOpenApiSpec } from './importers';
+import { ResizableSplitter } from '../../components/common/ResizableSplitter';
 
 interface ApiStudioProps {}
 
@@ -43,6 +48,11 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
   // Navigation Tabs in Sidebar: 'collections' | 'history' | 'environments' | 'specs'
   const [sidebarTab, setSidebarTab] = useState<'collections' | 'history' | 'environments' | 'specs'>('collections');
   const [layoutMode, setLayoutMode] = useState<'stacked' | 'split'>('split');
+  const [sidebarWidth, setSidebarWidth] = useState<number>(280);
+  const [requestSplitPercent, setRequestSplitPercent] = useState<number>(50);
+  const [wrapResponse, setWrapResponse] = useState<boolean>(true);
+  const [copiedCurl, setCopiedCurl] = useState<boolean>(false);
+  const [copiedResolvedUrl, setCopiedResolvedUrl] = useState<boolean>(false);
 
   // Request State
   const [requestId, setRequestId] = useState<string>('req-current');
@@ -313,6 +323,85 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
       }
     }
     return matches;
+  };
+
+  // Live evaluated full target URL with active query string
+  const getResolvedFullUrl = () => {
+    const resolvedBase = substituteEnv(url);
+    const activeParams = params.filter((p) => p.enabled && p.key.trim() !== '');
+    if (activeParams.length === 0) return resolvedBase;
+    const qs = activeParams
+      .map((p) => `${encodeURIComponent(p.key)}=${encodeURIComponent(substituteEnv(p.value))}`)
+      .join('&');
+    return resolvedBase.includes('?') ? `${resolvedBase}&${qs}` : `${resolvedBase}?${qs}`;
+  };
+
+  // Live formatted cURL command preview
+  const getRealtimeCurlCommand = () => {
+    const fullUrl = getResolvedFullUrl();
+    const effectiveMethod = method === 'CUSTOM' ? (customMethod.trim() || 'GET') : method;
+    let cmd = `curl -X ${effectiveMethod} "${fullUrl}"`;
+    const activeHeaders = headers.filter((h) => h.enabled && h.key.trim() !== '');
+    activeHeaders.forEach((h) => {
+      cmd += ` \\\n  -H "${h.key}: ${substituteEnv(h.value)}"`;
+    });
+    if (authType === 'bearer' && bearerToken.trim()) {
+      cmd += ` \\\n  -H "Authorization: Bearer ${substituteEnv(bearerToken)}"`;
+    }
+    if (bodyType !== 'none' && ['POST', 'PUT', 'PATCH'].includes(effectiveMethod) && bodyContent.trim()) {
+      cmd += ` \\\n  -d '${bodyContent.replace(/'/g, "'\\''")}'`;
+    }
+    return cmd;
+  };
+
+  // Quick query parameter presets
+  const applyParamPreset = (type: 'pagination' | 'sorting' | 'filter' | 'search') => {
+    if (type === 'pagination') {
+      setParams((prev) => [
+        ...prev.filter((p) => p.key !== 'page' && p.key !== 'limit'),
+        { key: 'page', value: '1', enabled: true, description: 'Page number' },
+        { key: 'limit', value: '25', enabled: true, description: 'Page size limit' },
+      ]);
+    } else if (type === 'sorting') {
+      setParams((prev) => [
+        ...prev.filter((p) => p.key !== 'sort' && p.key !== 'order'),
+        { key: 'sort', value: 'created_at', enabled: true, description: 'Sort property' },
+        { key: 'order', value: 'desc', enabled: true, description: 'Sort direction' },
+      ]);
+    } else if (type === 'filter') {
+      setParams((prev) => [
+        ...prev.filter((p) => p.key !== 'status'),
+        { key: 'status', value: 'active', enabled: true, description: 'Status filter' },
+      ]);
+    } else if (type === 'search') {
+      setParams((prev) => [
+        ...prev.filter((p) => p.key !== 'q'),
+        { key: 'q', value: 'keyword', enabled: true, description: 'Search query' },
+      ]);
+    }
+  };
+
+  // Syntax highlight token helper for JSON response lines
+  const renderHighlightedJsonLine = (line: string) => {
+    const match = line.match(/^(\s*)(".*?")(\s*:\s*)(.*)$/);
+    if (match) {
+      const [, indent, key, colon, val] = match;
+      let valColor = 'text-zinc-300';
+      if (val.startsWith('"')) valColor = 'text-emerald-300';
+      else if (/^-?\d+(\.\d+)?/.test(val)) valColor = 'text-amber-300';
+      else if (/^(true|false)/.test(val)) valColor = 'text-purple-300';
+      else if (/^null/.test(val)) valColor = 'text-rose-300';
+
+      return (
+        <span>
+          <span>{indent}</span>
+          <span className="text-sky-300 font-semibold">{key}</span>
+          <span className="text-zinc-500">{colon}</span>
+          <span className={valColor}>{val}</span>
+        </span>
+      );
+    }
+    return <span>{line}</span>;
   };
 
   // Execute Request Handler
@@ -619,7 +708,10 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
   return (
     <div className="flex h-full w-full bg-[#08090d] text-zinc-100 font-sans select-none overflow-hidden">
       {/* 1. Left Sidebar: Collections, History, Environments */}
-      <div className="w-64 bg-[#0c0e17]/80 backdrop-blur-xl border-r border-white/[0.08] flex flex-col flex-shrink-0">
+      <div
+        style={{ width: `${sidebarWidth}px` }}
+        className="bg-[#0c0e17]/80 backdrop-blur-xl border-r border-white/[0.08] flex flex-col flex-shrink-0"
+      >
         {/* Sidebar Header & Segmented Tabs */}
         <div className="p-3 border-b border-white/[0.08] bg-[#0c0e17]/80 backdrop-blur-xl">
           <div className="flex items-center justify-between mb-2.5">
@@ -923,6 +1015,11 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
         </div>
       </div>
 
+      <ResizableSplitter
+        direction="horizontal"
+        onResize={(delta) => setSidebarWidth((prev) => Math.max(220, Math.min(500, prev + delta)))}
+      />
+
       {/* 2. Main Request & Response Workbench */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#08090d]">
         {/* Request Top Header: Name, Breadcrumb, Actions */}
@@ -1042,10 +1139,11 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
         >
           {/* Section 1: Request Editor Pane */}
           <div
+            style={layoutMode === 'split' ? { width: `${requestSplitPercent}%` } : undefined}
             className={`flex flex-col min-h-0 overflow-hidden bg-[#08090d] ${
               layoutMode === 'stacked'
                 ? 'h-[44%] border-b border-white/[0.08]'
-                : 'w-1/2 border-r border-white/[0.08]'
+                : 'border-r border-white/[0.08]'
             }`}
           >
             {/* Request Tabs Bar */}
@@ -1163,6 +1261,95 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
                           </button>
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Quick Presets & Live Previews */}
+                  <div className="pt-2 space-y-3 font-sans">
+                    <div className="flex items-center justify-between text-xs text-zinc-400">
+                      <span className="font-semibold uppercase tracking-wider text-[11px] text-zinc-300 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                        Quick Parameter Presets
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => applyParamPreset('pagination')}
+                        className="px-2.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.08] text-zinc-300 hover:text-cyan-300 rounded-lg border border-white/[0.08] text-xs font-mono transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3 text-cyan-400" />
+                        + Pagination (page, limit)
+                      </button>
+                      <button
+                        onClick={() => applyParamPreset('sorting')}
+                        className="px-2.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.08] text-zinc-300 hover:text-cyan-300 rounded-lg border border-white/[0.08] text-xs font-mono transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3 text-cyan-400" />
+                        + Sorting (sort, order)
+                      </button>
+                      <button
+                        onClick={() => applyParamPreset('filter')}
+                        className="px-2.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.08] text-zinc-300 hover:text-cyan-300 rounded-lg border border-white/[0.08] text-xs font-mono transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3 text-cyan-400" />
+                        + Status Filter (status)
+                      </button>
+                      <button
+                        onClick={() => applyParamPreset('search')}
+                        className="px-2.5 py-1.5 bg-white/[0.03] hover:bg-white/[0.08] text-zinc-300 hover:text-cyan-300 rounded-lg border border-white/[0.08] text-xs font-mono transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3 text-cyan-400" />
+                        + Search Query (q)
+                      </button>
+                    </div>
+
+                    {/* Evaluated Live URL with Copy */}
+                    <div className="p-3 bg-black/40 border border-white/[0.08] rounded-xl space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[11px] font-semibold text-zinc-400 flex items-center gap-1.5">
+                          <Globe className="w-3 h-3 text-cyan-400" />
+                          Evaluated Live Request Target
+                        </span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(getResolvedFullUrl());
+                            setCopiedResolvedUrl(true);
+                            setTimeout(() => setCopiedResolvedUrl(false), 2000);
+                          }}
+                          className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 transition cursor-pointer"
+                        >
+                          {copiedResolvedUrl ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedResolvedUrl ? 'Copied' : 'Copy URL'}</span>
+                        </button>
+                      </div>
+                      <div className="font-mono text-xs text-cyan-300 break-all bg-white/[0.02] p-2 rounded-lg border border-white/[0.04] select-all">
+                        {getResolvedFullUrl()}
+                      </div>
+                    </div>
+
+                    {/* Real-time cURL Command Box */}
+                    <div className="p-3 bg-black/40 border border-white/[0.08] rounded-xl space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[11px] font-semibold text-zinc-400 flex items-center gap-1.5">
+                          <Terminal className="w-3 h-3 text-emerald-400" />
+                          Live cURL Terminal Equivalent
+                        </span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(getRealtimeCurlCommand());
+                            setCopiedCurl(true);
+                            setTimeout(() => setCopiedCurl(false), 2000);
+                          }}
+                          className="flex items-center gap-1 text-[11px] text-emerald-400 hover:text-emerald-300 transition cursor-pointer"
+                        >
+                          {copiedCurl ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedCurl ? 'Copied' : 'Copy cURL'}</span>
+                        </button>
+                      </div>
+                      <pre className="font-mono text-[11px] text-emerald-300/90 whitespace-pre-wrap bg-white/[0.02] p-2.5 rounded-lg border border-white/[0.04] overflow-x-auto select-all">
+                        {getRealtimeCurlCommand()}
+                      </pre>
                     </div>
                   </div>
                 </div>
@@ -1464,8 +1651,20 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
             </div>
           </div>
 
+          <ResizableSplitter
+            direction={layoutMode === 'split' ? 'horizontal' : 'vertical'}
+            onResize={(delta) => {
+              if (layoutMode === 'split') {
+                setRequestSplitPercent((prev) => Math.max(25, Math.min(75, prev + (delta / 10))));
+              }
+            }}
+          />
+
           {/* Section 2: Response Viewer Pane */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#08090d]">
+          <div
+            style={layoutMode === 'split' ? { width: `${100 - requestSplitPercent}%` } : undefined}
+            className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#08090d]"
+          >
             {/* Response Top Bar */}
             <div className="px-4 py-2.5 bg-[#0c0e17]/80 backdrop-blur-xl border-b border-white/[0.08] flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-3">
@@ -1701,18 +1900,98 @@ export const ApiStudio: React.FC<ApiStudioProps> = () => {
 
                   {/* Body Tab */}
                   {activeResponseTab === 'body' && (
-                    <div className="h-full">
+                    <div className="h-full flex flex-col min-h-0 bg-[#08090d] border border-white/[0.08] rounded-xl overflow-hidden shadow-2xl">
                       {responseViewMode === 'preview' ? (
                         <iframe
                           srcDoc={response.data}
                           title="Preview"
                           sandbox="allow-same-origin"
-                          className="w-full h-full bg-white rounded-lg border border-white/[0.08]"
+                          className="w-full h-full bg-white rounded-lg border-0"
                         />
                       ) : (
-                        <pre className="text-zinc-200 leading-relaxed whitespace-pre-wrap">
-                          {response.data || '(Empty response body)'}
-                        </pre>
+                        <div className="flex-1 flex flex-col min-h-0">
+                          {/* Code Viewer Subtoolbar */}
+                          <div className="px-3 py-1.5 bg-black/60 border-b border-white/[0.06] flex items-center justify-between text-xs text-zinc-400 flex-shrink-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-[11px] text-cyan-400 font-semibold flex items-center gap-1.5">
+                                <FileCode className="w-3.5 h-3.5" />
+                                JSON (application/json)
+                              </span>
+                              <span className="text-zinc-600">•</span>
+                              <span className="text-[11px] text-zinc-400 font-mono">
+                                {(response.data || '').split('\n').length} lines
+                              </span>
+                              <span className="text-zinc-600">•</span>
+                              <span className="text-[11px] text-zinc-400 font-mono">
+                                {(response.sizeBytes / 1024).toFixed(2)} KB
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setWrapResponse(!wrapResponse)}
+                                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono transition cursor-pointer ${
+                                  wrapResponse
+                                    ? 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/30'
+                                    : 'text-zinc-400 hover:text-zinc-200 bg-white/[0.04]'
+                                }`}
+                                title="Toggle word wrapping"
+                              >
+                                <WrapText className="w-3 h-3" />
+                                <span>Wrap</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(response.data || '');
+                                }}
+                                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] text-zinc-300 hover:text-cyan-300 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition cursor-pointer"
+                                title="Copy response body"
+                              >
+                                <Copy className="w-3 h-3" />
+                                <span>Copy</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Code Editor with Line Numbers Gutter */}
+                          <div className="flex-1 overflow-auto bg-[#050608] flex min-h-0 select-text">
+                            {/* Line Numbers Gutter */}
+                            <div className="select-none py-2 px-2.5 bg-black/50 border-r border-white/[0.06] text-right font-mono text-[11px] text-zinc-600 leading-relaxed flex flex-col flex-shrink-0 min-w-[42px]">
+                              {(response.data || '').split('\n').map((_, i) => (
+                                <span key={i} className="hover:text-zinc-400 transition">
+                                  {i + 1}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Formatted Code Lines */}
+                            <div
+                              className={`flex-1 py-2 px-3 font-mono text-[12px] leading-relaxed text-zinc-200 overflow-x-auto ${
+                                wrapResponse ? 'whitespace-pre-wrap' : 'whitespace-pre'
+                              }`}
+                            >
+                              {(response.data || '').split('\n').map((line, i) => (
+                                <div key={i} className="hover:bg-white/[0.02] px-1 rounded transition">
+                                  {responseSearchQuery && line.toLowerCase().includes(responseSearchQuery.toLowerCase()) ? (
+                                    <mark className="bg-yellow-400/30 text-yellow-200 px-0.5 rounded">
+                                      {renderHighlightedJsonLine(line)}
+                                    </mark>
+                                  ) : (
+                                    renderHighlightedJsonLine(line)
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Editor Footer Status */}
+                          <div className="px-3 py-1 bg-black/60 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-500 font-mono flex-shrink-0">
+                            <span className="flex items-center gap-1.5 text-emerald-400/80">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Payload Parsed & Validated
+                            </span>
+                            <span>UTF-8 • Response Time: {response.timeMs}ms</span>
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}

@@ -1080,7 +1080,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               CATEGORY: SKILLS & MCP SERVERS
              ========================================================================= */}
           {activeCategory === 'skills_mcp' && (
-            <div className="h-full min-h-[600px] flex flex-col -m-6">
+            <div className="h-full flex-1 flex flex-col -my-6 -mx-8 min-h-0">
               <McpSkillsManager onNotify={showToast} />
             </div>
           )}

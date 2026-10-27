@@ -12,8 +12,10 @@ import {
   Columns,
   Rows,
   ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react';
 import { TauriApi } from '../../services/tauriIpc';
+import { ResizableSplitter } from '../../components/common/ResizableSplitter';
 
 interface GitDiffViewerProps {
   workspaceId: string;
@@ -41,6 +43,8 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
   const [commitMessage, setCommitMessage] = useState<string>('feat: implement secure token verification');
   const [diffViewMode, setDiffViewMode] = useState<'unified' | 'split'>('unified');
   const [copiedPath, setCopiedPath] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState<number>(300);
+  const [reviewFeedback, setReviewFeedback] = useState<string | null>(null);
 
   // Changed files state
   const [files, setFiles] = useState<ChangedFile[]>([
@@ -286,8 +290,11 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
 
       {/* 2. Main Two-Column Layout */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Left Column: Source Control & Staging (300px) */}
-        <div className="w-76 bg-[#0c0e17]/80 backdrop-blur-xl border-r border-white/[0.07] flex flex-col shrink-0">
+        {/* Left Column: Source Control & Staging */}
+        <div
+          style={{ width: `${sidebarWidth}px` }}
+          className="bg-[#0c0e17]/80 backdrop-blur-xl border-r border-white/[0.07] flex flex-col shrink-0"
+        >
           {/* Commit Box */}
           <div className="p-4 border-b border-white/[0.07] space-y-3">
             <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex items-center justify-between">
@@ -387,6 +394,11 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
             </div>
           </div>
         </div>
+
+        <ResizableSplitter
+          direction="horizontal"
+          onResize={(delta) => setSidebarWidth((prev) => Math.max(240, Math.min(500, prev + delta)))}
+        />
 
         {/* Right Column: Diff & Repository Studio */}
         <div className="flex-1 flex flex-col min-w-0 bg-[#08090d] overflow-hidden">
@@ -672,19 +684,21 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
                   </div>
                 )}
 
-                {/* Inline Review Station Box (Fills bottom space elegantly) */}
-                <div className="p-4 bg-white/[0.025] border border-white/[0.08] rounded-xl font-sans space-y-3">
-                  <div className="flex items-center justify-between">
+                {/* Inline Review Station Box */}
+                <div className="p-5 bg-white/[0.025] border border-white/[0.08] rounded-2xl font-sans space-y-4 shadow-xl">
+                  <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-emerald-400" />
-                      <span className="text-xs font-bold text-zinc-200">Code Review &amp; Sign-off</span>
+                      <span className="text-xs font-bold text-zinc-200">Interactive Code Review &amp; Sign-off</span>
                     </div>
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                    <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold ${
                       reviewApproved
                         ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                        : reviewFeedback
+                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                         : 'bg-amber-500/10 text-amber-300 border border-amber-500/25'
                     }`}>
-                      {reviewApproved ? 'Approved for Merge' : 'Pending Sign-off'}
+                      {reviewApproved ? 'Approved for Merge' : reviewFeedback ? 'Changes Requested' : 'Pending Sign-off'}
                     </span>
                   </div>
 
@@ -693,25 +707,102 @@ export const GitDiffViewer: React.FC<GitDiffViewerProps> = ({ workspaceId }) => 
                     value={reviewNote}
                     onChange={(e) => setReviewNote(e.target.value)}
                     placeholder="Add code review remarks or security validation notes..."
-                    className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-indigo-500/60 rounded-xl p-2.5 text-xs text-zinc-100 placeholder-zinc-500 outline-none resize-none font-sans"
+                    className="w-full bg-white/[0.03] border border-white/[0.08] focus:border-indigo-500/60 rounded-xl p-3 text-xs text-zinc-100 placeholder-zinc-500 outline-none resize-none font-sans"
                   />
 
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-[11px] text-zinc-500">
-                      Cryptographic token verification verified against RFC 7519 standard.
+                    <span className="text-[11px] text-zinc-500 font-mono">
+                      Target: {activeDiffFile} • Branch: main
                     </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <button
+                        onClick={() => {
+                          if (confirm(`Discard all changes in "${activeDiffFile}" and rollback to HEAD?`)) {
+                            setFiles(files.filter((f) => f.path !== activeDiffFile));
+                            setCheckpointNotice(`Reverted changes in ${activeDiffFile}`);
+                            setTimeout(() => setCheckpointNotice(null), 3500);
+                          }
+                        }}
+                        className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                        title="Rollback uncommitted changes in this file"
+                      >
+                        <RotateCcw size={12} />
+                        <span>Discard Changes</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const reason = prompt('Specify requested changes:', 'Please add unit test coverage for invalid signature fallback.');
+                          if (reason) {
+                            setReviewApproved(false);
+                            setReviewFeedback(reason);
+                            setReviewNote(`[Changes Requested]: ${reason}`);
+                          }
+                        }}
+                        className="px-3.5 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <AlertTriangle size={13} />
+                        <span>Request Changes</span>
+                      </button>
+
                       <button
                         onClick={() => {
                           setReviewApproved(true);
-                          setReviewNote('Verified RS256 token validation & clean session revocation. Approved.');
+                          setReviewFeedback(null);
+                          setReviewNote('Verified RS256 token validation & clean session revocation. Approved for merge.');
                         }}
-                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/25 cursor-pointer"
                       >
                         <Check size={13} />
                         <span>Approve Changes</span>
                       </button>
                     </div>
+                  </div>
+                </div>
+
+                {/* Contextual Branch Timeline & Commit Highlights */}
+                <div className="p-5 bg-white/[0.015] border border-white/[0.08] rounded-2xl font-sans space-y-3 shadow-xl">
+                  <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
+                    <span className="text-xs font-bold text-zinc-300 flex items-center gap-2">
+                      <GitCommit className="w-4 h-4 text-indigo-400" />
+                      Recent Branch Commits on main
+                    </span>
+                    <button
+                      onClick={() => setRightStudioTab('history')}
+                      className="text-[11px] text-cyan-400 hover:underline font-mono cursor-pointer"
+                    >
+                      View Full History →
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {[
+                      {
+                        hash: 'dd0e6ff',
+                        message: 'feat(vm): add full VM & Host telemetry with IP addresses, device info, uname, and architecture',
+                        author: 'Developer-ritesh',
+                        time: 'Just now',
+                      },
+                      {
+                        hash: '32ed065',
+                        message: 'feat(header): responsive header with single rotate button and clean layout',
+                        author: 'Developer-ritesh',
+                        time: '1 hour ago',
+                      },
+                    ].map((c) => (
+                      <div
+                        key={c.hash}
+                        className="p-3 bg-black/40 border border-white/[0.06] rounded-xl flex items-center justify-between text-xs transition"
+                      >
+                        <div className="flex items-center gap-2.5 truncate">
+                          <span className="font-mono text-[11px] text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded font-bold">
+                            {c.hash}
+                          </span>
+                          <span className="text-zinc-200 truncate">{c.message}</span>
+                        </div>
+                        <span className="text-[10px] text-zinc-500 font-mono shrink-0 pl-3">{c.time}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

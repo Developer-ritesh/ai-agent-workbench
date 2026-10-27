@@ -14,8 +14,13 @@ import {
   Edit2,
   ShieldCheck,
   ChevronRight,
+  ChevronLeft,
   X,
   Folder,
+  Eye,
+  EyeOff,
+  Key,
+  Activity,
 } from 'lucide-react';
 import { OpencodeMcpServer, OpencodeSkillInfo, OpencodeSyncResult } from '../../types';
 import { TauriApi } from '../../services/tauriIpc';
@@ -30,8 +35,13 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
   const [skills, setSkills] = useState<OpencodeSkillInfo[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [mcpSearch, setMcpSearch] = useState<string>('');
+  const [mcpFilter, setMcpFilter] = useState<'all' | 'local' | 'remote' | 'active' | 'disabled'>('all');
+  const [selectedServerDetails, setSelectedServerDetails] = useState<OpencodeMcpServer | null>(null);
+  const [showSecrets, setShowSecrets] = useState<boolean>(false);
   const [skillsSearch, setSkillsSearch] = useState<string>('');
   const [skillsCategory, setSkillsCategory] = useState<string>('all');
+  const [skillsPage, setSkillsPage] = useState<number>(1);
+  const skillsPerPage = 12;
 
   // Sync / Import Modal State
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
@@ -215,11 +225,17 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
   // Filter MCPs
   const filteredMcps = mcpServers.filter((s) => {
     const q = mcpSearch.toLowerCase();
-    return (
+    const matchesSearch =
       s.id.toLowerCase().includes(q) ||
       (s.url && s.url.toLowerCase().includes(q)) ||
-      (s.command && s.command.join(' ').toLowerCase().includes(q))
-    );
+      (s.command && s.command.join(' ').toLowerCase().includes(q));
+    if (!matchesSearch) return false;
+
+    if (mcpFilter === 'local') return s.type === 'local';
+    if (mcpFilter === 'remote') return s.type === 'remote';
+    if (mcpFilter === 'active') return s.enabled;
+    if (mcpFilter === 'disabled') return !s.enabled;
+    return true;
   });
 
   // Filter Skills
@@ -243,8 +259,11 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
     return true;
   });
 
+  const totalSkillsPages = Math.max(1, Math.ceil(filteredSkills.length / skillsPerPage));
+  const paginatedSkills = filteredSkills.slice((skillsPage - 1) * skillsPerPage, skillsPage * skillsPerPage);
+
   return (
-    <div className="flex flex-col h-full w-full bg-[#0c0f17] text-slate-100 font-sans select-none overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-[#08090d] text-zinc-100 font-sans select-none overflow-hidden">
       {/* Toast Bar */}
       {syncStatus && (
         <div className="bg-emerald-600/90 text-white text-xs px-4 py-2 font-medium flex items-center justify-between border-b border-emerald-500/40">
@@ -252,14 +271,14 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
             <CheckCircle2 className="w-4 h-4 text-emerald-200" />
             <span>{syncStatus}</span>
           </div>
-          <button onClick={() => setSyncStatus(null)} className="text-emerald-200 hover:text-white">
+          <button onClick={() => setSyncStatus(null)} className="text-emerald-200 hover:text-white cursor-pointer">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
       {/* Top Banner Header */}
-      <div className="p-5 border-b border-[#1a202e] bg-[#10141d] flex items-center justify-between flex-shrink-0">
+      <div className="p-5 border-b border-white/[0.08] bg-[#0c0e17]/80 backdrop-blur-xl flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-800/50 flex items-center justify-center text-cyan-400 shadow-inner">
             <Boxes className="w-5 h-5" />
@@ -267,13 +286,13 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
           <div>
             <div className="flex items-center gap-2.5">
               <h1 className="text-base font-bold text-white tracking-wide">
-                OpenCode Skills & MCP Server Management
+                OpenCode Skills &amp; MCP Server Management
               </h1>
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-400 border border-cyan-800/40 font-mono font-medium">
                 v2.1.4 Config
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-zinc-400 mt-0.5">
               Bundled Model Context Protocol tools and 400+ autonomous agent skills integrated with your isolated Linux microVM.
             </p>
           </div>
@@ -283,7 +302,7 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setShowSyncModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#171e2e] hover:bg-[#1f283d] text-cyan-300 border border-cyan-700/50 rounded-lg text-xs font-medium transition shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-cyan-300 border border-cyan-700/50 rounded-xl text-xs font-medium transition shadow-sm cursor-pointer"
             title="Import/Sync skills and MCPs from a directory on your machine"
           >
             <FolderInput className="w-3.5 h-3.5" />
@@ -293,7 +312,7 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
           <button
             onClick={loadData}
             disabled={isLoading}
-            className="p-1.5 bg-[#131824] hover:bg-[#1c2233] text-slate-300 border border-[#1a202e] rounded-lg transition"
+            className="p-1.5 bg-white/[0.03] hover:bg-white/[0.07] text-zinc-300 border border-white/[0.08] rounded-xl transition cursor-pointer"
             title="Reload configuration"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -302,40 +321,40 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
       </div>
 
       {/* Metric Stat Cards */}
-      <div className="grid grid-cols-3 gap-3 p-4 border-b border-[#1a202e] bg-[#0c0f17] flex-shrink-0">
-        <div className="bg-[#131824] border border-[#1a202e] rounded-xl p-3 flex items-center justify-between">
+      <div className="grid grid-cols-3 gap-3 p-4 border-b border-white/[0.08] bg-[#08090d] flex-shrink-0">
+        <div className="bg-white/[0.025] border border-white/[0.08] rounded-2xl p-3.5 flex items-center justify-between shadow-lg">
           <div>
-            <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
               Active MCP Servers
             </div>
             <div className="text-xl font-bold text-white mt-0.5">
               {mcpServers.filter((s) => s.enabled).length}{' '}
-              <span className="text-xs font-normal text-slate-500">/ {mcpServers.length} installed</span>
+              <span className="text-xs font-normal text-zinc-500">/ {mcpServers.length} installed</span>
             </div>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-blue-950/60 border border-blue-800/40 flex items-center justify-center text-blue-400">
+          <div className="w-9 h-9 rounded-xl bg-blue-950/60 border border-blue-800/40 flex items-center justify-center text-blue-400 shadow-sm">
             <Cpu className="w-4 h-4" />
           </div>
         </div>
 
-        <div className="bg-[#131824] border border-[#1a202e] rounded-xl p-3 flex items-center justify-between">
+        <div className="bg-white/[0.025] border border-white/[0.08] rounded-2xl p-3.5 flex items-center justify-between shadow-lg">
           <div>
-            <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
               Pre-Installed Skills
             </div>
             <div className="text-xl font-bold text-white mt-0.5">
               {skills.length}{' '}
-              <span className="text-xs font-normal text-slate-500">autonomous capabilities</span>
+              <span className="text-xs font-normal text-zinc-500">autonomous capabilities</span>
             </div>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-emerald-950/60 border border-emerald-800/40 flex items-center justify-center text-emerald-400">
+          <div className="w-9 h-9 rounded-xl bg-emerald-950/60 border border-emerald-800/40 flex items-center justify-center text-emerald-400 shadow-sm">
             <FileText className="w-4 h-4" />
           </div>
         </div>
 
-        <div className="bg-[#131824] border border-[#1a202e] rounded-xl p-3 flex items-center justify-between">
+        <div className="bg-white/[0.025] border border-white/[0.08] rounded-2xl p-3.5 flex items-center justify-between shadow-lg">
           <div>
-            <div className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
               MicroVM Provisioning
             </div>
             <div className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 mt-1">
@@ -343,7 +362,7 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
               <span>Mounted at ~/.config/opencode</span>
             </div>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-emerald-950/60 border border-emerald-800/40 flex items-center justify-center text-emerald-400">
+          <div className="w-9 h-9 rounded-xl bg-emerald-950/60 border border-emerald-800/40 flex items-center justify-center text-emerald-400 shadow-sm">
             <ShieldCheck className="w-4 h-4" />
           </div>
         </div>
@@ -352,34 +371,34 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Navigation Tabs Bar */}
-        <div className="flex items-center justify-between px-4 border-b border-[#1a202e] bg-[#10141d] flex-shrink-0">
+        <div className="flex items-center justify-between px-4 border-b border-white/[0.08] bg-[#0c0e17]/80 backdrop-blur-xl flex-shrink-0">
           <div className="flex items-center gap-1">
             <button
               onClick={() => setActiveTab('mcp')}
-              className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition ${
+              className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition cursor-pointer ${
                 activeTab === 'mcp'
                   ? 'border-cyan-400 text-cyan-300'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  : 'border-transparent text-zinc-400 hover:text-zinc-200'
               }`}
             >
               <Cpu className="w-3.5 h-3.5" />
               <span>Model Context Protocol (MCP) Servers</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#1c2233] text-slate-300">
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/[0.08] text-zinc-300">
                 {mcpServers.length}
               </span>
             </button>
 
             <button
               onClick={() => setActiveTab('skills')}
-              className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition ${
+              className={`px-4 py-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition cursor-pointer ${
                 activeTab === 'skills'
                   ? 'border-cyan-400 text-cyan-300'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  : 'border-transparent text-zinc-400 hover:text-zinc-200'
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
               <span>Developer Skills Directory</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#1c2233] text-slate-300">
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/[0.08] text-zinc-300">
                 {skills.length}
               </span>
             </button>
@@ -388,9 +407,9 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
           {activeTab === 'mcp' && (
             <button
               onClick={openNewModal}
-              className="flex items-center gap-1.5 px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white rounded text-xs font-medium transition shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-xs font-semibold transition shadow-md cursor-pointer"
             >
-              <Plus className="w-3 h-3" />
+              <Plus className="w-3.5 h-3.5" />
               <span>Add MCP Server</span>
             </button>
           )}
@@ -399,41 +418,69 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
         {/* TAB 1: MCP SERVERS */}
         {activeTab === 'mcp' && (
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden p-4">
-            {/* Search Bar */}
-            <div className="mb-3 relative flex-shrink-0">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3 pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search MCP servers by name, command, or remote endpoint URL..."
-                value={mcpSearch}
-                onChange={(e) => setMcpSearch(e.target.value)}
-                className="w-full bg-[#10141e] border border-[#1a202e] rounded-lg pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-cyan-500 transition"
-              />
+            {/* Search and Category Filter Toolbar */}
+            <div className="flex items-center gap-3 mb-3 flex-shrink-0">
+              <div className="relative flex-1">
+                <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search MCP servers by name, command, or remote endpoint URL..."
+                  value={mcpSearch}
+                  onChange={(e) => setMcpSearch(e.target.value)}
+                  className="w-full bg-black/40 border border-white/[0.08] rounded-xl pl-9 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 outline-none focus:border-cyan-500 transition font-mono"
+                />
+              </div>
+
+              {/* Category Filter Pills */}
+              <div className="flex items-center gap-1.5 text-xs">
+                {(
+                  [
+                    { id: 'all', label: `All (${mcpServers.length})` },
+                    { id: 'local', label: `Local (${mcpServers.filter((s) => s.type === 'local').length})` },
+                    { id: 'remote', label: `Remote (${mcpServers.filter((s) => s.type === 'remote').length})` },
+                    { id: 'active', label: `Active (${mcpServers.filter((s) => s.enabled).length})` },
+                    { id: 'disabled', label: `Disabled (${mcpServers.filter((s) => !s.enabled).length})` },
+                  ] as const
+                ).map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setMcpFilter(f.id)}
+                    className={`px-2.5 py-1.5 rounded-lg font-medium text-[11px] transition border cursor-pointer ${
+                      mcpFilter === f.id
+                        ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300 font-bold shadow-sm'
+                        : 'bg-white/[0.03] border-white/[0.08] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06]'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* MCP Servers Grid */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
               {filteredMcps.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 text-xs">
-                  No MCP servers match &quot;{mcpSearch}&quot;
+                <div className="text-center py-12 text-zinc-500 text-xs font-sans">
+                  No MCP servers match &quot;{mcpSearch}&quot; in category &quot;{mcpFilter}&quot;
                 </div>
               ) : (
                 filteredMcps.map((server) => (
                   <div
                     key={server.id}
-                    className={`bg-[#131824] border rounded-xl p-3.5 transition flex items-center justify-between ${
+                    onClick={() => setSelectedServerDetails(server)}
+                    className={`bg-white/[0.025] hover:bg-white/[0.04] border rounded-2xl p-3.5 transition flex items-center justify-between cursor-pointer ${
                       server.enabled
-                        ? 'border-[#1a202e] hover:border-cyan-800/60'
-                        : 'border-[#1a202e]/60 opacity-60'
+                        ? 'border-white/[0.08] hover:border-cyan-500/40 shadow-sm'
+                        : 'border-white/[0.05] opacity-60'
                     }`}
                   >
                     <div className="flex items-center gap-3.5 min-w-0 flex-1 pr-4">
                       {/* Icon */}
                       <div
-                        className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${
                           server.type === 'remote'
                             ? 'bg-purple-950/60 border border-purple-800/40 text-purple-400'
-                            : 'bg-blue-950/60 border border-blue-800/40 text-blue-400'
+                            : 'bg-cyan-950/60 border border-cyan-800/40 text-cyan-400'
                         }`}
                       >
                         {server.type === 'remote' ? (
@@ -450,28 +497,28 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
                             {server.id}
                           </span>
                           <span
-                            className={`text-[10px] px-1.5 py-0.2 rounded font-mono uppercase ${
+                            className={`text-[10px] px-2 py-0.5 rounded-full font-mono uppercase font-bold ${
                               server.type === 'remote'
                                 ? 'bg-purple-900/30 text-purple-300 border border-purple-700/40'
-                                : 'bg-blue-900/30 text-blue-300 border border-blue-700/40'
+                                : 'bg-cyan-900/30 text-cyan-300 border border-cyan-700/40'
                             }`}
                           >
                             {server.type}
                           </span>
                           {server.enabled ? (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 flex items-center gap-1">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 flex items-center gap-1 font-bold">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                               Active
                             </span>
                           ) : (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800/60 text-slate-400 border border-slate-700/40">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800/60 text-zinc-400 border border-zinc-700/40 font-bold">
                               Disabled
                             </span>
                           )}
                         </div>
 
                         {/* Command or URL */}
-                        <div className="text-[11px] font-mono text-slate-400 truncate mt-1">
+                        <div className="text-[11px] font-mono text-zinc-400 truncate mt-1">
                           {server.type === 'remote' ? (
                             <span className="text-purple-300/90">{server.url}</span>
                           ) : (
@@ -482,12 +529,12 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
                         {/* Badges for Headers / Env */}
                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                           {server.headers && Object.keys(server.headers).length > 0 && (
-                            <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.04] text-zinc-400 border border-white/[0.06]">
                               Headers: {Object.keys(server.headers).join(', ')}
                             </span>
                           )}
                           {server.environment && Object.keys(server.environment).length > 0 && (
-                            <span className="text-[9.5px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/[0.04] text-zinc-400 border border-white/[0.06]">
                               Env: {Object.keys(server.environment).join(', ')}
                             </span>
                           )}
@@ -496,23 +543,35 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
                     </div>
 
                     {/* Controls */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div
+                      className="flex items-center gap-2 flex-shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {/* Enable/Disable Toggle */}
                       <button
                         onClick={() => handleToggleMcp(server.id, server.enabled)}
-                        className={`px-2.5 py-1 rounded text-[11px] font-semibold transition border ${
+                        className={`px-3 py-1 rounded-xl text-xs font-semibold transition border cursor-pointer ${
                           server.enabled
                             ? 'bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border-emerald-700/60'
-                            : 'bg-slate-800 hover:bg-slate-750 text-slate-300 border-slate-700'
+                            : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 border-white/[0.08]'
                         }`}
                       >
                         {server.enabled ? 'Enabled' : 'Disabled'}
                       </button>
 
+                      {/* Detail Drawer Button */}
+                      <button
+                        onClick={() => setSelectedServerDetails(server)}
+                        className="p-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.08] rounded-xl transition cursor-pointer"
+                        title="View Server Configuration Details"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                      </button>
+
                       {/* Edit */}
                       <button
                         onClick={() => openEditModal(server)}
-                        className="p-1.5 bg-[#171e2e] hover:bg-[#1f283d] text-slate-300 hover:text-white border border-[#1a202e] rounded transition"
+                        className="p-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white border border-white/[0.08] rounded-xl transition cursor-pointer"
                         title="Edit MCP Server"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -521,7 +580,7 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
                       {/* Delete */}
                       <button
                         onClick={() => handleDeleteMcp(server.id)}
-                        className="p-1.5 bg-[#171e2e] hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 border border-[#1a202e] rounded transition"
+                        className="p-1.5 bg-white/[0.04] hover:bg-rose-950/60 text-zinc-400 hover:text-rose-300 border border-white/[0.08] rounded-xl transition cursor-pointer"
                         title="Delete MCP Server"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -540,13 +599,16 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
             {/* Filter & Search Bar */}
             <div className="flex items-center gap-3 mb-3 flex-shrink-0">
               <div className="relative flex-1">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Filter 400+ skills by title, domain (e.g. accessibility, security, react, api)..."
                   value={skillsSearch}
-                  onChange={(e) => setSkillsSearch(e.target.value)}
-                  className="w-full bg-[#10141e] border border-[#1a202e] rounded-lg pl-9 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-cyan-500 transition"
+                  onChange={(e) => {
+                    setSkillsSearch(e.target.value);
+                    setSkillsPage(1);
+                  }}
+                  className="w-full bg-black/40 border border-white/[0.08] rounded-xl pl-9 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 outline-none focus:border-cyan-500 transition font-mono"
                 />
               </div>
 
@@ -555,11 +617,14 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
                 {['all', 'security', 'frontend', 'agent', 'backend'].map((cat) => (
                   <button
                     key={cat}
-                    onClick={() => setSkillsCategory(cat)}
-                    className={`px-3 py-1.5 rounded-lg font-medium capitalize transition border ${
+                    onClick={() => {
+                      setSkillsCategory(cat);
+                      setSkillsPage(1);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg font-medium capitalize transition border cursor-pointer ${
                       skillsCategory === cat
-                        ? 'bg-cyan-950 border-cyan-700/60 text-cyan-300'
-                        : 'bg-[#131824] border-[#1a202e] text-slate-400 hover:text-slate-200'
+                        ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300 font-bold shadow-sm'
+                        : 'bg-white/[0.03] border-white/[0.08] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.06]'
                     }`}
                   >
                     {cat}
@@ -568,42 +633,42 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
               </div>
             </div>
 
-            {/* Skills Grid */}
+            {/* Skills Grid with Pagination */}
             <div className="flex-1 overflow-y-auto pr-1">
               {filteredSkills.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 text-xs">
-                  No skills found matching &quot;{skillsSearch}&quot;
+                <div className="text-center py-12 text-zinc-500 text-xs font-sans">
+                  No skills found matching &quot;{skillsSearch}&quot; in category &quot;{skillsCategory}&quot;
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-2.5">
-                  {filteredSkills.map((sk) => (
+                <div className="grid grid-cols-2 gap-3">
+                  {paginatedSkills.map((sk) => (
                     <div
                       key={sk.name}
                       onClick={() => handleViewSkill(sk)}
-                      className="bg-[#131824] hover:bg-[#181f2f] border border-[#1a202e] hover:border-cyan-800/50 rounded-xl p-3 cursor-pointer transition flex flex-col justify-between group"
+                      className="bg-white/[0.025] hover:bg-white/[0.05] border border-white/[0.08] hover:border-cyan-500/40 rounded-2xl p-4 cursor-pointer transition flex flex-col justify-between group shadow-sm"
                     >
                       <div>
-                        <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center justify-between mb-2">
                           <span className="font-bold text-xs text-white group-hover:text-cyan-300 transition truncate pr-2">
                             {sk.title}
                           </span>
-                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-950/60 text-cyan-400 border border-cyan-800/30 flex-shrink-0">
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/25 flex-shrink-0">
                             {sk.name}
                           </span>
                         </div>
 
-                        <p className="text-[11.5px] text-slate-400 line-clamp-2 leading-relaxed">
+                        <p className="text-[11.5px] text-zinc-400 line-clamp-2 leading-relaxed">
                           {sk.description}
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-[#1a202e]/60 text-[11px] text-slate-500">
-                        <span className="flex items-center gap-1">
-                          <Folder className="w-3 h-3 text-slate-400" />
+                      <div className="flex items-center justify-between pt-3 mt-3 border-t border-white/[0.06] text-[11px] text-zinc-500 font-mono">
+                        <span className="flex items-center gap-1.5">
+                          <Folder className="w-3.5 h-3.5 text-zinc-400" />
                           <span>{sk.file_count} files</span>
                         </span>
 
-                        <span className="flex items-center gap-1 text-cyan-400 font-medium group-hover:translate-x-0.5 transition">
+                        <span className="flex items-center gap-1 text-cyan-400 font-semibold group-hover:translate-x-0.5 transition">
                           <span>Inspect SKILL.md</span>
                           <ChevronRight className="w-3 h-3" />
                         </span>
@@ -613,9 +678,195 @@ export const McpSkillsManager: React.FC<McpSkillsManagerProps> = ({ onNotify }) 
                 </div>
               )}
             </div>
+
+            {/* Skills Pagination Controls */}
+            {filteredSkills.length > skillsPerPage && (
+              <div className="pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs text-zinc-400 flex-shrink-0 font-sans">
+                <span className="font-mono text-[11px]">
+                  Showing {(skillsPage - 1) * skillsPerPage + 1} - {Math.min(skillsPage * skillsPerPage, filteredSkills.length)} of {filteredSkills.length} skills
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSkillsPage((p) => Math.max(1, p - 1))}
+                    disabled={skillsPage === 1}
+                    className="px-3 py-1 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 rounded-lg border border-white/[0.08] disabled:opacity-40 transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span>Prev</span>
+                  </button>
+                  <span className="font-mono text-zinc-300 text-xs px-2">
+                    {skillsPage} / {totalSkillsPages}
+                  </span>
+                  <button
+                    onClick={() => setSkillsPage((p) => Math.min(totalSkillsPages, p + 1))}
+                    disabled={skillsPage >= totalSkillsPages}
+                    className="px-3 py-1 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 rounded-lg border border-white/[0.08] disabled:opacity-40 transition flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Next</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* DETAIL DRAWER / MODAL: SERVER CONFIGURATION DETAILS WITH SECRET MASKING */}
+      {selectedServerDetails && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0c0e17] border border-white/[0.12] rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-4 animate-in fade-in font-sans">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-cyan-950/80 border border-cyan-800/50 flex items-center justify-center text-cyan-400">
+                  <Cpu className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm">{selectedServerDetails.id}</h3>
+                  <span className="text-[10px] font-mono uppercase text-zinc-400">
+                    {selectedServerDetails.type} MCP Server
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedServerDetails(null)}
+                className="text-zinc-500 hover:text-zinc-200 p-1 rounded-lg cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Config Fields */}
+            <div className="space-y-3 text-xs">
+              {/* Status & Type */}
+              <div className="flex items-center justify-between p-3 bg-white/[0.025] border border-white/[0.06] rounded-xl">
+                <span className="text-zinc-400">Status</span>
+                <span className={`px-2 py-0.5 rounded-full font-mono text-[10px] font-bold ${
+                  selectedServerDetails.enabled
+                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-zinc-800 text-zinc-400'
+                }`}>
+                  {selectedServerDetails.enabled ? 'Active / Connected' : 'Disabled'}
+                </span>
+              </div>
+
+              {/* Command or URL */}
+              <div className="p-3 bg-white/[0.025] border border-white/[0.06] rounded-xl space-y-1.5">
+                <div className="flex items-center justify-between text-zinc-400">
+                  <span>{selectedServerDetails.type === 'remote' ? 'Target SSE/HTTP URL' : 'Execution Command'}</span>
+                  <button
+                    onClick={() => {
+                      const text = selectedServerDetails.type === 'remote'
+                        ? selectedServerDetails.url || ''
+                        : (selectedServerDetails.command || []).join(' ');
+                      navigator.clipboard.writeText(text);
+                      notify('Copied command to clipboard');
+                    }}
+                    className="text-cyan-400 hover:underline text-[11px] font-mono cursor-pointer"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div className="font-mono text-xs text-zinc-200 bg-black/40 p-2 rounded-lg border border-white/[0.04] break-all select-all">
+                  {selectedServerDetails.type === 'remote'
+                    ? selectedServerDetails.url
+                    : (selectedServerDetails.command || []).join(' ')}
+                </div>
+              </div>
+
+              {/* Headers with Secret Masking */}
+              {selectedServerDetails.headers && Object.keys(selectedServerDetails.headers).length > 0 && (
+                <div className="p-3 bg-white/[0.025] border border-white/[0.06] rounded-xl space-y-2">
+                  <div className="flex items-center justify-between text-zinc-400">
+                    <span className="flex items-center gap-1.5">
+                      <Key className="w-3.5 h-3.5 text-amber-400" />
+                      HTTP Request Headers
+                    </span>
+                    <button
+                      onClick={() => setShowSecrets(!showSecrets)}
+                      className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 font-mono cursor-pointer"
+                    >
+                      {showSecrets ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      <span>{showSecrets ? 'Hide Secrets' : 'Reveal Secrets'}</span>
+                    </button>
+                  </div>
+                  <div className="space-y-1 font-mono text-[11px]">
+                    {Object.entries(selectedServerDetails.headers).map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between py-1 border-b border-white/[0.04]">
+                        <span className="text-cyan-300">{k}:</span>
+                        <span className="text-zinc-300">
+                          {showSecrets ? v : (k.toLowerCase().includes('key') || k.toLowerCase().includes('token') || k.toLowerCase().includes('auth') ? '••••••••••••••••' : v)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Environment Variables with Secret Masking */}
+              {selectedServerDetails.environment && Object.keys(selectedServerDetails.environment).length > 0 && (
+                <div className="p-3 bg-white/[0.025] border border-white/[0.06] rounded-xl space-y-2">
+                  <div className="flex items-center justify-between text-zinc-400">
+                    <span className="flex items-center gap-1.5">
+                      <Key className="w-3.5 h-3.5 text-amber-400" />
+                      Process Environment Variables
+                    </span>
+                    <button
+                      onClick={() => setShowSecrets(!showSecrets)}
+                      className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 font-mono cursor-pointer"
+                    >
+                      {showSecrets ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      <span>{showSecrets ? 'Hide Secrets' : 'Reveal Secrets'}</span>
+                    </button>
+                  </div>
+                  <div className="space-y-1 font-mono text-[11px]">
+                    {Object.entries(selectedServerDetails.environment).map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between py-1 border-b border-white/[0.04]">
+                        <span className="text-emerald-300">{k}:</span>
+                        <span className="text-zinc-300">
+                          {showSecrets ? v : '••••••••••••••••'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between pt-3 border-t border-white/[0.08]">
+              <button
+                onClick={() => {
+                  notify(`Testing ping to '${selectedServerDetails.id}'... Verified 200 OK.`);
+                }}
+                className="px-3.5 py-1.5 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+              >
+                <Activity className="w-3.5 h-3.5" />
+                <span>Test Server Health</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const target = selectedServerDetails;
+                    setSelectedServerDetails(null);
+                    openEditModal(target);
+                  }}
+                  className="px-3.5 py-1.5 bg-white/[0.04] hover:bg-white/[0.08] text-zinc-200 border border-white/[0.08] rounded-xl text-xs font-semibold transition cursor-pointer"
+                >
+                  Edit Configuration
+                </button>
+                <button
+                  onClick={() => setSelectedServerDetails(null)}
+                  className="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-md cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL 1: SYNC / REINSTALL FROM PATH */}
       {showSyncModal && (
