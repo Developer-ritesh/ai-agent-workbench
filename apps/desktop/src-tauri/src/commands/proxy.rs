@@ -74,13 +74,13 @@ pub fn save_proxy_config_to_file(cfg: &ProxyConfig) -> Result<(), String> {
     fs::write(&path, json).map_err(|e| e.to_string())
 }
 
-/// Ensure Tor daemon is configured to listen on 0.0.0.0:9050 and running
+/// Ensure Tor daemon is configured to listen on 0.0.0.0:9050 (SOCKS) & 0.0.0.0:9080 (HTTP CONNECT) and running
 pub fn ensure_tor_service_running() {
     let torrc_path = PathBuf::from("/opt/homebrew/etc/tor/torrc");
-    let desired_config = "SocksPort 0.0.0.0:9050\nControlPort 127.0.0.1:9051\nCookieAuthentication 0\n";
+    let desired_config = "SocksPort 0.0.0.0:9050\nHTTPTunnelPort 0.0.0.0:9080\nControlPort 127.0.0.1:9051\nCookieAuthentication 0\n";
     
     let needs_write = match fs::read_to_string(&torrc_path) {
-        Ok(c) => !c.contains("SocksPort 0.0.0.0:9050"),
+        Ok(c) => !c.contains("HTTPTunnelPort 0.0.0.0:9080"),
         Err(_) => true,
     };
 
@@ -93,10 +93,10 @@ pub fn ensure_tor_service_running() {
             .args(["services", "restart", "tor"])
             .output();
     } else {
-        // Quick check if port 9050 is responsive
-        if TcpStream::connect_timeout(&"127.0.0.1:9050".parse().unwrap(), Duration::from_millis(150)).is_err() {
+        // Quick check if HTTP tunnel port 9080 is responsive
+        if TcpStream::connect_timeout(&"127.0.0.1:9080".parse().unwrap(), Duration::from_millis(150)).is_err() {
             let _ = std::process::Command::new("brew")
-                .args(["services", "start", "tor"])
+                .args(["services", "restart", "tor"])
                 .output();
         }
     }
@@ -137,8 +137,8 @@ pub fn rotate_tor_ip() -> Result<(), String> {
 /// Transform localhost / 127.0.0.1 to 192.168.64.1 for VM guest access
 pub fn format_proxy_for_guest(url: &str) -> String {
     let clean = url.trim();
-    if clean.is_empty() || clean.contains(":9050") {
-        return "socks5h://192.168.64.1:9050".to_string();
+    if clean.is_empty() || clean.contains(":9050") || clean.contains(":9080") {
+        return "http://192.168.64.1:9080".to_string();
     }
     clean
         .replace("localhost", "192.168.64.1")
@@ -157,15 +157,17 @@ pub fn write_workspace_proxy_files(project_path: &str, cfg: &ProxyConfig) {
         return;
     }
 
-    let target_url = if cfg.mode == "auto" || cfg.proxy_url.trim().is_empty() {
-        "socks5h://192.168.64.1:9050".to_string()
+    // Use Tor's native HTTP tunnel (port 9080) for HTTP/HTTPS_PROXY so Bun/Node fetch works seamlessly without UnsupportedProxyProtocol
+    let (http_target, all_target) = if cfg.mode == "auto" || cfg.proxy_url.trim().is_empty() || cfg.proxy_url.contains(":9050") || cfg.proxy_url.contains(":9080") {
+        ("http://192.168.64.1:9080".to_string(), "http://192.168.64.1:9080".to_string())
     } else {
-        format_proxy_for_guest(&cfg.proxy_url)
+        let guest_url = format_proxy_for_guest(&cfg.proxy_url);
+        (guest_url.clone(), guest_url)
     };
 
     let content = format!(
-        "HTTP_PROXY={}\nHTTPS_PROXY={}\nALL_PROXY={}\nhttp_proxy={}\nhttps_proxy={}\nall_proxy={}\nNO_PROXY=localhost,127.0.0.1,192.168.64.1,192.168.64.*\nno_proxy=localhost,127.0.0.1,192.168.64.1,192.168.64.*\n",
-        target_url, target_url, target_url, target_url, target_url, target_url
+        "HTTP_PROXY={}\nHTTPS_PROXY={}\nhttp_proxy={}\nhttps_proxy={}\nALL_PROXY={}\nall_proxy={}\nNO_PROXY=localhost,127.0.0.1,192.168.64.1,192.168.64.*\nno_proxy=localhost,127.0.0.1,192.168.64.1,192.168.64.*\n",
+        http_target, http_target, http_target, http_target, all_target, all_target
     );
     let _ = fs::write(&proxy_file, content);
 }
@@ -239,7 +241,7 @@ pub fn proxy_set_config(
     let (direct_ip, _, _) = query_public_ip(None);
     let proxy_target = if config.enabled {
         if config.mode == "auto" || config.proxy_url.trim().is_empty() {
-            Some("socks5h://127.0.0.1:9050")
+            Some("http://127.0.0.1:9080")
         } else {
             Some(config.proxy_url.trim())
         }
@@ -272,7 +274,7 @@ pub fn proxy_test(proxy_url: Option<String>) -> Result<ProxyStatus, String> {
         Some(u)
     } else if cfg.enabled {
         if cfg.mode == "auto" || cfg.proxy_url.trim().is_empty() {
-            Some("socks5h://127.0.0.1:9050".to_string())
+            Some("http://127.0.0.1:9080".to_string())
         } else {
             Some(cfg.proxy_url.clone())
         }
@@ -286,7 +288,7 @@ pub fn proxy_test(proxy_url: Option<String>) -> Result<ProxyStatus, String> {
 
     Ok(ProxyStatus {
         enabled: target_ref.is_some(),
-        mode: if target_ref == Some("socks5h://127.0.0.1:9050") || target_ref.unwrap_or("").contains(":9050") {
+        mode: if target_ref == Some("http://127.0.0.1:9080") || target_ref.unwrap_or("").contains(":9080") || target_ref.unwrap_or("").contains(":9050") {
             "auto".to_string()
         } else {
             "custom".to_string()
@@ -330,8 +332,8 @@ pub fn proxy_rotate_ip(workspace_path: Option<String>) -> Result<ProxyStatus, St
         write_workspace_proxy_files(path, &cfg);
     }
 
-    let target = if cfg.mode == "auto" || cfg.proxy_url.contains(":9050") {
-        Some("socks5h://127.0.0.1:9050".to_string())
+    let target = if cfg.mode == "auto" || cfg.proxy_url.contains(":9050") || cfg.proxy_url.contains(":9080") {
+        Some("http://127.0.0.1:9080".to_string())
     } else {
         Some(cfg.proxy_url)
     };
