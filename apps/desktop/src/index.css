@@ -93,12 +93,11 @@
 
 /* ==========================================================================
    Base Resets & WebKit Native Controls Override
+   NOTE: Do NOT zero margin/padding on universal selector here. Tailwind v4
+   cascade layers are in use — unlayered universal margin/padding resets
+   override the utilities layer, discarding padding and margin classes.
+   Tailwind preflight in base layer already resets margins and box-sizing.
    ========================================================================== */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
 
 button,
 input[type="button"],
