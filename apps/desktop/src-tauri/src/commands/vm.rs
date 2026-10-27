@@ -29,10 +29,14 @@ pub fn vm_status(
 
 #[tauri::command]
 pub fn vm_rotate(
+    app: tauri::AppHandle,
     manager: State<'_, WorkspaceManager>,
     workspace_id: String,
 ) -> Result<VmStatusResponse, String> {
-    manager.rotate_vm(&workspace_id).map_err(|e| e.to_string())
+    let res = manager.rotate_vm(&workspace_id).map_err(|e| e.to_string())?;
+    use tauri::Emitter;
+    let _ = app.emit("vm-rotated", &workspace_id);
+    Ok(res)
 }
 
 #[tauri::command]

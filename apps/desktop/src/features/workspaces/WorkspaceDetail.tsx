@@ -22,6 +22,7 @@ interface WorkspaceDetailProps {
   showLeftSidebar?: boolean;
   showBottomPanel?: boolean;
   isTerminalMaximized?: boolean;
+  vmRotateNonce?: number;
 }
 
 export const WorkspaceDetail: React.FC<WorkspaceDetailProps> = ({
@@ -35,6 +36,7 @@ export const WorkspaceDetail: React.FC<WorkspaceDetailProps> = ({
   showLeftSidebar = true,
   showBottomPanel = true,
   isTerminalMaximized = false,
+  vmRotateNonce,
 }) => {
   const [activeFilePath, setActiveFilePath] = useState('');
   const [openFiles, setOpenFiles] = useState<string[]>([]);
@@ -243,6 +245,7 @@ export const WorkspaceDetail: React.FC<WorkspaceDetailProps> = ({
                   vmStatus={workspace.status}
                   isMaximized={effectiveMaximized}
                   onToggleMaximize={() => setLocalTerminalMaximized((prev) => !prev)}
+                  vmRotateNonce={vmRotateNonce}
                 />
               </div>
             )}

@@ -673,6 +673,16 @@ export const TauriApi = {
     }
     return () => {};
   },
+  listenVmRotated: async (callback: (workspaceId: string) => void): Promise<() => void> => {
+    if (isTauriEnv) {
+      const { listen } = await import('@tauri-apps/api/event');
+      const unlisten = await listen<string>('vm-rotated', (event) => {
+        callback(event.payload);
+      });
+      return unlisten;
+    }
+    return () => {};
+  },
 
   // Agent Supervision
   getOpencodeVersion: () => callTauri<string>('agent_get_version'),

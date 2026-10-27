@@ -21,6 +21,7 @@ interface TerminalPanelProps {
   vmStatus?: string;
   isMaximized?: boolean;
   onToggleMaximize?: () => void;
+  vmRotateNonce?: number;
 }
 
 export const TerminalPanel: React.FC<TerminalPanelProps> = ({
@@ -30,6 +31,7 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
   vmStatus: _vmStatus = 'running',
   isMaximized = false,
   onToggleMaximize,
+  vmRotateNonce,
 }) => {
   const [activeTab, setActiveTab] = useState<'Terminal' | 'Logs' | 'Problems' | 'Output'>('Terminal');
 
@@ -48,10 +50,13 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
   const spawnTerminal = useCallback(async () => {
     if (!containerRef.current) return;
 
-    // Clean up old terminal if any
+    // Clean up old terminal & kill previous PTY session
     if (unlistenRef.current) {
       unlistenRef.current();
       unlistenRef.current = null;
+    }
+    if (terminalIdRef.current) {
+      TauriApi.ptyKill(terminalIdRef.current).catch(() => {});
     }
     if (termRef.current) {
       termRef.current.dispose();
@@ -175,6 +180,32 @@ export const TerminalPanel: React.FC<TerminalPanelProps> = ({
       }
     };
   }, [spawnTerminal]);
+
+  // Listen for VM rotation events from Tauri IPC backend
+  useEffect(() => {
+    let unlisten: (() => void) | null = null;
+    let isMounted = true;
+
+    TauriApi.listenVmRotated((rotatedWsId) => {
+      if (isMounted && (!rotatedWsId || rotatedWsId === _workspaceId)) {
+        spawnTerminal();
+      }
+    }).then((fn) => {
+      unlisten = fn;
+    });
+
+    return () => {
+      isMounted = false;
+      if (unlisten) unlisten();
+    };
+  }, [_workspaceId, spawnTerminal]);
+
+  // Re-spawn terminal whenever vmRotateNonce prop increments
+  useEffect(() => {
+    if (vmRotateNonce && vmRotateNonce > 0) {
+      spawnTerminal();
+    }
+  }, [vmRotateNonce, spawnTerminal]);
 
   // Handle dynamic window and bottom panel resize during drag
   useEffect(() => {

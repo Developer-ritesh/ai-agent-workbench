@@ -45,6 +45,7 @@ export const App: React.FC = () => {
   // Auto-Rotate configuration (default 60 minutes)
   const [autoRotateMinutes, setAutoRotateMinutes] = useState<number>(60);
   const [secondsUntilRotate, setSecondsUntilRotate] = useState<number>(60 * 60);
+  const [vmRotateNonce, setVmRotateNonce] = useState<number>(0);
 
   useEffect(() => {
     loadInitialData();
@@ -158,6 +159,7 @@ export const App: React.FC = () => {
         prev.map((w) => (w.id === workspaceId ? { ...w, status: 'running' } : w))
       );
       setSecondsUntilRotate(autoRotateMinutes * 60);
+      setVmRotateNonce((n) => n + 1);
     } catch (err: any) {
       alert(`Failed to rotate VM: ${err?.message || String(err)}`);
     }
@@ -306,6 +308,7 @@ export const App: React.FC = () => {
             showLeftSidebar={showLeftSidebar}
             showBottomPanel={showBottomPanel}
             isTerminalMaximized={isTerminalMaximized}
+            vmRotateNonce={vmRotateNonce}
           />
         ) : (
           <div className="view-container">

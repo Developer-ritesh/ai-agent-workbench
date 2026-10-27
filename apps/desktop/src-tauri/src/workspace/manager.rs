@@ -177,26 +177,87 @@ impl WorkspaceManager {
     pub fn rotate_vm(&self, workspace_id: &str) -> Result<VmStatusResponse, WorkbenchError> {
         let ws = self.resolve_workspace(workspace_id)?;
         let actual_id = &ws.id;
+        let old_vm_id = ws.vm_id.clone();
+        let host_project_path = ws.host_project_path.clone();
 
         // 1. Stop existing VM instance
         let _ = self.stop_vm(actual_id);
 
-        // 2. Clear ephemeral state & guest scratch
-        let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
-        let vm_dir = home.join(".ai-agent-workbench").join("vms").join(&ws.vm_id);
-        let ephemeral_dir = vm_dir.join("ephemeral");
-        let _ = fs::remove_dir_all(&ephemeral_dir);
-        let _ = fs::create_dir_all(&ephemeral_dir);
+        // Terminate any lingering background vfkit instances for this workspace / old VM
+        let _ = std::process::Command::new("pkill")
+            .arg("-f")
+            .arg(format!("ai-agent-ws-{}", old_vm_id))
+            .output();
+        let _ = std::process::Command::new("pkill")
+            .arg("-f")
+            .arg(&old_vm_id)
+            .output();
+        let _ = std::process::Command::new("pkill")
+            .arg("-f")
+            .arg("ai-agent-ws-")
+            .output();
 
-        // 3. Generate new session token and update audit
+        // 2. Completely purge OpenCode / Dev AI session state in the workspace project directory
+        // Completely remove .opencode directory so all previous databases, sessions, and telemetry are gone
+        let project_dir = PathBuf::from(&host_project_path);
+        let opencode_dir = project_dir.join(".opencode");
+        if opencode_dir.exists() {
+            let _ = fs::remove_dir_all(&opencode_dir);
+        }
+        // Re-create clean, pristine directories with .gitignore
+        let _ = fs::create_dir_all(opencode_dir.join("sessions"));
+        let _ = fs::create_dir_all(opencode_dir.join("data"));
+        let _ = fs::create_dir_all(opencode_dir.join("config"));
+        let _ = fs::create_dir_all(opencode_dir.join("state"));
+        let _ = fs::create_dir_all(opencode_dir.join("cache"));
+        let _ = fs::write(opencode_dir.join(".gitignore"), "*\n");
+
+        // Ensure devai executable shim exists in workspace node_modules/.bin
+        let bin_dir = project_dir.join("node_modules").join(".bin");
+        let _ = fs::create_dir_all(&bin_dir);
+        let devai_shim = bin_dir.join("devai");
+        let script = "#!/bin/sh\nif [ -x /usr/bin/opencode ]; then\n  exec /usr/bin/opencode \"$@\"\nelif [ -x /bin/opencode ]; then\n  exec /bin/opencode \"$@\"\nelse\n  exec opencode \"$@\"\nfi\n";
+        let _ = fs::write(&devai_shim, script);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let _ = fs::set_permissions(&devai_shim, fs::Permissions::from_mode(0o755));
+        }
+
+        // Clean any term_size or temporary symlinks in temp_dir
+        if let Ok(entries) = fs::read_dir(std::env::temp_dir()) {
+            for entry in entries.flatten() {
+                let name = entry.file_name().to_string_lossy().to_string();
+                if name.starts_with("ai-agent-ws-term-") || name.starts_with(&format!("ai-agent-ws-{}", old_vm_id)) {
+                    let _ = fs::remove_file(entry.path());
+                }
+            }
+        }
+
+        // 3. Clear host VM directory
+        let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
+        let vms_root = home.join(".ai-agent-workbench").join("vms");
+        let old_dir = vms_root.join(&old_vm_id);
+        let _ = fs::remove_dir_all(&old_dir);
+
+        // 4. Generate a brand-new random VM ID so OpenCode cannot fingerprint or correlate the previous VM
+        let new_vm_id = format!("vm-{}", &Uuid::new_v4().to_string()[..8]);
+        let new_dir = vms_root.join(&new_vm_id);
+        let _ = fs::create_dir_all(&new_dir);
+        let _ = fs::create_dir_all(new_dir.join("ephemeral"));
+
+        // Persist new VM ID to database
+        self.db.update_workspace_vm_id(actual_id, &new_vm_id)?;
+
+        // 5. Generate new session token and update audit
         let new_token = Uuid::new_v4().to_string();
         self.db.record_audit_event(
             Some(actual_id),
             "vm.rotated",
-            &format!("VM rotated on-demand. Ephemeral cache purged. Session key renewed: {}", &new_token[..8]),
+            &format!("VM rotated on-demand. Instance ID updated to {}. Ephemeral cache and OpenCode session memory purged. Session token: {}.", new_vm_id, &new_token[..8]),
         )?;
 
-        // 4. Start fresh VM instance
+        // 6. Start fresh VM instance with the new VM ID
         self.start_vm(actual_id)
     }
 

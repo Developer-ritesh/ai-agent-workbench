@@ -250,6 +250,16 @@ impl DatabaseManager {
         Ok(())
     }
 
+    pub fn update_workspace_vm_id(&self, id: &str, new_vm_id: &str) -> Result<(), WorkbenchError> {
+        let conn = self.conn.lock().unwrap();
+        let now = Utc::now().to_rfc3339();
+        conn.execute(
+            "UPDATE workspaces SET vm_id = ?1, updated_at = ?2 WHERE id = ?3",
+            params![new_vm_id, now, id],
+        )?;
+        Ok(())
+    }
+
     pub fn delete_workspace(&self, id: &str) -> Result<(), WorkbenchError> {
         let conn = self.conn.lock().unwrap();
         conn.execute("DELETE FROM workspaces WHERE id = ?1", params![id])?;

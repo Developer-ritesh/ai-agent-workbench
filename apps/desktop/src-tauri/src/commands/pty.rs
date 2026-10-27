@@ -231,6 +231,12 @@ impl PtyManager {
                 let _ = child.kill();
             }
         }
+        let mount_link = std::env::temp_dir().join(format!("ai-agent-ws-{}", terminal_id));
+        let _ = std::fs::remove_file(&mount_link);
+        let _ = std::process::Command::new("pkill")
+            .arg("-f")
+            .arg(format!("ai-agent-ws-{}", terminal_id))
+            .output();
         Ok(())
     }
 }
