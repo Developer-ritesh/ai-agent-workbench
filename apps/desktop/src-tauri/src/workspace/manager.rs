@@ -223,7 +223,7 @@ impl WorkspaceManager {
         let bin_dir = project_dir.join("node_modules").join(".bin");
         let _ = fs::create_dir_all(&bin_dir);
         let devai_shim = bin_dir.join("devai");
-        let script = "#!/bin/sh\n# Auto-load API keys if available\nif [ -f /workspace/.env ]; then\n  export $(grep -E '^(GEMINI_API_KEY|ANTHROPIC_API_KEY|OPENAI_API_KEY|DEEPSEEK_API_KEY|GROQ_API_KEY|OPENROUTER_API_KEY|OLLAMA_BASE_URL)' /workspace/.env | xargs 2>/dev/null) 2>/dev/null\nfi\nif [ -x /usr/bin/opencode ]; then\n  exec /usr/bin/opencode \"$@\"\nelif [ -x /bin/opencode ]; then\n  exec /bin/opencode \"$@\"\nelse\n  exec opencode \"$@\"\nfi\n";
+        let script = "#!/bin/sh\n# Auto-load API keys if available\nif [ -f /workspace/.env ]; then\n  export $(grep -E '^(GEMINI_API_KEY|GOOGLE_API_KEY|ANTHROPIC_API_KEY|OPENAI_API_KEY|DEEPSEEK_API_KEY|GROQ_API_KEY|OPENROUTER_API_KEY|OLLAMA_BASE_URL)' /workspace/.env | xargs 2>/dev/null) 2>/dev/null\nfi\nif [ -x /usr/bin/opencode ]; then\n  exec /usr/bin/opencode \"$@\"\nelif [ -x /bin/opencode ]; then\n  exec /bin/opencode \"$@\"\nelse\n  exec opencode \"$@\"\nfi\n";
         let _ = fs::write(&devai_shim, script);
         #[cfg(unix)]
         {
