@@ -144,9 +144,8 @@ impl WorkspaceManager {
             }
         };
 
-        // Ensure proxy config is synced to workspace .proxy before VM starts
-        let proxy_cfg = crate::commands::proxy::load_proxy_config();
-        crate::commands::proxy::write_workspace_proxy_files(&ws.host_project_path, &proxy_cfg);
+        // Clean any leftover proxy file from workspace
+        let _ = fs::remove_file(PathBuf::from(&ws.host_project_path).join(".proxy"));
 
         self.vm_backend.start_vm(vm)?;
         self.db.update_workspace_status(actual_id, "running")?;
@@ -224,7 +223,7 @@ impl WorkspaceManager {
         let bin_dir = project_dir.join("node_modules").join(".bin");
         let _ = fs::create_dir_all(&bin_dir);
         let devai_shim = bin_dir.join("devai");
-        let script = "#!/bin/sh\n# Auto-load proxy if available\nif [ -f /workspace/.proxy ]; then\n  export $(grep -E '^(HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|http_proxy|https_proxy|all_proxy|NO_PROXY|no_proxy)' /workspace/.proxy | xargs 2>/dev/null) 2>/dev/null\nfi\nif [ -f /root/.proxy ]; then\n  export $(grep -E '^(HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|http_proxy|https_proxy|all_proxy|NO_PROXY|no_proxy)' /root/.proxy | xargs 2>/dev/null) 2>/dev/null\nfi\n# Auto-load API keys if available\nif [ -f /workspace/.env ]; then\n  export $(grep -E '^(GEMINI_API_KEY|ANTHROPIC_API_KEY|OPENAI_API_KEY|DEEPSEEK_API_KEY|GROQ_API_KEY|OPENROUTER_API_KEY|OLLAMA_BASE_URL)' /workspace/.env | xargs 2>/dev/null) 2>/dev/null\nfi\nif [ -x /usr/bin/opencode ]; then\n  exec /usr/bin/opencode \"$@\"\nelif [ -x /bin/opencode ]; then\n  exec /bin/opencode \"$@\"\nelse\n  exec opencode \"$@\"\nfi\n";
+        let script = "#!/bin/sh\n# Auto-load API keys if available\nif [ -f /workspace/.env ]; then\n  export $(grep -E '^(GEMINI_API_KEY|ANTHROPIC_API_KEY|OPENAI_API_KEY|DEEPSEEK_API_KEY|GROQ_API_KEY|OPENROUTER_API_KEY|OLLAMA_BASE_URL)' /workspace/.env | xargs 2>/dev/null) 2>/dev/null\nfi\nif [ -x /usr/bin/opencode ]; then\n  exec /usr/bin/opencode \"$@\"\nelif [ -x /bin/opencode ]; then\n  exec /bin/opencode \"$@\"\nelse\n  exec opencode \"$@\"\nfi\n";
         let _ = fs::write(&devai_shim, script);
         #[cfg(unix)]
         {
@@ -232,9 +231,8 @@ impl WorkspaceManager {
             let _ = fs::set_permissions(&devai_shim, fs::Permissions::from_mode(0o755));
         }
 
-        // Apply active proxy configuration if enabled
-        let proxy_cfg = crate::commands::proxy::load_proxy_config();
-        crate::commands::proxy::write_workspace_proxy_files(&host_project_path, &proxy_cfg);
+        // Clean any leftover proxy file from workspace
+        let _ = fs::remove_file(PathBuf::from(&host_project_path).join(".proxy"));
 
         // Clean any term_size or temporary symlinks in temp_dir
         if let Ok(entries) = fs::read_dir(std::env::temp_dir()) {
@@ -269,11 +267,6 @@ impl WorkspaceManager {
             &format!("VM rotated on-demand. Instance ID updated to {}. Ephemeral cache and OpenCode session memory purged. Session token: {}.", new_vm_id, &new_token[..8]),
         )?;
 
-        // 5b. Automatically rotate public IP via Tor / Proxy whenever VM rotates
-        let proxy_cfg = crate::commands::proxy::load_proxy_config();
-        if proxy_cfg.enabled {
-            let _ = crate::commands::proxy::proxy_rotate_ip(Some(host_project_path.clone()));
-        }
 
         // 6. Start fresh VM instance with the new VM ID
         self.start_vm(actual_id)
